@@ -124,6 +124,16 @@ if ($DryRun) {
 # ------------------------------------------------------------
 Write-Host ""
 Write-Host "Haciendo commit y push..."
+
+# Si quedó un index.lock huerfano (de una ejecución interrumpida), limpiarlo
+$lockFile = Join-Path $root '.git\index.lock'
+if (Test-Path $lockFile) {
+    $gitRunning = Get-Process git -ErrorAction SilentlyContinue
+    if ($gitRunning) { throw "Hay un proceso git activo; cierralo y reintenta." }
+    Remove-Item $lockFile -Force
+    Write-Warning "Se elimino un index.lock huerfano."
+}
+
 & git add -A
 & git commit -m "Release $tag"
 & git tag -f $tag
