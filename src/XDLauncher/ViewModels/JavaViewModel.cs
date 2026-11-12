@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Windows;
 using XdLauncher.Core;
@@ -114,8 +114,8 @@ public sealed class JavaViewModel : ObservableObject, IDisposable
     public IReadOnlyList<string> Filters { get; }
     public IReadOnlyList<string> ModLoaderOptions { get; }
 
-    public JavaService ActiveService => ActiveWorkspace.IsPremium ? _premiumJava : _noPremiumJava;
-    public JavaProfileStore ActiveStore => ActiveWorkspace.IsPremium ? _premiumStore : _noPremiumStore;
+    public JavaService ActiveService => _activeWorkspace == JavaWorkspaceKind.Premium ? _premiumJava : _noPremiumJava;
+    public JavaProfileStore ActiveStore => _activeWorkspace == JavaWorkspaceKind.Premium ? _premiumStore : _noPremiumStore;
     public JavaWorkspaceKind ActiveWorkspaceKind => _activeWorkspace;
     public JavaWorkspace ActiveWorkspace => ActiveService.Workspace;
 
