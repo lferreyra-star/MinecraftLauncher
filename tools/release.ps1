@@ -86,6 +86,8 @@ else {
 # ------------------------------------------------------------
 $ErrorActionPreference = 'Continue'
 Write-Host ""
+Write-Host "Limpiando obj (evita artefactos generados con nombres de ensamblado antiguos)..."
+Remove-Item (Join-Path $root 'src\XDLauncher\obj') -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host "Compilando Release self-contained (esto puede tardar un rato)..."
 & 'C:\Program Files\dotnet\dotnet.exe' publish $csprojPath -c Release -r win-x64 --self-contained true -o $distDir
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish fallo (codigo $LASTEXITCODE). No se publico nada." }

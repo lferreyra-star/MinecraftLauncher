@@ -17,6 +17,9 @@ rem No sobrescribir el EXE mientras el launcher esta corriendo
 taskkill /IM MinecraftLauncher.exe /F >nul 2>&1
 taskkill /IM MinecraftBedrockLauncher.exe /F >nul 2>&1
 
+rem Limpia obj: sin esto pueden quedar archivos generados con un nombre de ensamblado antiguo y el EXE crashea al abrir
+if exist "src\XDLauncher\obj" rmdir /s /q "src\XDLauncher\obj"
+
 echo Compilando Release self-contained...
 "C:\Program Files\dotnet\dotnet" publish "src\XDLauncher\XDLauncher.csproj" -c Release -r win-x64 --self-contained true -o "dist\MinecraftLauncher"
 if errorlevel 1 (
