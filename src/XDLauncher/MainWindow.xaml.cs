@@ -1,6 +1,11 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Threading;
+using XdLauncher.Core;
 using XdLauncher.ViewModels;
 
 namespace XdLauncher;
@@ -30,6 +35,7 @@ public partial class MainWindow : Window
         StateChanged += (_, _) => UpdateMaximizeGlyph();
         viewModel.Settings.WindowPlacementChanged += ApplyWindowPlacement;
         viewModel.Settings.ScaleChanged += () => ApplyScale(initial: false);
+        viewModel.PropertyChanged += ViewModelOnPropertyChanged;
     }
 
     /// <summary>Scales the whole interface and, on live changes, keeps the window filled.</summary>
@@ -53,7 +59,66 @@ public partial class MainWindow : Window
         _initialSizeApplied = true;
         ClampToWorkArea();
         UpdateMaximizeGlyph();
+        AnimatePage();
         await _viewModel.InitializeAsync();
+    }
+
+    private void ViewModelOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ShellViewModel.CurrentPage) or nameof(ShellViewModel.CurrentNavigation))
+            AnimatePage();
+        else if (e.PropertyName is nameof(ShellViewModel.IsSidebarCollapsed) or nameof(ShellViewModel.SidebarWidth))
+            AnimateSidebar();
+    }
+
+    private void AnimatePage()
+    {
+        if (PageHost is null)
+            return;
+
+        // Las animaciones previas se cancelan para no acumular transformaciones.
+        PageHost.BeginAnimation(OpacityProperty, null);
+        if (PageHost.RenderTransform is TranslateTransform translate)
+            translate.BeginAnimation(TranslateTransform.YProperty, null);
+
+        var fade = new DoubleAnimation
+        {
+            From = 0,
+            To = 1,
+            Duration = TimeSpan.FromMilliseconds(200),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        var slide = new DoubleAnimation
+        {
+            From = 16,
+            To = 0,
+            Duration = TimeSpan.FromMilliseconds(240),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+
+        PageHost.BeginAnimation(OpacityProperty, fade);
+        if (PageHost.RenderTransform is TranslateTransform tt)
+            tt.BeginAnimation(TranslateTransform.YProperty, slide);
+
+        // Aparición escalonada de las tarjetas del dashboard recién cargado.
+        if (PageHost.Content is FrameworkElement content)
+            Dispatcher.BeginInvoke(new Action(() => AnimationHelper.AnimateStagger(content)), DispatcherPriority.ContextIdle);
+    }
+
+    private void AnimateSidebar()
+    {
+        if (SidebarBorder is null)
+            return;
+
+        var target = _viewModel.SidebarWidth;
+        SidebarBorder.BeginAnimation(FrameworkElement.WidthProperty, null);
+        var anim = new DoubleAnimation
+        {
+            To = target,
+            Duration = TimeSpan.FromMilliseconds(220),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+        };
+        SidebarBorder.BeginAnimation(FrameworkElement.WidthProperty, anim);
     }
 
     private void ClampToWorkArea()

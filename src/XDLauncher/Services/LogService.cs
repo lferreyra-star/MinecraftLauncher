@@ -102,4 +102,5 @@ public static class AppInfo
     public const string MinecraftProductId = "9NBLGGH2JHXJ";
     public const string Website = "https://www.minecraft.net";
     public const string StoreWebUrl = "https://apps.microsoft.com/detail/9NBLGGH2JHXJ";
+    public const string XdWebsite = "https://xdluncher.gt.tc";
 }

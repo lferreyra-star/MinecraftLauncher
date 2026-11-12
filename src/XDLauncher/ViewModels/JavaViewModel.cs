@@ -26,6 +26,9 @@ public sealed class JavaViewModel : ObservableObject, IDisposable
     private JavaVersionEntry? _selectedVersion;
     private string _searchText = string.Empty;
     private string _selectedFilter = "Todas";
+    private string _selectedSort = "Fecha (reciente)";
+    private bool _showOnlyInstalled;
+    private bool _showOnlyNew;
     private bool _isLoading;
     private bool _isBusy;
     private bool _isDetectingJava;
@@ -63,6 +66,7 @@ public sealed class JavaViewModel : ObservableObject, IDisposable
             : JavaWorkspaceKind.NoPremium;
 
         Filters = ["Todas", "Release", "Snapshot", "Antiguas", "Instaladas"];
+        SortOptions = ["Fecha (reciente)", "Fecha (antigua)", "Número de versión"];
         ModLoaderOptions = [JavaModLoaders.Vanilla, JavaModLoaders.Fabric];
 
         RefreshCommand = new AsyncRelayCommand(() => RefreshAsync(force: true),
@@ -112,6 +116,7 @@ public sealed class JavaViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<JavaVersionEntry> Versions { get; } = [];
     public IReadOnlyList<string> Filters { get; }
+    public IReadOnlyList<string> SortOptions { get; }
     public IReadOnlyList<string> ModLoaderOptions { get; }
 
     public JavaService ActiveService => _activeWorkspace == JavaWorkspaceKind.Premium ? _premiumJava : _noPremiumJava;
@@ -158,6 +163,41 @@ public sealed class JavaViewModel : ObservableObject, IDisposable
         {
             if (string.IsNullOrWhiteSpace(value) || !SetProperty(ref _selectedFilter, value))
                 return;
+            RefreshView();
+        }
+    }
+
+    public string SelectedSort
+    {
+        get => _selectedSort;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value) || !SetProperty(ref _selectedSort, value))
+                return;
+            RefreshView();
+        }
+    }
+
+    public bool ShowOnlyInstalled
+    {
+        get => _showOnlyInstalled;
+        set
+        {
+            if (!SetProperty(ref _showOnlyInstalled, value))
+                return;
+            if (value) ShowOnlyNew = false;
+            RefreshView();
+        }
+    }
+
+    public bool ShowOnlyNew
+    {
+        get => _showOnlyNew;
+        set
+        {
+            if (!SetProperty(ref _showOnlyNew, value))
+                return;
+            if (value) ShowOnlyInstalled = false;
             RefreshView();
         }
     }
@@ -1032,7 +1072,14 @@ public sealed class JavaViewModel : ObservableObject, IDisposable
     private void RefreshView()
     {
         Versions.Clear();
-        foreach (var version in _all.Where(MatchesFilter))
+        var query = _all.Where(MatchesFilter);
+        query = SelectedSort switch
+        {
+            "Fecha (antigua)" => query.OrderBy(v => v.ReleaseTime),
+            "Número de versión" => query.OrderByDescending(v => v.Id, StringComparer.OrdinalIgnoreCase),
+            _ => query.OrderByDescending(v => v.ReleaseTime)
+        };
+        foreach (var version in query)
             Versions.Add(version);
 
         OnPropertyChanged(nameof(HasVersions));
@@ -1044,6 +1091,11 @@ public sealed class JavaViewModel : ObservableObject, IDisposable
     {
         if (!string.IsNullOrWhiteSpace(SearchText) &&
             !version.Id.Contains(SearchText.Trim(), StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (ShowOnlyInstalled && !version.IsInstalled)
+            return false;
+        if (ShowOnlyNew && version.IsInstalled)
             return false;
 
         return SelectedFilter switch

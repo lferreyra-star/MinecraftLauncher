@@ -1,31 +1,27 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#0B100E" />
-    <SolidColorBrush x:Key="TitleBarBrush" Color="#E60B100E" />
-    <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#D90C1310" />
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#F0151D19" />
-    <SolidColorBrush x:Key="SurfaceStrongBrush" Color="#1C2721" />
-    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#24352C" />
-    <SolidColorBrush x:Key="BorderBrush" Color="#2C3D34" />
-    <SolidColorBrush x:Key="BorderSoftBrush" Color="#1F2C25" />
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F3F8F4" />
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#BAC9C0" />
-    <SolidColorBrush x:Key="TextMutedBrush" Color="#7F9489" />
-    <SolidColorBrush x:Key="ChipBrush" Color="#1D2A23" />
-    <SolidColorBrush x:Key="ChipStrongBrush" Color="#26382E" />
-    <SolidColorBrush x:Key="SuccessBrush" Color="#5CE07A" />
-    <SolidColorBrush x:Key="WarningBrush" Color="#F2C55C" />
-    <SolidColorBrush x:Key="ErrorBrush" Color="#FF8080" />
-    <SolidColorBrush x:Key="InfoBrush" Color="#64C8F0" />
-    <SolidColorBrush x:Key="ScrimBrush" Color="#B3000000" />
-    <LinearGradientBrush x:Key="BackdropOverlayBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#A60A0F0C" Offset="0" />
-        <GradientStop Color="#8E0C1410" Offset="0.42" />
-        <GradientStop Color="#B8090D0B" Offset="1" />
-    </LinearGradientBrush>
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#0D1117" />
+    <SolidColorBrush x:Key="TitleBarBrush" Color="#0D1117" />
+    <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#11161D" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#161B22" />
+    <SolidColorBrush x:Key="SurfaceStrongBrush" Color="#1C2330" />
+    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#222B3A" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#303846" />
+    <SolidColorBrush x:Key="BorderSoftBrush" Color="#232B38" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F0F6FC" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#B1BAC4" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#7D8590" />
+    <SolidColorBrush x:Key="ChipBrush" Color="#1C2330" />
+    <SolidColorBrush x:Key="ChipStrongBrush" Color="#263041" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#3FB950" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#D29922" />
+    <SolidColorBrush x:Key="ErrorBrush" Color="#F85149" />
+    <SolidColorBrush x:Key="InfoBrush" Color="#58A6FF" />
+    <SolidColorBrush x:Key="ScrimBrush" Color="#CC000000" />
+    <SolidColorBrush x:Key="BackdropOverlayBrush" Color="#CC0D1117" />
     <LinearGradientBrush x:Key="HeroScrimBrush" StartPoint="0,0" EndPoint="0,1">
         <GradientStop Color="#00000000" Offset="0" />
-        <GradientStop Color="#4D050A07" Offset="0.55" />
-        <GradientStop Color="#F2050A07" Offset="1" />
+        <GradientStop Color="#660D1117" Offset="0.45" />
+        <GradientStop Color="#F20D1117" Offset="1" />
     </LinearGradientBrush>
 </ResourceDictionary>

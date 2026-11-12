@@ -180,7 +180,7 @@
                                 <Border Grid.Column="2" Width="220" VerticalAlignment="Center"
                                         Visibility="{Binding State, Converter={StaticResource DownloadStateToVisibility}, ConverterParameter=Downloading}">
                                     <StackPanel>
-                                        <ProgressBar Value="{Binding ProgressPercent}" Height="6"
+                                        <ProgressBar Value="{Binding ProgressPercent, Mode=OneWay}" Height="6"
                                                      Foreground="{DynamicResource AccentBrush}"
                                                      Background="{DynamicResource BorderBrush}"
                                                      IsIndeterminate="{Binding IsIndeterminate}" />

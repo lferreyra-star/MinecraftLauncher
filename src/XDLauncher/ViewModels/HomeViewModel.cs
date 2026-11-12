@@ -12,12 +12,13 @@ public sealed class HomeViewModel : ObservableObject
     private string _selectedEditionId = "bedrock";
 
     public HomeViewModel(GameState game, CatalogState catalog, ProfileState profile, SettingsState settings,
-        MobileConnectState mobile)
+        MobileConnectState mobile, XdAccount account)
     {
         Game = game;
         Catalog = catalog;
         Profile = profile;
         Mobile = mobile;
+        Account = account;
         _settings = settings;
 
         OpenNewsCommand = new RelayCommand(parameter =>
@@ -55,6 +56,7 @@ public sealed class HomeViewModel : ObservableObject
     public CatalogState Catalog { get; }
     public ProfileState Profile { get; }
     public MobileConnectState Mobile { get; }
+    public XdAccount Account { get; }
     public SettingsState Settings => _settings;
     public JavaViewModel? JavaPage { get; set; }
 
@@ -71,7 +73,13 @@ public sealed class HomeViewModel : ObservableObject
         _ => "Buenas noches"
     };
 
-    public string WelcomeName => Profile.DisplayName;
+    public string WelcomeName => Account.DisplayName ?? Account.Email;
+    public string AccountDisplayName => Account.DisplayName ?? Account.Email;
+    public string AccountEmail => Account.Email;
+    public string AccountInitial => Account.Initial;
+    public string? AccountAvatarPath => Account.AvatarPath;
+    public string AccountProviderLabel => Account.ProviderLabel;
+    public string AccountStatusLabel => $"{Account.ProviderLabel} · {AccountEmail}";
     public string PlayLabel => Game.PlayLabel;
     public string PlayGlyph => Game.PlayGlyph;
     public bool IsInstalled => Game.IsInstalled;

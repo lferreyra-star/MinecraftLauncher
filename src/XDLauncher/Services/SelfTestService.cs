@@ -209,7 +209,47 @@ public sealed class SelfTestService
         }
 
         Line(string.Empty);
-        Line("[9] Minecraft Java Edition · Premium / No-Premium");
+        Line("[9] Cuenta de XD Launcher (autenticación real)");
+        try
+        {
+            var auth = new XdAuthService();
+            var online = await auth.PingAsync(cancellationToken);
+            Line($"  Servidor de autenticación: {(online ? "en línea" : "sin conexión")}");
+
+            var stored = XdSessionStore.Load();
+            if (stored is null)
+            {
+                Line("  Sesión local: ninguna (el launcher pedirá iniciar sesión).");
+                Pass("Sistema de autenticación de XD Launcher accesible.");
+            }
+            else
+            {
+                var refreshToken = XdSessionStore.UnprotectToken(stored.ProtectedRefreshToken);
+                if (string.IsNullOrWhiteSpace(refreshToken))
+                {
+                    Fail("La sesión guardada no tiene token de actualización legible.");
+                    failures++;
+                }
+                else
+                {
+                    var account = await auth.RefreshAsync(refreshToken, cancellationToken);
+                    Line($"  Sesión guardada: {account.Email}");
+                    Line($"  Nombre del servidor: {account.DisplayName ?? "—"}");
+                    Line($"  UID: {account.UserId}");
+                    var profile = await auth.FetchProfileAsync(account, cancellationToken);
+                    Line($"  Perfil Firestore: {(profile is null ? "sin documento" : profile.Name)}");
+                    Pass("Sesión de XD Launcher validada contra el servidor.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Fail("Error validando la cuenta de XD Launcher: " + ex.Message);
+            failures++;
+        }
+
+        Line(string.Empty);
+        Line("[10] Minecraft Java Edition · Premium / No-Premium");
         try
         {
             var premiumWorkspace = Paths.CreatePremiumJavaWorkspace();

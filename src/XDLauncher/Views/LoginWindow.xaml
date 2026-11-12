@@ -1,0 +1,361 @@
+<Window x:Class="XdLauncher.Views.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="XD Launcher · Acceso"
+        Width="1080" Height="680"
+        MinWidth="880" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="#070A0F"
+        ResizeMode="CanResize"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        WindowStyle="None"
+        AllowsTransparency="False">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="LoginSurface" Color="#11161F" />
+        <SolidColorBrush x:Key="LoginSurfaceAlt" Color="#161C27" />
+        <SolidColorBrush x:Key="LoginBorder" Color="#28313F" />
+        <SolidColorBrush x:Key="LoginText" Color="#F2F6FC" />
+        <SolidColorBrush x:Key="LoginMuted" Color="#94A3B8" />
+        <SolidColorBrush x:Key="LoginAccent" Color="#5CE07A" />
+        <SolidColorBrush x:Key="LoginAccentSoft" Color="#1B3A26" />
+        <SolidColorBrush x:Key="LoginError" Color="#F87171" />
+        <SolidColorBrush x:Key="LoginInfo" Color="#7DD3FC" />
+
+        <Style x:Key="LoginField" TargetType="TextBox">
+            <Setter Property="Foreground" Value="{StaticResource LoginText}" />
+            <Setter Property="CaretBrush" Value="{StaticResource LoginAccent}" />
+            <Setter Property="Background" Value="{StaticResource LoginSurfaceAlt}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LoginBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
+            <Setter Property="Padding" Value="13,11" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Root" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="#3B4757" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource LoginAccent}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="LoginSecret" TargetType="PasswordBox">
+            <Setter Property="Foreground" Value="{StaticResource LoginText}" />
+            <Setter Property="CaretBrush" Value="{StaticResource LoginAccent}" />
+            <Setter Property="Background" Value="{StaticResource LoginSurfaceAlt}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LoginBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
+            <Setter Property="Padding" Value="13,11" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border x:Name="Root" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="#3B4757" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource LoginAccent}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="LoginLink" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource LoginAccent}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root" Background="Transparent" CornerRadius="8" Padding="10,4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#1E2733" />
+                                <Setter Property="Foreground" Value="#9CF2AC" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.7" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid ClipToBounds="True">
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#070A0F" Offset="0" />
+                <GradientStop Color="#0B1119" Offset="0.55" />
+                <GradientStop Color="#0A0F17" Offset="1" />
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <!-- Luces ambientales -->
+        <Ellipse Width="620" Height="620" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-180,-160,0,0" Opacity="0.5">
+            <Ellipse.Fill>
+                <RadialGradientBrush>
+                    <GradientStop Color="#472BD46A" Offset="0" />
+                    <GradientStop Color="#002BD46A" Offset="1" />
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+        <Ellipse Width="560" Height="560" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-160,-180" Opacity="0.42">
+            <Ellipse.Fill>
+                <RadialGradientBrush>
+                    <GradientStop Color="#4238BDF8" Offset="0" />
+                    <GradientStop Color="#0038BDF8" Offset="1" />
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+        <Ellipse Width="420" Height="420" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-260,0,0" Opacity="0.3">
+            <Ellipse.Fill>
+                <RadialGradientBrush>
+                    <GradientStop Color="#3DA78BFA" Offset="0" />
+                    <GradientStop Color="#00A78BFA" Offset="1" />
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+
+        <!-- Partículas ambientales -->
+        <Canvas x:Name="ParticleLayer" IsHitTestVisible="False" />
+
+        <Grid Margin="46">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="452" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Marca -->
+            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="10,0,48,0" x:Name="BrandPanel">
+                <StackPanel.Triggers>
+                    <EventTrigger RoutedEvent="Loaded">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.5" />
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                 From="-26" To="0" Duration="0:0:0.6">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut" />
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </StackPanel.Triggers>
+                <StackPanel.RenderTransform>
+                    <TranslateTransform X="0" />
+                </StackPanel.RenderTransform>
+
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Assets/logo.png" Width="58" Height="58" />
+                    <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="XD LAUNCHER" FontSize="30" FontWeight="Bold" Foreground="{StaticResource LoginText}" />
+                        <TextBlock Text="BEDROCK LAUNCHER" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{StaticResource LoginMuted}" Margin="0,3,0,0" />
+                    </StackPanel>
+                </StackPanel>
+
+                <TextBlock Text="Tu cuenta de XD Launcher, sincronizada con la web oficial."
+                           Foreground="{StaticResource LoginMuted}" FontSize="13" Margin="0,26,0,0"
+                           MaxWidth="420" TextWrapping="Wrap" LineHeight="21" />
+
+                <StackPanel Margin="0,26,0,0" MaxWidth="420">
+                    <Border Background="#0F1620" BorderBrush="{StaticResource LoginBorder}" BorderThickness="1"
+                            CornerRadius="12" Padding="14">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="9" Height="9" VerticalAlignment="Center">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="{StaticResource LoginAccent}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsServerReachable}" Value="False">
+                                                    <Setter Property="Fill" Value="{StaticResource LoginError}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                    <Ellipse.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0.25"
+                                                                     Duration="0:0:1.1" AutoReverse="True" RepeatBehavior="Forever" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </Ellipse.Triggers>
+                                </Ellipse>
+                                <TextBlock Text="{Binding ServerStatusLabel}" Margin="9,0,0,0" FontSize="12"
+                                           Foreground="{StaticResource LoginMuted}" />
+                            </StackPanel>
+                            <TextBlock Text="Autenticación real con Firebase Authentication. Tus credenciales nunca se guardan en el launcher."
+                                       Foreground="#64748B" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Formulario -->
+            <Border Grid.Column="1" Style="{StaticResource Card}" Background="{StaticResource LoginSurface}"
+                    BorderBrush="{StaticResource LoginBorder}" CornerRadius="20" Padding="34" VerticalAlignment="Center">
+                <Border.RenderTransform>
+                    <TranslateTransform Y="0" />
+                </Border.RenderTransform>
+                <Border.Triggers>
+                    <EventTrigger RoutedEvent="Loaded">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.4" />
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                                 From="24" To="0" Duration="0:0:0.5">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut" />
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Border.Triggers>
+
+                <StackPanel>
+                    <TextBlock Text="{Binding ModeTitle}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource LoginText}" />
+                    <TextBlock Text="{Binding ModeSubtitle}" Foreground="{StaticResource LoginMuted}" FontSize="12"
+                               Margin="0,6,0,0" TextWrapping="Wrap" />
+
+                    <TextBlock Text="CORREO ELECTRÓNICO" Style="{StaticResource Caption}" Foreground="#7C8CA0" Margin="0,22,0,6" />
+                    <TextBox Style="{StaticResource LoginField}" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="Email" />
+
+                    <StackPanel Visibility="{Binding ShowRegisterFields, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="NOMBRE MOSTRADO" Style="{StaticResource Caption}" Foreground="#7C8CA0" Margin="0,16,0,6" />
+                        <TextBox Style="{StaticResource LoginField}" Text="{Binding DisplayName, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+
+                    <TextBlock Text="CONTRASEÑA" Style="{StaticResource Caption}" Foreground="#7C8CA0" Margin="0,16,0,6" />
+                    <Grid>
+                        <PasswordBox x:Name="SecretBox" Style="{StaticResource LoginSecret}" Padding="13,11,44,11"
+                                     PasswordChanged="SecretBox_PasswordChanged" KeyDown="PasswordBox_KeyDown" />
+                        <TextBox x:Name="PlainBox" Style="{StaticResource LoginField}" Padding="13,11,44,11"
+                                 Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" Visibility="Collapsed" />
+                        <Button Style="{StaticResource IconButton}" Width="34" Height="34" HorizontalAlignment="Right"
+                                VerticalAlignment="Center" Margin="0,0,6,0" Content="{Binding PasswordVisibilityGlyph}"
+                                Click="TogglePassword_Click" ToolTip="Mostrar u ocultar la contraseña" />
+                    </Grid>
+
+                    <StackPanel Visibility="{Binding ShowRegisterFields, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="REPETIR CONTRASEÑA" Style="{StaticResource Caption}" Foreground="#7C8CA0" Margin="0,16,0,6" />
+                        <PasswordBox x:Name="ConfirmBox" Style="{StaticResource LoginSecret}"
+                                     PasswordChanged="ConfirmBox_PasswordChanged" KeyDown="PasswordBox_KeyDown" />
+                    </StackPanel>
+
+                    <Border Background="#2A1416" BorderBrush="#5B2226" BorderThickness="1" CornerRadius="10"
+                            Padding="12,9" Margin="0,16,0,0"
+                            Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource LoginError}" FontSize="12"
+                                   TextWrapping="Wrap" />
+                    </Border>
+
+                    <Border Background="#0E2233" BorderBrush="#1E4A66" BorderThickness="1" CornerRadius="10"
+                            Padding="12,9" Margin="0,16,0,0"
+                            Visibility="{Binding HasInfo, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{Binding InfoMessage}" Foreground="{StaticResource LoginInfo}" FontSize="12"
+                                   TextWrapping="Wrap" />
+                    </Border>
+
+                    <Button Style="{StaticResource PrimaryButton}" Height="46" Margin="0,20,0,0"
+                            HorizontalContentAlignment="Left" Padding="20,0" Click="Primary_Click">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                <TextBlock Text="{Binding PrimaryActionGlyph}" FontFamily="{StaticResource IconFont}"
+                                           FontSize="13" Margin="0,0,10,0" />
+                                <TextBlock Text="{Binding PrimaryActionLabel}" FontSize="13" FontWeight="Bold" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding StatusLabel}" HorizontalAlignment="Right" FontSize="11"
+                                       Foreground="{StaticResource AccentTextBrush}" />
+                        </Grid>
+                    </Button>
+
+                    <Grid Margin="0,16,0,0">
+                        <Button Style="{StaticResource LoginLink}" HorizontalAlignment="Left" Click="SwitchMode_Click">
+                            <TextBlock Text="{Binding SecondaryActionLabel}" />
+                        </Button>
+                        <Button Style="{StaticResource LoginLink}" HorizontalAlignment="Right" Click="Recover_Click"
+                                Content="RECUPERAR CONTRASEÑA" />
+                    </Grid>
+
+                    <Border Background="#2A2210" BorderBrush="#5B4A18" BorderThickness="1" CornerRadius="10"
+                            Padding="12,9" Margin="0,14,0,0"
+                            Visibility="{Binding NeedsEmailProvider, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Text="Falta activar el acceso por correo en Firebase"
+                                       Foreground="#FCD34D" FontSize="12" FontWeight="SemiBold" />
+                            <TextBlock Text="Abre Authentication → Sign-in method → Email/Password → Enable. La cuenta se comparte con la web."
+                                       Foreground="#D6BC74" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap" />
+                            <Button Style="{StaticResource LoginLink}" HorizontalAlignment="Left" Margin="-6,2,0,0"
+                                    Click="OpenFirebaseConsole_Click" Content="ABRIR CONSOLA DE FIREBASE" />
+                        </StackPanel>
+                    </Border>
+
+                    <Button Style="{StaticResource SecondaryButton}" Height="44" Margin="0,14,0,0"
+                            Click="ContinueWithGoogle_Click" BorderBrush="#3A4252">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="&#xE80F;" FontFamily="{StaticResource IconFont}" FontSize="12"
+                                       Margin="0,0,9,0" Foreground="{StaticResource LoginMuted}" />
+                            <TextBlock Text="Continuar con tu cuenta de Google" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{StaticResource LoginText}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Border Height="1" Background="{StaticResource LoginBorder}" Margin="0,18,0,14" />
+                    <Button Style="{StaticResource LoginLink}" HorizontalAlignment="Center" Click="OpenWebsite_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE774;" FontFamily="{StaticResource IconFont}" FontSize="12" Margin="0,0,8,0" />
+                            <TextBlock Text="Ir a xdluncher.gt.tc" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Cierre -->
+        <Button Style="{StaticResource IconButton}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                Margin="0,14,14,0" Content="&#xE8BB;" Click="Close_Click" ToolTip="Salir" />
+    </Grid>
+</Window>

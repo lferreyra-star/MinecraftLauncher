@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using XdLauncher.Core;
@@ -15,6 +15,7 @@ public sealed class ShellViewModel : ObservableObject
     private NavigationItem _currentNavigation;
     private bool _isInitializing;
     private bool _isFullscreen;
+    private bool _isSidebarCollapsed;
     private string _initializationStatus = "Preparando el launcher…";
 
     // Almacenar la última información de actualización verificada
@@ -30,11 +31,13 @@ public sealed class ShellViewModel : ObservableObject
         DialogService dialogs,
         MinecraftDownloadService downloadService,
         UpdateService updateService,
-        UpdateCheckService updateCheckService)
+        UpdateCheckService updateCheckService,
+        XdAccount account)
     {
         _dialogs = dialogs;
         _updateService = updateService;
         _updateCheckService = updateCheckService;
+        Account = account;
 
         _updateService.UpdateChecked += OnUpdateChecked;
         _updateService.UpdateAvailable += OnUpdateAvailable;
@@ -48,13 +51,13 @@ public sealed class ShellViewModel : ObservableObject
         Game = new GameState(gameService, Catalog, Settings, dialogs);
         Profile = new ProfileState(authService, Settings, dialogs);
         MobileState = new MobileConnectState(settingsService, dialogs);
-        Home = new HomeViewModel(Game, Catalog, Profile, Settings, MobileState);
+        Home = new HomeViewModel(Game, Catalog, Profile, Settings, MobileState, account);
         Versions = new VersionsViewModel(Game, Catalog);
         Addons = new AddonsViewModel(addonService, Game, Settings, dialogs);
         Downloads = new DownloadViewModel(downloadService, dialogs);
         Java = new JavaViewModel(Settings, Profile, dialogs);
         Home.JavaPage = Java;
-        SettingsPage = new SettingsViewModel(Settings, Profile);
+        SettingsPage = new SettingsViewModel(Settings, Profile, account);
 
 
         Navigation =
@@ -66,7 +69,7 @@ public sealed class ShellViewModel : ObservableObject
             },
             new NavigationItem
             {
-                Key = "java", Title = "Minecraft Java", Glyph = "\uE7FC",
+                Key = "java", Title = "Minecraft Java", Glyph = "\uE945",
                 Subtitle = "Versiones, Java y lanzamiento", Page = Java
             },
             new NavigationItem
@@ -86,7 +89,7 @@ public sealed class ShellViewModel : ObservableObject
             },
             new NavigationItem
             {
-                Key = "downloads", Title = "Descargas", Glyph = "\uE893",
+                Key = "downloads", Title = "Descargas", Glyph = "\uE896",
                 Subtitle = "Descarga Minecraft y herramientas", Page = Downloads
             },
             new NavigationItem
@@ -96,7 +99,7 @@ public sealed class ShellViewModel : ObservableObject
             },
             new NavigationItem
             {
-                Key = "mobile", Title = "Móvil", Glyph = "\uE12C",
+                Key = "mobile", Title = "Móvil", Glyph = "\uE8EA",
                 Subtitle = "Conecta tu teléfono Android", Page = MobileState
             }
         ];
@@ -120,13 +123,29 @@ public sealed class ShellViewModel : ObservableObject
             if (parameter is ToastMessage toast)
                 Toasts.Remove(toast);
         });
+        ToggleSidebarCommand = new RelayCommand(() => IsSidebarCollapsed = !IsSidebarCollapsed);
+        SignOutCommand = new RelayCommand(() =>
+        {
+            XdSessionStore.Delete();
+            LogService.Info("Cierre de sesión de XD Launcher.");
+            SignOutRequested?.Invoke();
+        });
 
         ToastHub.ToastRequested += OnToastRequested;
         Game.PropertyChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(GameStatusText));
             OnPropertyChanged(nameof(GameStatusDetail));
+            OnPropertyChanged(nameof(BedrockStatusText));
+            OnPropertyChanged(nameof(BedrockStatusDetail));
+            OnPropertyChanged(nameof(BedrockStatusGlyph));
             OnPropertyChanged(nameof(IsGameRunning));
+            OnPropertyChanged(nameof(GameStatusGlyph));
+        };
+        Java.PropertyChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(GameStatusText));
+            OnPropertyChanged(nameof(GameStatusDetail));
             OnPropertyChanged(nameof(GameStatusGlyph));
         };
         Profile.PropertyChanged += (_, _) =>
@@ -156,6 +175,7 @@ public sealed class ShellViewModel : ObservableObject
     public CatalogState Catalog { get; }
     public GameState Game { get; }
     public ProfileState Profile { get; }
+    public XdAccount Account { get; }
     public HomeViewModel Home { get; }
     public VersionsViewModel Versions { get; }
     public AddonsViewModel Addons { get; }
@@ -210,22 +230,65 @@ public sealed class ShellViewModel : ObservableObject
     public string AccountStatusText => Profile.IsMicrosoftAccount
         ? $"Xbox Live · {Profile.DisplayName}"
         : "Perfil local";
-    public string GameStatusText => Game.IsInstalled
+    public string BedrockStatusText => Game.IsInstalled
         ? Game.IsGameRunning ? "Minecraft en ejecución" : $"Listo · {Game.VersionLabel}"
         : "Minecraft no instalado";
-    public string GameStatusDetail => Game.IsInstalled
+    public string BedrockStatusDetail => Game.IsInstalled
         ? $"{Game.DisplayName} · {Game.ChannelLabel}"
         : "Instálalo desde Microsoft Store";
-    public string GameStatusGlyph => Game.IsInstalled ? "\uE73E" : "\uEA39";
+    public string BedrockStatusGlyph => Game.IsInstalled ? "\uE73E" : "\uEA39";
+
+    public string GameStatusText => CurrentNavigation?.Key == "java"
+        ? "Minecraft Java Edition"
+        : BedrockStatusText;
+    public string GameStatusDetail => CurrentNavigation?.Key == "java"
+        ? $"{Java.WorkspaceName} · {Java.SelectedVersionLabel}"
+        : BedrockStatusDetail;
+    public string GameStatusGlyph => CurrentNavigation?.Key == "java"
+        ? "\uE945"
+        : BedrockStatusGlyph;
 
     public ICommand NavigateCommand { get; }
     public ICommand DismissToastCommand { get; }
+    public ICommand ToggleSidebarCommand { get; }
 
     public bool IsGameRunning => Game.IsGameRunning;
     public bool IsLightTheme => Settings.IsLightTheme;
     public string? BackdropSource => Settings.BackgroundPath;
     public bool IsFullscreen => _isFullscreen;
     public UpdateInfo? LastUpdateInfo => _lastUpdateInfo;
+
+    /// <summary>Nombre mostrado de la cuenta de XD Launcher (viene del servidor).</summary>
+    public string AccountDisplayName =>
+        string.IsNullOrWhiteSpace(Account.DisplayName) ? Account.Email : Account.DisplayName;
+
+    public string AccountEmail => Account.Email;
+    public string AccountInitial => Account.Initial;
+    public string? AccountAvatarPath => Account.AvatarPath;
+    public string AccountProviderLabel => Account.ProviderLabel;
+    public string XdAccountStatusText => $"{Account.ProviderLabel} · {AccountEmail}";
+
+    /// <summary>Solicita el cierre de sesión y el regreso a la pantalla de acceso.</summary>
+    public event Action? SignOutRequested;
+
+    public RelayCommand SignOutCommand { get; }
+
+    public bool IsSidebarCollapsed
+    {
+        get => _isSidebarCollapsed;
+        set
+        {
+            if (SetProperty(ref _isSidebarCollapsed, value))
+            {
+                OnPropertyChanged(nameof(SidebarWidth));
+                OnPropertyChanged(nameof(SidebarToggleGlyph));
+            }
+        }
+    }
+
+    public double SidebarWidth => IsSidebarCollapsed ? 76 : 244;
+    public double TitleBarHeight => 42;
+    public string SidebarToggleGlyph => IsSidebarCollapsed ? "\uE76C" : "\uE76B";
 
     /// <summary>Navega a la página con la clave indicada.</summary>
     public void Navigate(string key)
@@ -238,6 +301,9 @@ public sealed class ShellViewModel : ObservableObject
     private void OnNavigated(string key)
     {
         LogService.Info($"Navegación: {key}.");
+        OnPropertyChanged(nameof(GameStatusText));
+        OnPropertyChanged(nameof(GameStatusDetail));
+        OnPropertyChanged(nameof(GameStatusGlyph));
     }
 
     private void OnToastRequested(ToastMessage toast)
@@ -279,6 +345,26 @@ public sealed class ShellViewModel : ObservableObject
 
         if (isAvailable && Settings.ShowUpdateNotifications && !string.IsNullOrWhiteSpace(info.LatestVersion))
             ToastHub.Info($"Nueva versión {info.LatestVersion} disponible.");
+
+        if (!isAvailable || !Settings.Settings.AutoCheckUpdates)
+            return;
+
+        _ = ApplyGitHubUpdateAsync(info);
+    }
+
+    private async Task ApplyGitHubUpdateAsync(UpdateInfo info)
+    {
+        try
+        {
+            var updated = await _updateService.UpdateAsync(info, CancellationToken.None);
+            if (updated)
+                ToastHub.Success($"Launcher actualizado a la versión {info.LatestVersion}.");
+        }
+        catch (Exception ex)
+        {
+            LogService.Error(ex, "No se pudo actualizar el launcher desde GitHub.");
+            ToastHub.Error("No se pudo completar la actualización automática. Usa el instalador manual si hace falta.");
+        }
     }
 
     private void OnStatusMessage(string message)

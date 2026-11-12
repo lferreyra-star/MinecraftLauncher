@@ -6,10 +6,11 @@ namespace XdLauncher.ViewModels;
 /// <summary>Launcher settings page facade.</summary>
 public sealed class SettingsViewModel : ObservableObject
 {
-    public SettingsViewModel(SettingsState state, ProfileState profile)
+    public SettingsViewModel(SettingsState state, ProfileState profile, XdAccount account)
     {
         State = state;
         Profile = profile;
+        Account = account;
 
         OpenAzureCommand = new RelayCommand(() => FileOps.OpenUrl("https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade"));
         OpenLogsCommand = new RelayCommand(() => FileOps.OpenFolder(Paths.LogsDirectory));
@@ -28,6 +29,13 @@ public sealed class SettingsViewModel : ObservableObject
 
     public SettingsState State { get; }
     public ProfileState Profile { get; }
+    public XdAccount Account { get; }
+
+    public string AccountDisplayName => Account.DisplayName ?? Account.Email;
+    public string AccountEmail => Account.Email;
+    public string AccountInitial => Account.Initial;
+    public string? AccountAvatarPath => Account.AvatarPath;
+    public string AccountProviderLabel => Account.ProviderLabel;
 
     public string LauncherVersion => AppInfo.FullVersion;
     public string ProductName => AppInfo.ProductName;

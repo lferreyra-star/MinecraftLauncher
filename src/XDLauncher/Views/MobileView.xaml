@@ -19,7 +19,7 @@
                 <StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Border Width="40" Height="40" CornerRadius="11" Background="{DynamicResource ChipBrush}">
-                            <TextBlock Text="&#xE12C;" FontFamily="{StaticResource IconFont}" FontSize="17"
+                            <TextBlock Text="&#xE8EA;" FontFamily="{StaticResource IconFont}" FontSize="17"
                                        Foreground="{DynamicResource AccentBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>

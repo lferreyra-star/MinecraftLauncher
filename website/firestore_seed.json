@@ -1,0 +1,20 @@
+{
+  "collections": {
+    "users": {
+      "_schema_example_doc_id_is_auth_uid": {
+        "uid": "UID_DEL_USUARIO_DE_FIREBASE_AUTH",
+        "name": "Nombre del usuario",
+        "email": "correo@ejemplo.com",
+        "photoURL": "https://lh3.googleusercontent.com/a/...",
+        "provider": "google.com",
+        "createdAt": { "__datatype__": "timestamp", "value": "2026-01-01T00:00:00Z" },
+        "lastLoginAt": { "__datatype__": "timestamp", "value": "2026-01-01T00:00:00Z" }
+      }
+    }
+  },
+  "_notes": [
+    "No es necesario importar datos: el documento users/{uid} se crea/actualiza automáticamente al iniciar sesión con Google (el ID del documento es el UID de Authentication).",
+    "Este archivo es una referencia de la estructura/colección requerida por la app y por firestore.rules.",
+    "Si deseas cargar un usuario manualmente: en Firestore Console > Iniciar colección 'users' > ID de documento = UID real del usuario en Authentication > agrega los campos indicados (createdAt/lastLoginAt como tipo timestamp)."
+  ]
+}
