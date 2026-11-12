@@ -24,12 +24,26 @@ public sealed class UpdateCheckService
 
     // Estado de verificación
     private DateTimeOffset _lastCheckTime = DateTimeOffset.MinValue;
-    private DateTimeOffset _lastNotificationTime = DateTimeOffset.MinValue;
+    private DateTimeOffset _lastNotificationTime = DateTime.Now;
     private string? _lastCheckedVersion;
     private UpdateInfo? _lastUpdateInfo;
     private bool _isChecking;
     private readonly object _gate = new();
 
+
+    /// <summary>Extrae el nombre owner de una cadena "owner/repo"</summary>
+    private static string GetOwnerFromRepo(string repoFullName)
+    {
+        var parts = repoFullName.Split('/');
+        return parts.Length > 0 ? parts[0] : "";
+    }
+
+    /// <summary>Extrae el nombre repo de una cadena "owner/repo"</summary>
+    private static string GetRepoNameFromRepo(string repoFullName)
+    {
+        var parts = repoFullName.Split('/');
+        return parts.Length > 1 ? parts[1] : repoFullName;
+    }
     // Eventos
     public event Action<UpdateInfo>? UpdateChecked;
     public event Action<UpdateInfo, bool>? UpdateAvailable;
@@ -124,19 +138,19 @@ public sealed class UpdateCheckService
                     if (assetName.EndsWith(".exe") || assetName.EndsWith(".zip"))
                     {
                         downloadUrl = asset.GetProperty("browser_download_url").GetString() ?? "";
-                        // Intentar obtener SHA-256 si está disponible
-                        if (asset.Properties().Any(p => p.Name.Equals("sha256", StringComparison.OrdinalIgnoreCase)))
+                        // Intentar obtener SHA-256 si el asset lo declara
+                        if (asset.TryGetProperty("sha256", out var sha256Prop) && sha256Prop.ValueKind == JsonValueKind.String)
                         {
-                            sha256 = asset.GetProperty("sha256").GetString() ?? "";
+                            sha256 = sha256Prop.GetString() ?? "";
                         }
                         break;
                     }
                 }
             }
 
-            // Comparar versiones usando versionamiento semántico
-            var latestVersion = new UpdateAvailabilityVersion(latestTagName);
-            var installedVersion = new UpdateAvailabilityVersion(_currentVersion);
+            // Comparar versiones usando System.Version
+            var latestVersion = Version.TryParse(latestTagName, out var latestParsed) ? latestParsed : new Version(0, 0, 0);
+            var installedVersion = Version.TryParse(_currentVersion, out var installedParsed) ? installedParsed : new Version(0, 0, 0);
 
             UpdateAvailability availability;
             bool isAvailable = false;
@@ -164,7 +178,7 @@ public sealed class UpdateCheckService
                 LatestVersion = latestTagName,
                 InstalledVersion = _currentVersion,
                 ReleaseNotes = body,
-                ReleaseDate = DateTimeOffset.Parse(publishedAt),
+                ReleaseDate = DateTimeOffset.TryParse(publishedAt, out var releaseDate) ? releaseDate : DateTimeOffset.Now,
                 DownloadUrl = downloadUrl,
                 Sha256 = sha256,
                 LatestName = latestName
@@ -203,4 +217,4 @@ public sealed class UpdateCheckService
     /// <summary>Marcar que el usuario ha visto la actualización (para evitar duplicados).</summary>
     public void MarkNotificationSeen()
     {
-        _lastNotificationTime = DateTi
+        _lastNotificationTime = DateTime.Now;}}

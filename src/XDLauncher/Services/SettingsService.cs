@@ -62,6 +62,9 @@ public sealed class LauncherSettings
     public bool AutoRestoreAccount { get; set; } = true;
     public string PreferredChannel { get; set; } = "Retail";
     public DateTimeOffset? LastUpdateCheck { get; set; }
+    public TimeSpan UpdateCheckInterval { get; set; } = TimeSpan.FromMinutes(30);
+    public bool ShowUpdateNotifications { get; set; } = true;
+    public DateTimeOffset LastCheckTime { get; set; } = DateTimeOffset.MinValue;
     public bool AskPlatformOnStartup { get; set; } = true;
     public MobileConnectSettings MobileConnect { get; set; } = new();
     public JavaSettings Java { get; set; } = new();

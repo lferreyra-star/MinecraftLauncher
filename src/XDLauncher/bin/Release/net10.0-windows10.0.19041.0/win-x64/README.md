@@ -1,9 +1,12 @@
-# Minecraft Bedrock Launcher
+# XD Launcher · Minecraft Bedrock + Java
 
-Launcher de escritorio para **Minecraft Bedrock Edition en Windows 10/11**, con la nueva sección
-**MINECRAFT MOBILE CONNECT**: conecta tu teléfono Android por USB o Wi-Fi, transmite su pantalla en
-tiempo real dentro del launcher y controla **el Minecraft Bedrock original que ya tienes instalado en
-el móvil** con el teclado y el ratón del PC.
+Launcher de escritorio para **Minecraft Bedrock Edition en Windows 10/11**, **Minecraft Java Edition**
+y la sección **MINECRAFT MOBILE CONNECT**: conecta tu teléfono Android por USB o Wi-Fi, transmite su
+pantalla en tiempo real dentro del launcher y controla **el Minecraft Bedrock original que ya tienes
+instalado en el móvil** con el teclado y el ratón del PC.
+
+El inicio incluye un **selector de edición** (Java Edition, Bedrock Windows o Bedrock Android) que
+adapta el botón principal de juego a la edición elegida.
 
 > Launcher de escritorio no oficial. No está afiliado a Mojang Studios ni a Microsoft.
 > Minecraft es una marca de Mojang Synergies AB.
@@ -12,14 +15,14 @@ el móvil** con el teclado y el ratón del PC.
 
 ## 1. MINECRAFT MOBILE CONNECT
 
-No se instala ninguna copia extra de Minecraft, no se usa Minecraft Java, ni la versión de Microsoft
-Store, ni ningún emulador. La función **no toca** los archivos internos del juego: ni mundos, ni
-skins, ni addons, ni la cuenta de Microsoft/Xbox, ni el progreso. Solo usa ADB y scrcpy, exactamente
-igual que haría la herramienta oficial `scrcpy` de Genymobile.
+No se instala ninguna copia extra de Minecraft, no se usa la versión de Microsoft Store desde el PC,
+ni ningún emulador. La función **no toca** los archivos internos del juego: ni mundos, ni skins, ni
+addons, ni la cuenta de Microsoft/Xbox, ni el progreso. Solo usa ADB y scrcpy, exactamente igual que
+haría la herramienta oficial `scrcpy` de Genymobile.
 
 ### Flujo recomendado
 
-1. Abre `MinecraftBedrockLauncher.exe`.
+1. Abre `MinecraftLauncher.exe`.
 2. En el menú lateral entra en **Móvil** (o usa el botón **Abrir sección** de la tarjeta
    *MINECRAFT MOBILE CONNECT* del inicio).
 3. Pulsa **CONECTAR CELULAR** (detecta cualquier dispositivo autorizado por USB o Wi-Fi) o
@@ -106,7 +109,34 @@ Si ya tienes el SDK de Android o `adb` en el PATH, el launcher los detecta y los
 
 ---
 
-## 2. Funciones de Windows (conservadas)
+## 2. Minecraft Java Edition
+
+La sección **Minecraft Java** (menú lateral o botón del inicio) descarga e instala versiones oficiales
+desde el manifiesto de Mojang y lanza el cliente real de Java Edition.
+
+* **Biblioteca oficial**: releases, snapshots y versiones antiguas, con buscador y filtros
+  (Todas, Release, Snapshot, Antiguas, Instaladas).
+* **Instalación real**: cliente `.jar`, bibliotecas, nativos, índice de recursos, objetos y
+  configuración de registro, todo desde `piston-meta.mojang.com`, `libraries.minecraft.net` y
+  `resources.download.minecraft.net`.
+* **Java automático**: detecta un Java 64 bits del sistema; si no existe, descarga el runtime
+  oficial de Mojang y lo guarda en `%APPDATA%\XDLauncher\java\runtimes`.
+* **Lanzamiento real**: construye la línea de argumentos oficial (JVM + juego), aplica las reglas de
+  sistema operativo y abre `javaw.exe` con el cliente de Mojang. Incluye botón **Cerrar juego**.
+* **Memoria y carpeta**: RAM asignada (1–32 GB), nombre del perfil local y carpeta de partidas
+  configurables.
+* **Cuentas**: con una cuenta Microsoft conectada en el launcher se solicita una sesión oficial de
+  Minecraft Services (Xbox/XSTS). Sin cuenta Microsoft se usa un **perfil local no premium** y se
+  avisa claramente; no se falsifica ninguna identidad ni token.
+* **Registros**: la salida del juego se escribe en el registro del launcher para diagnosticar fallos.
+
+> Alcance actual: se instalan y lanzan **versiones vanilla oficiales**. Los cargadores de mods
+> (Forge, NeoForge, Fabric, OptiFine) y los modpacks **no están implementados todavía**; no se muestra
+> ninguna opción falsa para ellos.
+
+---
+
+## 3. Funciones de Windows (conservadas)
 
 * Detección de la instalación oficial de Bedrock (Retail/Preview) vía `PackageManager`.
 * Verificación de paquete, firma y componentes obligatorios antes de jugar.
@@ -124,34 +154,48 @@ Todo está en español y sigue funcionando exactamente igual que antes.
 
 ---
 
-## 3. Compilar
+## 4. Compilar
+
+Requisitos: .NET 10 SDK (probado con 10.0.404) e Inno Setup 6 (probado con 6.7.3).
 
 ```bash
-dotnet build src/XDLauncher/XDLauncher.csproj -c Release
+dotnet build src/XDLauncher/XDLauncher.csproj -c Release -p:Platform=x64
 ```
 
 Publicación portable (no requiere instalar .NET):
 
 ```bash
-dotnet publish src/XDLauncher/XDLauncher.csproj -c Release -r win-x64 --self-contained true
+dotnet publish src/XDLauncher/XDLauncher.csproj -c Release -r win-x64 --self-contained true -o dist/MinecraftLauncher
 ```
 
-Instalador (requiere Inno Setup 6):
+Instalador (requiere Inno Setup 6; usa la carpeta anterior como origen):
 
 ```bash
 iscc installer/MinecraftBedrockLauncher.iss
 ```
 
+El instalador se genera como `dist/MinecraftLauncher_Setup.exe` y el ejecutable como
+`dist/MinecraftLauncher/MinecraftLauncher.exe`.
+
 Autodiagnóstico sin interfaz:
 
 ```bash
-MinecraftBedrockLauncher.exe --selftest
+MinecraftLauncher.exe --selftest
 ```
 
 ---
 
-## 4. Limitaciones conocidas (dicho con claridad)
+## 5. Limitaciones conocidas (dicho con claridad)
 
+* **Java**: solo se instalan versiones **vanilla** oficiales. Los cargadores de mods y modpacks aún no
+  existen en la interfaz para no ofrecer botones que no funcionan.
+* **Java sin cuenta Microsoft**: el perfil local permite jugar en un jugador y en LAN, pero los
+  servidores que exigen cuenta premium rechazarán esa sesión. Es una limitación de Mojang, no del
+  launcher.
+* **Java premium**: requiere configurar el *Client ID* de Microsoft Entra en **Ajustes** y que la
+  cuenta posea Minecraft Java Edition. Sin ese dato se usa el perfil local.
+* **Descarga de Java**: si el equipo no tiene un Java 64 bits compatible, el launcher descarga el
+  runtime oficial de Mojang (puede ocupar cientos de MB) la primera vez que se juega.
 * **No se ha podido validar con un teléfono real autorizado por el usuario final**: la función se
   ha probado contra un dispositivo Android real conectado por USB (Xiaomi, Android 13) y contra un
   AVD local usado **solo como banco de pruebas**, nunca como parte del producto.
@@ -169,19 +213,29 @@ MinecraftBedrockLauncher.exe --selftest
 
 ---
 
-## 5. Estructura del proyecto
+## 6. Estructura del proyecto
 
 ```
 src/XDLauncher
 ├─ App.xaml(.cs)              Composition root, instancia única, selector de plataforma inicial
 ├─ MainWindow.xaml(.cs)       Ventana sin marco, layout de pantalla completa
 ├─ Core/                      Convertidores, comandos, INotifyPropertyChanged
-├─ Models/                    Modelos de datos (incluye MobileConnectModels.cs)
-├─ Services/                  ADB, scrcpy, descargas, entrada, settings, tema, toasts
+├─ Models/                    Modelos de datos (incluye MobileConnectModels.cs y JavaModels.cs)
+├─ Services/                  Java, descargas, ADB, scrcpy, entrada, settings, tema, toasts
 ├─ Themes/                    Shared.xaml (estilos) + Dark.xaml / Light.xaml
-├─ ViewModels/                Shell, Home, Game, Catalog, Profile, Settings, MobileConnectState
-└─ Views/                     Páginas + diálogos (incluye MobileView y ScrcpyHost)
+├─ ViewModels/                Shell, Home, Game, Catalog, Profile, Settings, MobileConnectState, Java
+└─ Views/                     Páginas + diálogos (incluye MobileView, ScrcpyHost, JavaView)
 ```
+
+Clases clave de Minecraft Java:
+
+| Archivo | Responsabilidad |
+|---|---|
+| `Services/JavaService.cs` | Manifiesto oficial, instalación vanilla, Java automático, argumentos y lanzamiento real. |
+| `Services/AuthService.cs` | Device code de Microsoft, Xbox Live, XSTS y sesión de Minecraft Services. |
+| `Services/DownloadService.cs` | Descargas por HTTP con progreso y verificación SHA-256. |
+| `ViewModels/JavaViewModel.cs` | Biblioteca, filtros, instalación, progreso, configuración y JUGAR. |
+| `Views/JavaView.xaml` | Interfaz de la sección Minecraft Java. |
 
 Clases clave de MINECRAFT MOBILE CONNECT:
 

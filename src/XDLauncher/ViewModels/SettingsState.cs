@@ -255,14 +255,14 @@ public sealed class SettingsState : ObservableObject
     public bool ShowUpdateNotifications
     {
         get => Settings.ShowUpdateNotifications;
-        value => { Settings.ShowUpdateNotifications = value; SaveAndNotify(nameof(ShowUpdateNotifications)); }
+        set { Settings.ShowUpdateNotifications = value; SaveAndNotify(nameof(ShowUpdateNotifications)); }
     }
 
     /// <summary>Last check time timestamp./
     public DateTimeOffset LastCheckTime
     {
         get => Settings.LastCheckTime;
-        value => { Settings.LastCheckTime = value; SaveAndNotify(nameof(LastCheckTime)); }
+        set { Settings.LastCheckTime = value; SaveAndNotify(nameof(LastCheckTime)); }
     }
     public bool ShowNews
     {

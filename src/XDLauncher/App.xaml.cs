@@ -45,6 +45,9 @@ public partial class App : Application
             var dialogs = new DialogService();
             var systemInfo = new SystemInfoService();
             var downloadService = new MinecraftDownloadService();
+            var updateService = new UpdateService();
+            var currentVersion = typeof(App).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
+            var updateCheckService = new UpdateCheckService("lferreyra-star/MinecraftLauncher", currentVersion);
             _shell = new ShellViewModel(
                 settingsService,
                 new GameService(),
@@ -53,7 +56,9 @@ public partial class App : Application
                 new StoreCatalogService(),
                 systemInfo,
                 dialogs,
-                downloadService);
+                downloadService,
+                updateService,
+                updateCheckService);
 
             var window = new MainWindow(_shell);
             MainWindow = window;

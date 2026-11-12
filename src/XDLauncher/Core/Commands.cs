@@ -165,3 +165,12 @@ public sealed class AsyncRelayCommand : ICommand
 
     public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
 }
+
+public sealed class NavigationItem
+{
+    public string Key { get; set; }
+    public string Title { get; set; }
+    public string Glyph { get; set; }
+    public string Subtitle { get; set; }
+    public object Page { get; set; }
+}

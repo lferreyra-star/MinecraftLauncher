@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Input;
 using XdLauncher.Core;
 using XdLauncher.Models;
 using XdLauncher.Services;
@@ -215,5 +216,115 @@ public sealed class ShellViewModel : ObservableObject
     public string GameStatusDetail => Game.IsInstalled
         ? $"{Game.DisplayName} · {Game.ChannelLabel}"
         : "Instálalo desde Microsoft Store";
-    public string GameStatusGlyph => Game.IsInstalled
-     
+    public string GameStatusGlyph => Game.IsInstalled ? "\uE73E" : "\uEA39";
+
+    public ICommand NavigateCommand { get; }
+    public ICommand DismissToastCommand { get; }
+
+    public bool IsGameRunning => Game.IsGameRunning;
+    public bool IsLightTheme => Settings.IsLightTheme;
+    public string? BackdropSource => Settings.BackgroundPath;
+    public bool IsFullscreen => _isFullscreen;
+    public UpdateInfo? LastUpdateInfo => _lastUpdateInfo;
+
+    /// <summary>Navega a la página con la clave indicada.</summary>
+    public void Navigate(string key)
+    {
+        var target = Navigation.FirstOrDefault(n => string.Equals(n.Key, key, StringComparison.OrdinalIgnoreCase));
+        if (target is not null)
+            CurrentNavigation = target;
+    }
+
+    private void OnNavigated(string key)
+    {
+        LogService.Info($"Navegación: {key}.");
+    }
+
+    private void OnToastRequested(ToastMessage toast)
+    {
+        // ToastHub puede notificar desde hilos secundarios: siempre se vuelve al hilo de UI.
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher is not null && !dispatcher.CheckAccess())
+            dispatcher.Invoke(() => Toasts.Add(toast));
+        else
+            Toasts.Add(toast);
+
+        while (Toasts.Count > 5)
+            Toasts.RemoveAt(0);
+    }
+
+    private void OnGameLaunched(LaunchResult result)
+    {
+        LogService.Info(result.Success
+            ? $"Minecraft lanzado (PID {result.ProcessId})."
+            : $"No se pudo lanzar Minecraft: {result.Message}");
+    }
+
+    private void OnFullscreenChanged(bool isFullscreen)
+    {
+        _isFullscreen = isFullscreen;
+        OnPropertyChanged(nameof(IsFullscreen));
+    }
+
+    private void OnUpdateChecked(UpdateInfo info)
+    {
+        _lastUpdateInfo = info;
+        OnPropertyChanged(nameof(LastUpdateInfo));
+    }
+
+    private void OnUpdateAvailable(UpdateInfo info, bool isAvailable)
+    {
+        _lastUpdateInfo = info;
+        OnPropertyChanged(nameof(LastUpdateInfo));
+
+        if (isAvailable && Settings.ShowUpdateNotifications && !string.IsNullOrWhiteSpace(info.LatestVersion))
+            ToastHub.Info($"Nueva versión {info.LatestVersion} disponible.");
+    }
+
+    private void OnStatusMessage(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            return;
+        LogService.Info(message);
+    }
+
+    /// <summary>Inicialización asíncrona de la interfaz: ajustes base y comprobación de actualizaciones.</summary>
+    public async Task InitializeAsync()
+    {
+        if (IsInitializing)
+            return;
+
+        IsInitializing = true;
+        try
+        {
+            Settings.ApplyInitial();
+
+            if (Settings.Settings.AutoCheckUpdates)
+            {
+                InitializationStatus = "Comprobando actualizaciones…";
+                await _updateCheckService.CheckForUpdatesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Error(ex, "No se pudo completar la inicialización del launcher.");
+        }
+        finally
+        {
+            IsInitializing = false;
+        }
+    }
+
+    /// <summary>Libera las suscripciones globales al cerrar el launcher.</summary>
+    public void Shutdown()
+    {
+        ToastHub.ToastRequested -= OnToastRequested;
+        Game.Launched -= OnGameLaunched;
+        MobileState.FullscreenChanged -= OnFullscreenChanged;
+        _updateService.UpdateChecked -= OnUpdateChecked;
+        _updateService.UpdateAvailable -= OnUpdateAvailable;
+        _updateCheckService.UpdateChecked -= OnUpdateChecked;
+        _updateCheckService.UpdateAvailable -= OnUpdateAvailable;
+        _updateCheckService.StatusMessage -= OnStatusMessage;
+    }
+}

@@ -184,7 +184,7 @@ public sealed class ModDownloadService
         return modList;
     }
 
-    private static async Task DownloadFileAsync(string url, string destination, CancellationToken cancellationToken)
+    private async Task DownloadFileAsync(string url, string destination, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
 

@@ -13,13 +13,13 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("XD Studio")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright © 2026 XD Studio")]
-[assembly: System.Reflection.AssemblyDescriptionAttribute(("Launcher de escritorio para Minecraft Bedrock Edition en Windows, con MINECRAFT M" +
-    "OBILE CONNECT para jugar desde un teléfono Android."))]
-[assembly: System.Reflection.AssemblyFileVersionAttribute("1.1.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.1.0")]
-[assembly: System.Reflection.AssemblyProductAttribute("Minecraft Bedrock Launcher")]
-[assembly: System.Reflection.AssemblyTitleAttribute("MinecraftBedrockLauncher")]
-[assembly: System.Reflection.AssemblyVersionAttribute("1.1.0.0")]
+[assembly: System.Reflection.AssemblyDescriptionAttribute(("Launcher de escritorio para Minecraft Bedrock Edition y Minecraft Java Edition, c" +
+    "on MINECRAFT MOBILE CONNECT para jugar desde un teléfono Android."))]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.3.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.3.0+ae1caab87d4aad94165acac4041e6ef477fad242")]
+[assembly: System.Reflection.AssemblyProductAttribute("XD Launcher")]
+[assembly: System.Reflection.AssemblyTitleAttribute("XD Launcher")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.3.0.0")]
 [assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows10.0.19041.0")]
 [assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows10.0.17763.0")]
 

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AssetGen")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ae1caab87d4aad94165acac4041e6ef477fad242")]
 [assembly: System.Reflection.AssemblyProductAttribute("AssetGen")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AssetGen")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

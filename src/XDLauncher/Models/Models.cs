@@ -115,6 +115,15 @@ public sealed class UpdateInfo
     public string? StoreUrl { get; init; }
     public DateTimeOffset CheckedAt { get; init; } = DateTimeOffset.Now;
 
+    // Datos del release de GitHub (rellenados por UpdateCheckService)
+    public string LatestVersion { get; init; } = string.Empty;
+    public string InstalledVersion { get; init; } = string.Empty;
+    public string LatestName { get; init; } = string.Empty;
+    public string? ReleaseNotes { get; init; }
+    public DateTimeOffset ReleaseDate { get; init; } = DateTimeOffset.Now;
+    public string? DownloadUrl { get; init; }
+    public string? Sha256 { get; init; }
+
     public string StatusText => Availability switch
     {
         UpdateAvailability.Available => "Actualización disponible",

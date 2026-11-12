@@ -5,7 +5,7 @@
   },
   "projects": {
     "C:\\Users\\EVIL\\Documents\\xD\\src\\XDLauncher\\XDLauncher.csproj": {
-      "version": "1.3.0",
+      "version": "1.3.1",
       "restore": {
         "projectUniqueName": "C:\\Users\\EVIL\\Documents\\xD\\src\\XDLauncher\\XDLauncher.csproj",
         "projectName": "MinecraftLauncher",
@@ -39,7 +39,7 @@
           "auditLevel": "low",
           "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.400"
+        "SdkAnalysisLevel": "11.0.100"
       },
       "frameworks": {
         "net10.0-windows10.0.19041.0": {
@@ -58,7 +58,19 @@
           "warn": true,
           "downloadDependencies": [
             {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[10.0.15, 10.0.15]"
+            },
+            {
               "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
+              "version": "[10.0.15, 10.0.15]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.win-x64",
+              "version": "[10.0.15, 10.0.15]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
               "version": "[10.0.15, 10.0.15]"
             },
             {
@@ -67,7 +79,11 @@
             },
             {
               "name": "Microsoft.Windows.SDK.NET.Ref",
-              "version": "[10.0.19041.57, 10.0.19041.57]"
+              "version": "[10.0.19041.87, 10.0.19041.87]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Ref",
+              "version": "[10.0.15, 10.0.15]"
             },
             {
               "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
@@ -85,7 +101,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Users\\EVIL\\AppData\\Local\\Microsoft\\dotnet\\sdk\\10.0.404/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\11.0.100/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",

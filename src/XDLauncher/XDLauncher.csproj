@@ -16,8 +16,8 @@
     <PlatformTarget>x64</PlatformTarget>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
-    <Version>1.3.0</Version>
-    <FileVersion>1.3.0.0</FileVersion>
+    <Version>1.3.1</Version>
+    <FileVersion>1.3.1.0</FileVersion>
     <Product>XD Launcher</Product>
     <AssemblyTitle>XD Launcher</AssemblyTitle>
     <Company>XD Studio</Company>
@@ -29,11 +29,25 @@
     <StartupObject>XdLauncher.Program</StartupObject>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)' == 'Development'">
+    <DebugType>portable</DebugType>
+    <Optimize>false</Optimize>
+    <DebugSymbols>True</DebugSymbols>
+    <!-- El SDK desactiva Hot Reload en configuraciones != Debug; reactivar para Development -->
+    <MetadataUpdaterSupport>True</MetadataUpdaterSupport>
+    <XamlDebuggingInformation>True</XamlDebuggingInformation>
+  </PropertyGroup>
+
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml" />
     <None Remove="Assets\**" />
     <Resource Include="Assets\**" />
     <None Include="..\..\README.md" Link="README.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Vigilar los XAML con dotnet watch (no se vigilan por defecto) -->
+    <Watch Include="**\*.xaml" Exclude="bin\**;obj\**" />
   </ItemGroup>
 
 </Project>
