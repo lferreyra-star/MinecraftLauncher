@@ -1,0 +1,116 @@
+<Window x:Class="XdLauncher.Views.Dialogs.TouchConfigDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Posiciones táctiles"
+        Width="940"
+        Height="640"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="CanResize"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <Border Background="{DynamicResource SurfaceStrongBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="16"
+            Effect="{StaticResource CardShadow}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border x:Name="HeaderBar" Background="Transparent" Padding="22,18,12,8"
+                    MouseLeftButtonDown="HeaderBar_MouseLeftButtonDown">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="38" Height="38" CornerRadius="11" Background="{DynamicResource ChipBrush}">
+                        <TextBlock Text="&#xE7C9;" FontFamily="{StaticResource IconFont}" FontSize="17"
+                                   Foreground="{DynamicResource AccentBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="14,0,8,0" VerticalAlignment="Center">
+                        <TextBlock Text="POSICIONES TÁCTILES" Style="{StaticResource CardTitle}" />
+                        <TextBlock Text="Elige un botón y pulsa su posición en la captura real del teléfono"
+                                   Style="{StaticResource Caption}" Margin="0,3,0,0" />
+                    </StackPanel>
+                    <Button Grid.Column="2" Content="&#xE711;" Style="{StaticResource IconButton}" Click="Cancel_Click" />
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" Margin="22,4,22,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Margin="0,0,14,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="TargetsList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource CardButton}" Tag="{Binding Id}" Click="Target_Click">
+                                        <Border Background="{DynamicResource ChipBrush}" CornerRadius="10" Padding="12,9" Margin="0,0,0,6"
+                                                BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource IconFont}" FontSize="15"
+                                                           Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
+                                                <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                                    <TextBlock Text="{Binding Label}" FontWeight="SemiBold" FontSize="12" />
+                                                    <TextBlock Text="{Binding PositionLabel}" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="1" Style="{StaticResource InnerCard}" Margin="0,12,0,0" Padding="14,10">
+                        <StackPanel>
+                            <TextBlock Text="RANGO DEL JOYSTICK" Style="{StaticResource Caption}" />
+                            <Slider x:Name="RadiusSlider" Minimum="0.04" Maximum="0.30" Margin="0,6,0,0"
+                                    IsSnapToTickEnabled="False" ValueChanged="Radius_Changed" />
+                            <TextBlock x:Name="RadiusText" Style="{StaticResource Caption}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Border Grid.Column="1" Style="{StaticResource InnerCard}" Padding="10">
+                    <Grid>
+                        <Image x:Name="ScreenshotImage" Stretch="Uniform" SnapsToDevicePixels="True" />
+                        <Canvas x:Name="MarkerCanvas" Background="Transparent"
+                                MouseLeftButtonDown="Canvas_MouseLeftButtonDown" />
+                        <Border x:Name="EmptyState" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="No se pudo capturar la pantalla del teléfono. Conéctalo y vuelve a intentarlo."
+                                       Style="{StaticResource Muted}" TextAlignment="Center" MaxWidth="320" />
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="2" Background="{DynamicResource ChipBrush}" CornerRadius="0,0,16,16" Padding="22,14">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancelar" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0"
+                            MinWidth="104" Click="Cancel_Click" />
+                    <Button Content="Guardar" Style="{StaticResource PrimaryButton}" MinWidth="120" Click="Save_Click" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

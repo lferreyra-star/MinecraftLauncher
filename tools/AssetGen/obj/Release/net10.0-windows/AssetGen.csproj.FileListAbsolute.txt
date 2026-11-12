@@ -1,0 +1,14 @@
+C:\Users\AUTONOMA\Documents\xD\tools\AssetGen\bin\Release\net10.0-windows\AssetGen.exe
+C:\Users\AUTONOMA\Documents\xD\tools\AssetGen\bin\Release\net10.0-windows\AssetGen.deps.json
+C:\Users\AUTONOMA\Documents\xD\tools\AssetGen\bin\Release\net10.0-windows\AssetGen.runtimeconfig.json
+C:\Users\AUTONOMA\Documents\xD\tools\AssetGen\bin\Release\net10.0-windows\AssetGen.dll
+C:\Users\AUTONOMA\Documents\xD\tools\AssetGen\bin\Release\net10.0-windows\AssetGen.pdb
+C:\Users\AUTONOMA\Documents\xD\tools\AssetGen\obj\Release\net10.0-windows\AssetGen.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\AUTONOMA\Documents\xD\tools\AssetGen\obj\Release\net10.0-windows\AssetGen.AssemblyInfoInputs.cache
+C:\Users\AUTONOMA\Documents\xD\tools\AssetGen\obj\Release\net10.0-windows\AssetGen.AssemblyInfo.cs
+C:\Users\AUTONOMA\Documents\xD\tools\AssetGen\obj\Release\net10.0-windows\AssetGen.csproj.CoreCompileInputs.cache
+C:\Users\AUTONOMA\Documents\xD\tools\AssetGen\obj\Release\net10.0-windows\AssetGen.dll
+C:\Users\AUTONOMA\Documents\xD\tools\AssetGen\obj\Release\net10.0-windows\refint\AssetGen.dll
+C:\Users\AUTONOMA\Documents\xD\tools\AssetGen\obj\Release\net10.0-windows\AssetGen.pdb
+C:\Users\AUTONOMA\Documents\xD\tools\AssetGen\obj\Release\net10.0-windows\AssetGen.genruntimeconfig.cache
+C:\Users\AUTONOMA\Documents\xD\tools\AssetGen\obj\Release\net10.0-windows\ref\AssetGen.dll

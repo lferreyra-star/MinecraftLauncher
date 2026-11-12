@@ -1,0 +1,342 @@
+<UserControl x:Class="XdLauncher.Views.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="0,0,6,28">
+
+            <!-- Hero -->
+            <Grid Height="356">
+                <Border CornerRadius="22" Background="{DynamicResource SurfaceStrongBrush}" />
+                <Border CornerRadius="22">
+                    <Border.Background>
+                        <ImageBrush ImageSource="{Binding BackgroundPath, Converter={StaticResource ImagePath}}"
+                                    Stretch="UniformToFill" />
+                    </Border.Background>
+                </Border>
+                <Border CornerRadius="22" Background="{DynamicResource HeroScrimBrush}" />
+                <Border CornerRadius="22" BorderBrush="#33FFFFFF" BorderThickness="1" />
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Margin="28,24,28,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Background="#33000000" BorderBrush="#55FFFFFF" BorderThickness="1"
+                                    CornerRadius="20" Padding="11,5">
+                                <TextBlock Text="{Binding EditionBadgeLabel}" FontSize="10" FontWeight="Bold"
+                                           Foreground="#E9FFF1" />
+                            </Border>
+                            <Border Background="#3328C76F" BorderBrush="#885CE07A" BorderThickness="1"
+                                    CornerRadius="20" Padding="11,5" Margin="8,0,0,0"
+                                    Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE896;" FontFamily="{StaticResource IconFont}" FontSize="10"
+                                               Foreground="#D7FFE2" Margin="0,1,5,0" />
+                                    <TextBlock Text="Actualización disponible" FontSize="10" FontWeight="SemiBold"
+                                               Foreground="#D7FFE2" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Border Background="#33000000" BorderBrush="#44FFFFFF" BorderThickness="1"
+                                    CornerRadius="20" Padding="11,5">
+                                <TextBlock Text="{Binding Game.ChannelLabel}" FontSize="10" FontWeight="SemiBold"
+                                           Foreground="#E9FFF1" />
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Grid.Row="2" Margin="30,0,30,28">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Grid Width="40" Height="40">
+                                <Border CornerRadius="20" Background="{DynamicResource AccentSoftBrush}"
+                                        BorderBrush="#66FFFFFF" BorderThickness="1" />
+                                <TextBlock Text="{Binding Profile.Initial}" FontWeight="Bold" FontSize="16"
+                                           Foreground="{DynamicResource AccentLightBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <Border CornerRadius="20">
+                                    <Border.Background>
+                                        <ImageBrush ImageSource="{Binding Profile.AvatarPath, Converter={StaticResource ImagePath}}"
+                                                    Stretch="UniformToFill" />
+                                    </Border.Background>
+                                </Border>
+                            </Grid>
+                            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Greeting}" FontSize="11" Foreground="#B9D0C1"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding WelcomeName}" FontSize="14" FontWeight="SemiBold"
+                                           Foreground="#FFFFFFFF" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding HeroHeadline}" Style="{StaticResource HeroTitle}" />
+                        <TextBlock Text="{Binding HeroDetail}" Foreground="#D6E4DA" FontSize="13"
+                                   MaxWidth="640" HorizontalAlignment="Left" Margin="0,8,0,0" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                            <Button Style="{StaticResource PrimaryButton}" Padding="24,0" Height="48"
+                                    MinWidth="210" Command="{Binding MainActionCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding MainActionGlyph}" FontFamily="{StaticResource IconFont}"
+                                               FontSize="14" Margin="0,1,9,0" />
+                                    <TextBlock Text="{Binding MainActionLabel}" FontSize="14" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource SecondaryButton}" Height="48" Margin="10,0,0,0"
+                                    Content="Verificar instalación" Padding="18,0"
+                                    Visibility="{Binding ShowVerify, Converter={StaticResource BoolToVisibility}}"
+                                    Command="{Binding VerifyCommand}" />
+                            <Button Style="{StaticResource GhostButton}" Height="48" Margin="4,0,0,0"
+                                    Foreground="#E7F3EB" Content="Buscar actualizaciones"
+                                    Command="{Binding OpenUpdatesCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <!-- Edition selector -->
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0" Padding="16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="EDICIÓN" Style="{StaticResource Caption}" VerticalAlignment="Center"
+                               Margin="0,0,14,0" />
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <RadioButton Content="Java Edition" Style="{StaticResource SegmentRadio}"
+                                     GroupName="HomeEdition" Margin="0,0,8,0"
+                                     Command="{Binding SelectEditionCommand}" CommandParameter="java"
+                                     IsChecked="{Binding IsJavaEdition, Mode=OneWay}" />
+                        <RadioButton Content="Bedrock · Windows" Style="{StaticResource SegmentRadio}"
+                                     GroupName="HomeEdition" Margin="0,0,8,0"
+                                     Command="{Binding SelectEditionCommand}" CommandParameter="bedrock"
+                                     IsChecked="{Binding IsBedrockEdition, Mode=OneWay}" />
+                        <RadioButton Content="Bedrock · Android" Style="{StaticResource SegmentRadio}"
+                                     GroupName="HomeEdition"
+                                     Command="{Binding SelectEditionCommand}" CommandParameter="android"
+                                     IsChecked="{Binding IsAndroidEdition, Mode=OneWay}" />
+                    </StackPanel>
+
+                    <TextBlock Grid.Column="2" Text="{Binding EditionDescription}" Style="{StaticResource Muted}"
+                               VerticalAlignment="Center" MaxWidth="330" Margin="14,0,0,0"
+                               TextAlignment="Right" />
+                </Grid>
+            </Border>
+
+            <!-- Quick stats -->
+            <Grid Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource Card}" Padding="18" Margin="0,0,8,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE7FC;" FontFamily="{StaticResource IconFont}" FontSize="13"
+                                       Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="INSTALACIÓN" Style="{StaticResource Caption}" Margin="8,0,0,0"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding Game.ChannelLabel}" Style="{StaticResource StatValue}" Margin="0,8,0,0" />
+                        <TextBlock Text="{Binding Game.PackageStatusLabel}" Style="{StaticResource Caption}"
+                                   Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource Card}" Padding="18" Margin="4,0,4,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE895;" FontFamily="{StaticResource IconFont}" FontSize="13"
+                                       Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="VERSIÓN INSTALADA" Style="{StaticResource Caption}" Margin="8,0,0,0"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding Game.VersionLabel}" Style="{StaticResource StatValue}" Margin="0,8,0,0"
+                                   TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Game.InstallDateLabel, StringFormat='Instalada el {0}'}"
+                                   Style="{StaticResource Caption}" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource Card}" Padding="18" Margin="8,0,0,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE77B;" FontFamily="{StaticResource IconFont}" FontSize="13"
+                                       Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="CUENTA" Style="{StaticResource Caption}" Margin="8,0,0,0"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding Profile.DisplayName}" Style="{StaticResource StatValue}" Margin="0,8,0,0"
+                                   TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Profile.AccountTypeLabel}" Style="{StaticResource Caption}"
+                                   Margin="0,4,0,0" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Minecraft Mobile Connect -->
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="40" Height="40" CornerRadius="11" Background="{DynamicResource ChipBrush}">
+                            <TextBlock Text="&#xE12C;" FontFamily="{StaticResource IconFont}" FontSize="17"
+                                       Foreground="{DynamicResource AccentBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="MINECRAFT MOBILE CONNECT" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="Juega al Minecraft Bedrock original de tu teléfono Android desde el PC"
+                                       Style="{StaticResource Muted}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Margin="0,0,16,0">
+                            <TextBlock Text="DISPOSITIVO" Style="{StaticResource Caption}" />
+                            <TextBlock Text="{Binding Mobile.DeviceName}" FontWeight="SemiBold" FontSize="14" Margin="0,4,0,0" />
+                            <TextBlock Text="{Binding Mobile.StatusLabel}" Style="{StaticResource Caption}" Margin="0,3,0,0" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="0,0,20,0" VerticalAlignment="Center">
+                            <TextBlock Text="RESOLUCIÓN" Style="{StaticResource Caption}" />
+                            <TextBlock Text="{Binding Mobile.Resolution}" FontWeight="SemiBold" FontSize="13" Margin="0,3,0,0" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Margin="0,0,20,0" VerticalAlignment="Center">
+                            <TextBlock Text="FPS" Style="{StaticResource Caption}" />
+                            <TextBlock Text="{Binding Mobile.FpsLabel}" FontWeight="SemiBold" FontSize="13" Margin="0,3,0,0" />
+                        </StackPanel>
+                        <Button Grid.Column="3" Content="Abrir sección" Style="{StaticResource GhostButton}"
+                                VerticalAlignment="Center" Command="{Binding OpenMobileCommand}" />
+                    </Grid>
+
+                    <WrapPanel Margin="0,16,0,0">
+                        <Button Content="JUGAR" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8"
+                                Command="{Binding Mobile.PlayCommand}" />
+                        <Button Content="CONECTAR CELULAR" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
+                                Command="{Binding Mobile.ConnectCommand}" />
+                        <Button Content="CONECTAR POR USB" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
+                                Command="{Binding Mobile.ConnectUsbCommand}" />
+                        <Button Content="CONECTAR POR WIFI" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
+                                Command="{Binding Mobile.ConnectWifiCommand}" />
+                    </WrapPanel>
+
+                    <WrapPanel>
+                        <Button Content="INICIAR TRANSMISIÓN" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
+                                Command="{Binding Mobile.StartStreamCommand}" />
+                        <Button Content="DETENER TRANSMISIÓN" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
+                                Command="{Binding Mobile.StopStreamCommand}" />
+                        <Button Content="PANTALLA COMPLETA" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
+                                Command="{Binding Mobile.FullscreenCommand}" />
+                    </WrapPanel>
+
+                    <WrapPanel>
+                        <Button Content="CONFIGURAR CONTROLES" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
+                                Command="{Binding Mobile.ConfigureControlsCommand}" />
+                        <Button Content="DESCONECTAR" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
+                                Command="{Binding Mobile.DisconnectCommand}" />
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- News -->
+            <Grid Margin="0,26,0,10">
+                <StackPanel>
+                    <TextBlock Text="{Binding NewsSectionTitle}" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Text="{Binding NewsSectionSubtitle}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding NewsStatus}" Style="{StaticResource Caption}" VerticalAlignment="Center"
+                               MaxWidth="330" TextTrimming="CharacterEllipsis" />
+                    <Button Content="Actualizar" Style="{StaticResource GhostButton}" Margin="8,0,0,0"
+                            Command="{Binding Catalog.RefreshCommand}" />
+                </StackPanel>
+            </Grid>
+
+            <ItemsControl ItemsSource="{Binding News}" Visibility="{Binding HasNews, Converter={StaticResource BoolToVisibility}}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Style="{StaticResource CardButton}" Margin="0,0,12,12"
+                                Command="{Binding DataContext.OpenNewsCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding}">
+                            <Border Width="322" Height="184" CornerRadius="16" Background="{DynamicResource ChipBrush}">
+                                <Grid>
+                                    <Border CornerRadius="16">
+                                        <Border.Background>
+                                            <ImageBrush ImageSource="{Binding ImagePath, Converter={StaticResource ImagePath}}"
+                                                        Stretch="UniformToFill" />
+                                        </Border.Background>
+                                    </Border>
+                                    <Border CornerRadius="16">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#22000000" Offset="0" />
+                                                <GradientStop Color="#E6000000" Offset="1" />
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                    </Border>
+                                    <Grid Margin="16">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Border Background="#66000000" CornerRadius="14" Padding="9,3"
+                                                HorizontalAlignment="Left" VerticalAlignment="Top">
+                                            <TextBlock Text="{Binding Category}" FontSize="10" FontWeight="SemiBold"
+                                                       Foreground="#E9FFF1" />
+                                        </Border>
+                                        <TextBlock Grid.Row="1" Text="{Binding Title}" FontSize="16"
+                                                   FontWeight="SemiBold" Foreground="#FFFFFFFF"
+                                                   VerticalAlignment="Bottom" MaxHeight="62" TextTrimming="CharacterEllipsis" />
+                                        <Grid Grid.Row="2" Margin="0,8,0,0">
+                                            <TextBlock Text="{Binding DateLabel}" FontSize="10" Foreground="#B9D0C1" />
+                                            <TextBlock Text="Leer más  &#xE76C;" FontFamily="{StaticResource IconFont}"
+                                                       FontSize="10" Foreground="#D7FFE2" HorizontalAlignment="Right" />
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Border Style="{StaticResource Card}" Visibility="{Binding HasNews, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="44" Height="44" CornerRadius="12" Background="{DynamicResource ChipBrush}">
+                        <TextBlock Text="&#xE7BA;" FontFamily="{StaticResource IconFont}" FontSize="17"
+                                   Foreground="{DynamicResource WarningBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="No hay novedades disponibles" Style="{StaticResource CardTitle}" />
+                        <TextBlock Text="Comprueba tu conexión y vuelve a intentarlo. También puedes abrir Microsoft Store."
+                                   Style="{StaticResource Muted}" Margin="0,3,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

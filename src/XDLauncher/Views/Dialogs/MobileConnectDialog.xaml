@@ -1,0 +1,125 @@
+<Window x:Class="XdLauncher.Views.Dialogs.MobileConnectDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Conectar por Wi-Fi"
+        Width="560"
+        SizeToContent="Height"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <Border Background="{DynamicResource SurfaceStrongBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="16"
+            Effect="{StaticResource CardShadow}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border x:Name="HeaderBar" Background="Transparent" Padding="22,18,12,8"
+                    MouseLeftButtonDown="HeaderBar_MouseLeftButtonDown">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="38" Height="38" CornerRadius="11" Background="{DynamicResource ChipBrush}">
+                        <TextBlock Text="&#xE12C;" FontFamily="{StaticResource IconFont}" FontSize="17"
+                                   Foreground="{DynamicResource AccentBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="14,0,8,0" VerticalAlignment="Center">
+                        <TextBlock Text="CONECTAR POR WIFI" Style="{StaticResource CardTitle}" />
+                        <TextBlock Text="Emparejamiento oficial de Android · sin apps instaladas en el teléfono"
+                                   Style="{StaticResource Caption}" Margin="0,3,0,0" />
+                    </StackPanel>
+                    <Button Grid.Column="2" Content="&#xE711;" Style="{StaticResource IconButton}" Click="Cancel_Click" />
+                </Grid>
+            </Border>
+
+            <StackPanel Grid.Row="1" Margin="22,4,22,10">
+                <Border Style="{StaticResource InnerCard}">
+                    <StackPanel>
+                        <TextBlock Text="1 · BUSCA EL TELÉFONO EN LA RED" Style="{StaticResource Caption}" />
+                        <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0" LineHeight="18"
+                                   Text="En el teléfono: Ajustes › Ajustes de desarrollador › Depuración por Wi-Fi. Pulsa «Emparejar dispositivo con código QR» o «Conectar dispositivo con código de emparejamiento»." />
+                        <WrapPanel Margin="0,10,0,0">
+                            <Button x:Name="DiscoverButton" Content="Buscar por Wi-Fi" Style="{StaticResource SecondaryButton}"
+                                    Padding="14,8" Click="Discover_Click" />
+                            <TextBlock x:Name="DiscoveryText" Style="{StaticResource Caption}" VerticalAlignment="Center"
+                                       Margin="10,0,0,0" Text="Sin búsqueda realizada" />
+                        </WrapPanel>
+                        <ListBox x:Name="ServicesList" MaxHeight="120" Margin="0,10,0,0"
+                                 Visibility="Collapsed" Background="{DynamicResource ChipBrush}"
+                                 BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="4,3">
+                                        <TextBlock Text="{Binding Address}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding ServiceType}" Style="{StaticResource Caption}" Margin="10,1,0,0" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource InnerCard}" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock Text="2 · DIRECCIÓN DE CONEXIÓN" Style="{StaticResource Caption}" />
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="AddressBox" Style="{StaticResource InputTextBox}"
+                                     Text="192.168.1." Margin="0,0,8,0" />
+                            <Button Grid.Column="1" Content="Conectar" Style="{StaticResource PrimaryButton}"
+                                    Padding="18,9" Click="Connect_Click" />
+                        </Grid>
+                        <TextBlock x:Name="ConnectStatus" Style="{StaticResource Caption}" Margin="0,8,0,0"
+                                   Text="Usa el puerto 5555 o el que muestre el teléfono." />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource InnerCard}" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock Text="3 · EMPAREJAMIENTO (SOLO LA PRIMERA VEZ)" Style="{StaticResource Caption}" />
+                        <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0" LineHeight="18"
+                                   Text="Si la conexión falla, el teléfono muestra una dirección de emparejamiento y un código de 6 dígitos. Introdúcelos aquí: la autorización la hace Android." />
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBox x:Name="PairAddressBox" Style="{StaticResource InputTextBox}" />
+                                <TextBox x:Name="PairCodeBox" Style="{StaticResource InputTextBox}" Margin="0,8,0,0"
+                                         MaxLength="6" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Emparejar" Style="{StaticResource SecondaryButton}"
+                                    Padding="18,9" VerticalAlignment="Top" Click="Pair_Click" />
+                        </Grid>
+                        <TextBlock x:Name="PairStatus" Style="{StaticResource Caption}" Margin="0,8,0,0"
+                                   Text="El código se muestra en «Ajustes › Depuración por Wi-Fi › Emparejar con código»." />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <Border Grid.Row="2" Background="{DynamicResource ChipBrush}" CornerRadius="0,0,16,16" Padding="22,14">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancelar" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0"
+                            MinWidth="104" Click="Cancel_Click" />
+                    <Button Content="Listo" Style="{StaticResource PrimaryButton}" MinWidth="120" Click="Accept_Click" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

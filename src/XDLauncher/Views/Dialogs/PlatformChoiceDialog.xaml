@@ -1,0 +1,76 @@
+<Window x:Class="XdLauncher.Views.Dialogs.PlatformChoiceDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Elige plataforma"
+        Width="720"
+        SizeToContent="Height"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False">
+    <Border Background="{DynamicResource SurfaceStrongBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="16"
+            Effect="{StaticResource CardShadow}">
+        <StackPanel>
+            <Grid Margin="22,20,22,0">
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="40" Height="40" CornerRadius="11" Background="{DynamicResource ChipBrush}">
+                        <Image Source="/Assets/logo.png" Stretch="Uniform" Margin="8" />
+                    </Border>
+                    <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="MINECRAFT BEDROCK LAUNCHER" Style="{StaticResource CardTitle}" />
+                        <TextBlock Text="¿Dónde quieres jugar?" Style="{StaticResource Caption}" Margin="0,3,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Orientation="Horizontal" Margin="22,18,22,6">
+                <Button x:Name="WindowsButton" Style="{StaticResource CardButton}" Width="322" Margin="0,0,11,0"
+                        Click="Windows_Click">
+                    <Border Style="{StaticResource InnerCard}" Padding="18">
+                        <StackPanel>
+                            <Border Width="46" Height="46" CornerRadius="13"
+                                    Background="{DynamicResource AccentSoftBrush}" HorizontalAlignment="Left">
+                                <TextBlock Text="&#xE7FC;" FontFamily="{StaticResource IconFont}" FontSize="20"
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="MINECRAFT EN WINDOWS" Style="{StaticResource SectionTitle}" Margin="0,12,0,0" />
+                            <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0" LineHeight="18"
+                                       Text="Instala, verifica y abre la versión oficial de Bedrock Edition para Windows 10 y 11 desde Microsoft Store." />
+                        </StackPanel>
+                    </Border>
+                </Button>
+
+                <Button x:Name="MobileButton" Style="{StaticResource CardButton}" Width="322" Margin="11,0,0,0"
+                        Click="Mobile_Click">
+                    <Border Style="{StaticResource InnerCard}" Padding="18">
+                        <StackPanel>
+                            <Border Width="46" Height="46" CornerRadius="13"
+                                    Background="{DynamicResource AccentSoftBrush}" HorizontalAlignment="Left">
+                                <TextBlock Text="&#xE12C;" FontFamily="{StaticResource IconFont}" FontSize="20"
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="MINECRAFT MOBILE CONNECT" Style="{StaticResource SectionTitle}" Margin="0,12,0,0" />
+                            <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0" LineHeight="18"
+                                       Text="Conecta tu teléfono Android por USB o Wi-Fi, transmite su pantalla y juega con teclado y ratón sin tocar el móvil." />
+                        </StackPanel>
+                    </Border>
+                </Button>
+            </StackPanel>
+
+            <Border Background="{DynamicResource ChipBrush}" CornerRadius="0,0,16,16" Padding="22,14">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <CheckBox x:Name="AskAgainCheck" Content="Preguntar siempre al abrir"
+                              Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center" Margin="0,0,16,0" />
+                    <Button Content="Cancelar" Style="{StaticResource SecondaryButton}" MinWidth="104" Click="Cancel_Click" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Border>
+</Window>

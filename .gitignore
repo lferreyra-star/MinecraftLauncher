@@ -1,0 +1,37 @@
+# Archivos buildados
+[obj]/
+[bin]/
+
+# Directories
+dist/
+installer/
+
+# Windows specific
+.nul
+*.suo
+*.user
+*.userossum
+
+# IDE specific
+*.sln.codeplan
+*.sln.temp
+.vscode/
+*.vs/publishproj
+
+# Package manager cache
+*.json.cache
+*.nuget.cache
+
+# Environment
+.env
+
+# Backup
+*.orig
+*.backup
+
+# Installer
+*.iss
+!.github/workflows/*.yml
+
+# Release assets (we'll handle these manually)
+# .nupkg
