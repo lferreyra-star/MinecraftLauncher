@@ -227,6 +227,19 @@ public sealed class LoginViewModel : ObservableObject
         }
         catch (XdAuthException ex)
         {
+            // Si Firebase no tiene habilitado el proveedor de correo y contraseña,
+            // el alta se hace con Google, que crea la cuenta en el mismo sistema.
+            if (ex.Code is "OPERATION_NOT_ALLOWED" or "PASSWORD_LOGIN_DISABLED")
+            {
+                LogService.Info("El proveedor de correo está deshabilitado: se ofrece el alta con Google.");
+                ErrorMessage = "El servidor no permite crear cuentas con contraseña. "
+                               + "Vamos a crearla con Google, que usa el mismo sistema de cuentas.";
+                Password = string.Empty;
+                ConfirmPassword = string.Empty;
+                await SignInWithGoogleAsync();
+                return;
+            }
+
             ErrorMessage = ex.Message;
             Password = string.Empty;
             ConfirmPassword = string.Empty;

@@ -1,8 +1,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 (() => {
+  // Marcador de versión: permite verificar desde fuera qué versión del script carga el navegador.
+  document.documentElement.setAttribute('data-xd-auth', 'v3');
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const reduce = false;
@@ -252,7 +254,8 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
     } catch (err) {
       const code = err && err.code ? err.code : '';
       if (code === 'auth/operation-not-allowed' || code === 'auth/password-login-disabled') {
-        setMsg('El registro con contraseña está deshabilitado en el servidor. Usa «Continuar con Google».', 'error');
+        setMsg('El registro con contraseña está deshabilitado en el servidor. Te llevamos a Google, que crea la misma cuenta.', 'ok');
+        await startGoogle();
       } else {
         setMsg(authError(err, 'No se pudo crear la cuenta:'), 'error');
       }
@@ -273,34 +276,24 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
     }
   });
 
-  // Google: se intenta el popup y, si el navegador lo bloquea o falla,
-  // se cae a la redirección completa, que siempre funciona.
+  // Google: se usa signInWithRedirect (navegación completa) porque el popup de
+  // Firebase lo bloquean muchos navegadores y los bloqueadores de ventanas
+  // emergentes, dejando el botón sin hacer nada. La redirección nunca falla por eso.
   const startGoogle = async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    try {
-      const result = await signInWithPopup(auth, provider);
-      if (result && result.user) setMsg('Sesión iniciada.', 'ok');
-    } catch (err) {
-      const code = err && err.code ? err.code : '';
-      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
-        setMsg('Ventana de Google cerrada. Reintentando con redirección…');
-        await signInWithRedirect(auth, provider);
-        return;
-      }
-      if (code === 'auth/unauthorized-domain') { setMsg('Dominio no autorizado. Agrégalo en Firebase > Authentication > Settings > Authorized domains.', 'error'); return; }
-      if (code === 'auth/operation-not-allowed') { setMsg('Habilita el proveedor Google en Firebase Authentication.', 'error'); return; }
-      setMsg('Reintentando con redirección…');
-      await signInWithRedirect(auth, provider);
-    }
+    await signInWithRedirect(auth, provider);
   };
 
   googleBtn && googleBtn.addEventListener('click', async () => {
-    setMsg('Conectando con Google…');
+    setMsg('Redirigiendo a Google…');
     googleBtn.disabled = true;
     try {
       await startGoogle();
     } catch (err) {
+      const code = err && err.code ? err.code : '';
+      if (code === 'auth/unauthorized-domain') { setMsg('Dominio no autorizado. Agrégalo en Firebase > Authentication > Settings > Authorized domains.', 'error'); return; }
+      if (code === 'auth/operation-not-allowed') { setMsg('Habilita el proveedor Google en Firebase Authentication.', 'error'); return; }
       setMsg(authError(err, 'No se pudo iniciar sesión con Google:'), 'error');
     } finally {
       googleBtn.disabled = false;
@@ -330,29 +323,22 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
   });
 
   if (isDesktopFlow) {
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) { setMsg('Inicia sesión en esta pestaña para continuar en el launcher.', 'error'); return; }
-      await handoffToDesktop(user);
-    });
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('desktop') === '1') {
+      // Mensaje inicial para que el usuario sepa qué está haciendo.
+      setMsg('Inicia sesión con Google para enviar la sesión al launcher.');
+    }
   }
 
   async function doLogout() { try { await signOut(auth); } catch {} }
   $('#logout-btn') && $('#logout-btn').addEventListener('click', doLogout);
   $('#profile-logout') && $('#profile-logout').addEventListener('click', doLogout);
 
-  // Si la página vuelve de una redirección de Google, se recupera el resultado.
-  getRedirectResult(auth)
-    .then((redirectResult) => {
-      if (redirectResult && redirectResult.user) setMsg('Sesión iniciada.', 'ok');
-    })
-    .catch((err) => {
-      setMsg(authError(err, 'No se pudo completar el acceso:'), 'error');
-    });
-
   onAuthStateChanged(auth, async (user) => {
     if (!user) { renderUser(null, null); return; }
     // usuario autenticado (nuevo o existente). Mostrar datos y sincronizar perfil propio en Firestore.
     renderUser(user, null);
+    setMsg('Sesión iniciada.', 'ok');
     try {
       const profile = await ensureUserProfile(user);
       renderUser(user, profile);
@@ -360,5 +346,7 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
       // si Firestore falla (reglas/config), mantenemos la sesión visible con datos de Auth
       renderUser(user, null);
     }
+    // Traspaso de sesión al launcher de escritorio (si se pidió con ?desktop=1).
+    if (isDesktopFlow) await handoffToDesktop(user);
   });
 })();

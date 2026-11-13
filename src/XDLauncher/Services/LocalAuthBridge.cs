@@ -261,7 +261,7 @@ public sealed class LocalAuthBridge : IDisposable
           </div>
         <script type="module">
           import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-          import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+          import { getAuth, GoogleAuthProvider, signInWithRedirect, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
           const cfg = {
             apiKey: "AIzaSyDegbqMJdTeNvkK17z4tRUW2490yV8FWXE",
@@ -275,6 +275,7 @@ public sealed class LocalAuthBridge : IDisposable
           const title = document.getElementById('title');
           const msg = document.getElementById('msg');
           const bar = document.getElementById('bar');
+          const START_KEY = 'xd_google_started';
 
           const post = (path, payload) => fetch(path, {
             method: 'POST',
@@ -289,26 +290,47 @@ public sealed class LocalAuthBridge : IDisposable
             post('/error', { message: error && error.message ? error.message : 'Error de autenticación' });
           };
 
+          const cameBack = new URLSearchParams(location.search).has('apiKey') ||
+                           sessionStorage.getItem(START_KEY) === '1';
+
           try {
             const app = initializeApp(cfg);
             const auth = getAuth(app);
-            const params = new URLSearchParams(location.search);
-            const cameBack = params.has('apiKey');
 
-            if (!cameBack) {
-              sessionStorage.setItem('xd_google_started', '1');
-              await signInWithRedirect(auth, new GoogleAuthProvider());
-            } else {
-              const result = await getRedirectResult(auth);
-              if (result && result.user) {
-                const idToken = await result.user.getIdToken();
-                await post('/token', { token: idToken, email: result.user.email || '' });
-                title.textContent = 'Sesión iniciada';
-                msg.innerHTML = '<span class="ok">Sesión transferida al launcher.</span><br>Ya puedes cerrar esta pestaña.';
-                bar.style.display = 'none';
-              } else {
-                fail(new Error('No se recibió una sesión de Google.'));
+            if (cameBack) {
+              // Volvemos de la redirección de Google: onAuthStateChanged es el evento
+              // que restaura la sesión (getRedirectResult se queda esperando en
+              // algunos navegadores, por eso no se usa).
+              title.textContent = 'Recuperando tu sesión…';
+              msg.textContent = 'Un momento, estamos confirmando el acceso con Google.';
+
+              let restored = null;
+              const unsubscribe = onAuthStateChanged(auth, (u) => {
+                if (u) { restored = u; unsubscribe(); }
+              });
+
+              const deadline = Date.now() + 90000;
+              while (Date.now() < deadline) {
+                const user = restored || auth.currentUser;
+                if (user) {
+                  const idToken = await user.getIdToken();
+                  await post('/token', { token: idToken, email: user.email || '' });
+                  sessionStorage.removeItem(START_KEY);
+                  title.textContent = 'Sesión iniciada';
+                  msg.innerHTML = '<span class="ok">Sesión transferida al launcher.</span><br>Ya puedes cerrar esta pestaña.';
+                  bar.style.display = 'none';
+                  return;
+                }
+                await new Promise((r) => setTimeout(r, 400));
               }
+
+              sessionStorage.removeItem(START_KEY);
+              fail(new Error('No se completó el inicio de sesion con Google.'));
+            } else {
+              sessionStorage.setItem(START_KEY, '1');
+              // signInWithRedirect navega a Google en la misma pestaña: nunca lo bloquea
+              // el navegador ni los bloqueadores de ventanas emergentes.
+              await signInWithRedirect(auth, new GoogleAuthProvider());
             }
           } catch (error) {
             fail(error);
