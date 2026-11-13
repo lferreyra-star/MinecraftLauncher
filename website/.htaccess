@@ -1,0 +1,62 @@
+# ===============================================================
+#  XD Launcher — configuración de Apache para InfinityFree
+#  Sube este fichero a la raíz pública (htdocs) junto a index.html
+# ===============================================================
+
+# --- Página de inicio: el sitio es estático, no hay PHP ---
+DirectoryIndex index.html
+
+# --- No listar el contenido de los directorios ---
+Options -Indexes
+
+# --- Evita que Apache revele su versión ---
+ServerSignature Off
+
+# --- Protege ficheros internos de desarrollo ---
+<FilesMatch "(^\.|\.git|\.vscode|_.*|\.md$|\.bak$|\.sql$)">
+    Require all denied
+</FilesMatch>
+
+# --- Cache: los recursos versionados se cachean; el HTML nunca ---
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 7 days"
+    ExpiresByType application/javascript "access plus 7 days"
+    ExpiresByType image/png "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+    ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+    # El HTML debe recargarse siempre para tomar los cambios de la web.
+    <FilesMatch "\.html$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+    </FilesMatch>
+
+    # Cabeceras de seguridad basicas.
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>
+
+# --- Sin reescrituras: la web es estatica y usa rutas reales.
+#     Importante: ?desktop=1 (traspaso de sesion al launcher) debe llegar intacto. ---
+
+# --- Compresion (reduce peso y mejora la carga) ---
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/javascript application/json image/svg+xml
+</IfModule>
+
+# --- Tipos MIME correctos (importante en hosting Linux) ---
+<IfModule mod_mime.c>
+    AddType image/png .png
+    AddType image/jpeg .jpg .jpeg
+    AddType image/svg+xml .svg
+    AddType image/webp .webp
+    AddType font/woff2 .woff2
+    AddType text/css .css
+    AddType application/javascript .js
+    AddType text/html .html
+</IfModule>

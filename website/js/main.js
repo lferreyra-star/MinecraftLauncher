@@ -1,10 +1,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 (() => {
-  // Marcador de versión: permite verificar desde fuera qué versión del script carga el navegador.
-  document.documentElement.setAttribute('data-xd-auth', 'v3');
+  // Marcador de versión: permite verificar desde fuera qué build carga el navegador.
+  document.documentElement.setAttribute('data-xd-auth', 'xd-1.0');
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const reduce = false;
@@ -48,7 +48,25 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
     window.addEventListener('mouseleave', () => glow.style.opacity = '0');
   }
 
-  // parallax + tilt + magnetic
+  // magnetico: desplazamiento sutil hacia el cursor (solo en punteros finos)
+  const magneticEls = $$('.magnetic');
+  if (!reduce && window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
+    magneticEls.forEach((el) => {
+      el.addEventListener('mousemove', (e) => {
+        const r = el.getBoundingClientRect();
+        const dx = (e.clientX - (r.left + r.width / 2)) * 0.16;
+        const dy = (e.clientY - (r.top + r.height / 2)) * 0.16;
+        el.style.setProperty('--mx', dx.toFixed(2) + 'px');
+        el.style.setProperty('--my', dy.toFixed(2) + 'px');
+      });
+      el.addEventListener('mouseleave', () => {
+        el.style.setProperty('--mx', '0px');
+        el.style.setProperty('--my', '0px');
+      });
+    });
+  }
+
+  // parallax + tilt
   if (!reduce) {
     const parEls = $$('[data-parallax]');
     window.addEventListener('mousemove', (e) => {
@@ -72,8 +90,11 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
   if (canvas) {
     const ctx = canvas.getContext('2d');
     let w, h, particles;
-    function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; const count = Math.min(90, Math.floor((w * h) / 22000)); particles = Array.from({ length: count }, () => ({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.8 + 0.4, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, a: Math.random() * 0.5 + 0.15 })); }
+    function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; const count = Math.min(w < 720 ? 40 : 90, Math.floor((w * h) / 22000)); particles = Array.from({ length: count }, () => ({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.8 + 0.4, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, a: Math.random() * 0.5 + 0.15 })); }
+    let running = true;
+    document.addEventListener('visibilitychange', () => { running = !document.hidden; });
     function draw() {
+      if (!running) { requestAnimationFrame(draw); return; }
       ctx.clearRect(0, 0, w, h);
       const g = ctx.createRadialGradient(w * 0.7, h * 0.2, 0, w * 0.7, h * 0.2, Math.max(w, h) * 0.7);
       g.addColorStop(0, 'rgba(92,224,122,0.07)'); g.addColorStop(0.5, 'rgba(53,208,255,0.03)'); g.addColorStop(1, 'rgba(11,15,20,0)');
@@ -88,6 +109,61 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
     }
     window.addEventListener('resize', resize); resize(); draw();
   }
+
+
+  // ===== Boton volver arriba =====
+  const toTop = $('#to-top');
+  if (toTop) {
+    const toggleTop = () => toTop.classList.toggle('show', window.scrollY > 520);
+    window.addEventListener('scroll', toggleTop, { passive: true });
+    toggleTop();
+    toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  }
+
+  // ===== Noticias oficiales de Minecraft (fuente real, sin datos inventados) =====
+  const newsSide = $('#news-side');
+  const FALLBACK_NEWS = [
+    { title: 'Consulta las novedades oficiales en Minecraft.net', url: 'https://www.minecraft.net/es-es/updates', category: 'Sitio oficial', date: '' },
+    { title: 'Historial de versiones del launcher', url: 'https://github.com/lferreyra-star/MinecraftLauncher/releases', category: 'GitHub Releases', date: '' }
+  ];
+
+  const renderNewsSide = (items) => {
+    if (!newsSide) return;
+    const list = (items && items.length) ? items.slice(0, 3) : FALLBACK_NEWS;
+    newsSide.innerHTML = list.map((item) => {
+      const date = item.date ? `<small>${item.date}</small>` : '';
+      const tag = (item.category || 'Actualidad').slice(0, 22);
+      return `<a class="news-row" href="${item.url}" target="_blank" rel="noopener">
+        <span class="halo-icon">📰</span>
+        <span><b>${item.title}</b><small>${tag}${date ? ' · ' + date : ''}</small></span>
+      </a>`;
+    }).join('');
+  };
+  renderNewsSide(null);
+
+  // La API publica de Minecraft expone las novedades en JSON.
+  // Se pide con timeout: si la red falla, la seccion conserva la lista de respaldo
+  // y nunca queda a la espera bloqueando el render.
+  const fetchWithTimeout = (url, ms) => {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, { mode: 'cors', signal: ctrl.signal }).finally(() => clearTimeout(timer));
+  };
+
+  fetchWithTimeout('https://launchercontent.mojang.com/v2/java/client.json', 6000)
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => {
+      if (!data || !data.downloads) return;
+      const latest = data.downloads && data.downloads.latest && data.downloads.latest.release;
+      if (!latest) return;
+      renderNewsSide([{
+        title: 'Minecraft Java Edition ' + latest.version + ' ya disponible',
+        url: 'https://www.minecraft.net/es-es/updates',
+        category: 'Release',
+        date: latest.time ? new Date(latest.time).toLocaleDateString('es-ES') : ''
+      }]);
+    })
+    .catch(() => { /* se mantiene la lista de respaldo */ });
 
   // ===== Firebase Auth + Firestore (Google) =====
   const modal = $('#auth-modal'), openLogin = $('#open-login'), closeLogin = $('#auth-close'), googleBtn = $('#google-login-btn');
@@ -276,17 +352,35 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
     }
   });
 
-  // Google: se usa signInWithRedirect (navegación completa) porque el popup de
-  // Firebase lo bloquean muchos navegadores y los bloqueadores de ventanas
-  // emergentes, dejando el botón sin hacer nada. La redirección nunca falla por eso.
+  // Google: primero se intenta el popup (mantiene la página sin recargar) y si el
+  // navegador lo bloquea se cae a la redirección completa, que nunca se bloquea.
+  // Ambos caminos terminan en Firebase Auth, así que la cuenta es la misma.
   const startGoogle = async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    await signInWithRedirect(auth, provider);
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      if (result && result.user) return result.user;
+    } catch (err) {
+      const code = err && err.code ? err.code : '';
+      if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+        // Ventana emergente bloqueada: se navega a Google y se vuelve a la web.
+        await signInWithRedirect(auth, provider);
+        return null;
+      }
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        throw err;
+      }
+      // Cualquier otro fallo del popup se resuelve con redirección.
+      await signInWithRedirect(auth, provider);
+      return null;
+    }
+    return null;
   };
 
   googleBtn && googleBtn.addEventListener('click', async () => {
-    setMsg('Redirigiendo a Google…');
+    setMsg('Conectando con Google…');
     googleBtn.disabled = true;
     try {
       await startGoogle();
@@ -294,6 +388,7 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
       const code = err && err.code ? err.code : '';
       if (code === 'auth/unauthorized-domain') { setMsg('Dominio no autorizado. Agrégalo en Firebase > Authentication > Settings > Authorized domains.', 'error'); return; }
       if (code === 'auth/operation-not-allowed') { setMsg('Habilita el proveedor Google en Firebase Authentication.', 'error'); return; }
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') { setMsg('Inicio de sesión cancelado.'); return; }
       setMsg(authError(err, 'No se pudo iniciar sesión con Google:'), 'error');
     } finally {
       googleBtn.disabled = false;
@@ -334,19 +429,27 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
   $('#logout-btn') && $('#logout-btn').addEventListener('click', doLogout);
   $('#profile-logout') && $('#profile-logout').addEventListener('click', doLogout);
 
-  // Tras volver de la redireccion de Google se recupera el resultado.
-  // Se usa getRedirectResult con timeout porque en algunos navegadores se queda
-  // esperando; onAuthStateChanged sirve de respaldo.
-  const redirectTimeout = new Promise((resolve) => setTimeout(() => resolve(null), 20000));
-  Promise.race([getRedirectResult(auth), redirectTimeout])
-    .then((redirectResult) => {
-      if (redirectResult && redirectResult.user) setMsg('Sesión iniciada.', 'ok');
-    })
-    .catch((err) => {
-      const code = err && err.code ? err.code : '';
-      if (code === 'auth/user-cancelled' || code === 'auth/cancelled-popup-request') return;
-      setMsg(authError(err, 'No se pudo completar el acceso:'), 'error');
-    });
+  // Tras volver de una redireccion de Google se recupera el resultado.
+  // Solo se consulta si la URL trae los parametros de la redireccion: pedirlo
+  // sin necesidad deja la promesa colgada y ralentiza la carga en produccion.
+  const hasRedirectParams = () => {
+    const search = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    return search.has('apiKey') || search.has('eventId') || hash.has('apiKey') || hash.has('eventId');
+  };
+
+  if (hasRedirectParams()) {
+    const redirectTimeout = new Promise((resolve) => setTimeout(() => resolve(null), 15000));
+    Promise.race([getRedirectResult(auth).catch((err) => { throw err; }), redirectTimeout])
+      .then((redirectResult) => {
+        if (redirectResult && redirectResult.user) setMsg('Sesión iniciada.', 'ok');
+      })
+      .catch((err) => {
+        const code = err && err.code ? err.code : '';
+        if (code === 'auth/user-cancelled' || code === 'auth/cancelled-popup-request') return;
+        setMsg(authError(err, 'No se pudo completar el acceso:'), 'error');
+      });
+  }
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) { renderUser(null, null); return; }
