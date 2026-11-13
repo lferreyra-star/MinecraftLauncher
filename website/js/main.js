@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 (() => {
@@ -333,6 +333,20 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
   async function doLogout() { try { await signOut(auth); } catch {} }
   $('#logout-btn') && $('#logout-btn').addEventListener('click', doLogout);
   $('#profile-logout') && $('#profile-logout').addEventListener('click', doLogout);
+
+  // Tras volver de la redireccion de Google se recupera el resultado.
+  // Se usa getRedirectResult con timeout porque en algunos navegadores se queda
+  // esperando; onAuthStateChanged sirve de respaldo.
+  const redirectTimeout = new Promise((resolve) => setTimeout(() => resolve(null), 20000));
+  Promise.race([getRedirectResult(auth), redirectTimeout])
+    .then((redirectResult) => {
+      if (redirectResult && redirectResult.user) setMsg('Sesión iniciada.', 'ok');
+    })
+    .catch((err) => {
+      const code = err && err.code ? err.code : '';
+      if (code === 'auth/user-cancelled' || code === 'auth/cancelled-popup-request') return;
+      setMsg(authError(err, 'No se pudo completar el acceso:'), 'error');
+    });
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) { renderUser(null, null); return; }

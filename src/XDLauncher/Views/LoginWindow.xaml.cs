@@ -23,7 +23,8 @@ public partial class LoginWindow : Window
         Loaded += async (_, _) => await _viewModel.CheckServerAsync();
         Closing += (_, _) =>
         {
-            LogService.Info("La pantalla de acceso se está cerrando.");
+            if (!IsAuthenticated)
+                LogService.Info("El usuario cerró la pantalla de acceso.");
             _viewModel.Authenticated -= OnAuthenticated;
         };
     }

@@ -95,6 +95,7 @@ public sealed class LocalAuthBridge : IDisposable
                 if (path.StartsWith("/token", StringComparison.OrdinalIgnoreCase))
                 {
                     var token = ExtractJsonValue(body, "token");
+                    LogService.Info("Puente local: token de Firebase recibido del navegador.");
                     if (!string.IsNullOrWhiteSpace(token))
                         _tokenSource.TrySetResult(token);
 
@@ -109,9 +110,12 @@ public sealed class LocalAuthBridge : IDisposable
                 if (path.StartsWith("/error", StringComparison.OrdinalIgnoreCase))
                 {
                     var message = ExtractJsonValue(body, "message");
+                    LogService.Warn("Puente local: el navegador devolvió un error: " + message);
                     if (!string.IsNullOrWhiteSpace(message))
                         _tokenSource.TrySetException(new InvalidOperationException(message));
                 }
+
+                LogService.Info("Puente local: página de acceso servida en " + path + ".");
 
                 await WriteResponseAsync(stream, 200, "text/html; charset=utf-8", _html);
             }
@@ -261,7 +265,7 @@ public sealed class LocalAuthBridge : IDisposable
           </div>
         <script type="module">
           import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-          import { getAuth, GoogleAuthProvider, signInWithRedirect, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+          import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
           const cfg = {
             apiKey: "AIzaSyDegbqMJdTeNvkK17z4tRUW2490yV8FWXE",
@@ -304,12 +308,20 @@ public sealed class LocalAuthBridge : IDisposable
               title.textContent = 'Recuperando tu sesión…';
               msg.textContent = 'Un momento, estamos confirmando el acceso con Google.';
 
+              // Tres vías de captura, la que llegue primero gana:
+              //  a) getRedirectResult (con timeout: en algunos navegadores se queda esperando)
+              //  b) onAuthStateChanged (restauración automática de la sesión)
+              //  c) auth.currentUser (consulta directa)
               let restored = null;
               const unsubscribe = onAuthStateChanged(auth, (u) => {
-                if (u) { restored = u; unsubscribe(); }
+                if (u) { restored = u; }
               });
 
-              const deadline = Date.now() + 90000;
+              getRedirectResult(auth)
+                .then((result) => { if (result && result.user) restored = result.user; })
+                .catch(() => {});
+
+              const deadline = Date.now() + 120000;
               while (Date.now() < deadline) {
                 const user = restored || auth.currentUser;
                 if (user) {
