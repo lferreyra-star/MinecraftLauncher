@@ -25,7 +25,7 @@ public sealed class XdAccount
     public required string Email { get; init; }
     public string? DisplayName { get; init; }
     public string? PhotoUrl { get; init; }
-    public string Provider { get; init; } = "password";
+    public string Provider { get; set; } = "password";
     public required string IdToken { get; init; }
     public string? RefreshToken { get; init; }
     public DateTimeOffset ExpiresAt { get; init; } = DateTimeOffset.UtcNow.AddHours(1);
@@ -50,7 +50,7 @@ public sealed class XdUserProfile
     public string Name { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
     public string? PhotoUrl { get; init; }
-    public string Provider { get; init; } = "password";
+    public string Provider { get; set; } = "password";
     public DateTimeOffset? CreatedAt { get; init; }
     public DateTimeOffset? LastLoginAt { get; init; }
 }
@@ -170,6 +170,22 @@ public sealed class XdAuthService
     {
         var account = await LookupAsync(idToken, cancellationToken);
         LogService.Info($"Sesión de XD Launcher validada por token: {account.Email}");
+        return account;
+    }
+
+    /// <summary>
+    /// Inicia sesión con Google sin salir de la aplicación: levanta un puente local que
+    /// pide el consentimiento en el navegador del sistema y valida el idToken devuelto
+    /// contra el servidor de autenticación.
+    /// </summary>
+    public async Task<XdAccount> SignInWithGoogleAsync(CancellationToken cancellationToken = default)
+    {
+        using var bridge = new LocalAuthBridge();
+        LogService.Info("Abriendo el acceso con Google en el navegador del sistema.");
+
+        var idToken = await bridge.RequestGoogleTokenAsync(TimeSpan.FromMinutes(5), cancellationToken);
+        var account = await SignInWithIdTokenAsync(idToken, cancellationToken);
+        account.Provider = "google.com";
         return account;
     }
 
@@ -467,8 +483,8 @@ public sealed class XdAuthService
             "USER_DISABLED" => "Esta cuenta está deshabilitada. Contacta con el soporte de XD Launcher.",
             "TOO_MANY_ATTEMPTS_TRY_LATER" => "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
             "WEAK_PASSWORD" => "La contraseña es demasiado débil. Usa al menos 6 caracteres.",
-            "PASSWORD_LOGIN_DISABLED" => "Firebase no tiene habilitado el acceso con contraseña. Actívalo en Firebase Console > Authentication > Sign-in method > Email/Password.",
-            "OPERATION_NOT_ALLOWED" => "El proveedor de autenticación solicitado no está habilitado en el servidor de XD Launcher.",
+            "PASSWORD_LOGIN_DISABLED" => "El acceso con correo y contraseña está deshabilitado en Firebase. Actívalo en Firebase Console > Authentication > Sign-in method > Email/Password. Mientras tanto, usa «Continuar con Google».",
+            "OPERATION_NOT_ALLOWED" => "El proveedor de correo y contraseña no está habilitado en el servidor de XD Launcher. Actívalo en Firebase Console > Authentication > Sign-in method > Email/Password o usa «Continuar con Google».",
             "TOKEN_EXPIRED" => "La sesión caducó. Vuelve a iniciar sesión.",
             "INVALID_ID_TOKEN" => "La sesión ya no es válida. Vuelve a iniciar sesión.",
             "USER_NOT_FOUND" => "La cuenta ya no existe en el servidor.",

@@ -79,6 +79,9 @@ public partial class LoginWindow : Window
             _viewModel.ContinueWithGoogleCommand.Execute(null);
     }
 
+    private void OpenWebsiteHandoff_Click(object sender, RoutedEventArgs e)
+        => FileOps.OpenUrl(XdLauncher.Services.XdAuthService.DesktopHandoffUrl);
+
     private void OpenFirebaseConsole_Click(object sender, RoutedEventArgs e)
     {
         if (_viewModel.OpenFirebaseConsoleCommand.CanExecute(null))

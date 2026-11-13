@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 (() => {
@@ -223,7 +223,16 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
       await signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPassword.value);
       setMsg('Sesión iniciada.', 'ok');
     } catch (err) {
-      setMsg(authError(err, 'No se pudo iniciar sesión:'), 'error');
+      const code = err && err.code ? err.code : '';
+      if (code === 'auth/operation-not-allowed' || code === 'auth/password-login-disabled') {
+        setMsg('El acceso con contraseña está deshabilitado en el servidor. Usa «Continuar con Google» para entrar ahora mismo.', 'error');
+        if (formLogin) formLogin.classList.add('hidden');
+        if (formRegister) formRegister.classList.add('hidden');
+        if (tabLogin) tabLogin.classList.remove('active');
+        if (tabRegister) tabRegister.classList.remove('active');
+      } else {
+        setMsg(authError(err, 'No se pudo iniciar sesión:'), 'error');
+      }
     } finally {
       if (loginSubmit) { loginSubmit.disabled = false; loginSubmit.textContent = 'Iniciar sesión'; }
     }
@@ -241,7 +250,12 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
       }
       setMsg('Cuenta creada. Sesión iniciada.', 'ok');
     } catch (err) {
-      setMsg(authError(err, 'No se pudo crear la cuenta:'), 'error');
+      const code = err && err.code ? err.code : '';
+      if (code === 'auth/operation-not-allowed' || code === 'auth/password-login-disabled') {
+        setMsg('El registro con contraseña está deshabilitado en el servidor. Usa «Continuar con Google».', 'error');
+      } else {
+        setMsg(authError(err, 'No se pudo crear la cuenta:'), 'error');
+      }
     } finally {
       if (registerSubmit) { registerSubmit.disabled = false; registerSubmit.textContent = 'Crear cuenta'; }
     }
@@ -259,21 +273,35 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
     }
   });
 
+  // Google: se intenta el popup y, si el navegador lo bloquea o falla,
+  // se cae a la redirección completa, que siempre funciona.
+  const startGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    try {
+      const result = await signInWithPopup(auth, provider);
+      if (result && result.user) setMsg('Sesión iniciada.', 'ok');
+    } catch (err) {
+      const code = err && err.code ? err.code : '';
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        setMsg('Ventana de Google cerrada. Reintentando con redirección…');
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+      if (code === 'auth/unauthorized-domain') { setMsg('Dominio no autorizado. Agrégalo en Firebase > Authentication > Settings > Authorized domains.', 'error'); return; }
+      if (code === 'auth/operation-not-allowed') { setMsg('Habilita el proveedor Google en Firebase Authentication.', 'error'); return; }
+      setMsg('Reintentando con redirección…');
+      await signInWithRedirect(auth, provider);
+    }
+  };
+
   googleBtn && googleBtn.addEventListener('click', async () => {
     setMsg('Conectando con Google…');
     googleBtn.disabled = true;
     try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      const result = await signInWithPopup(auth, provider);
-      // nuevo o existente: onAuthStateChanged se encargará de reflejar y crear/actualizar perfil
-      if (result && result.user) setMsg('Sesión iniciada.', 'ok');
+      await startGoogle();
     } catch (err) {
-      const code = err && err.code ? err.code : '';
-      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') setMsg('Inicio de sesión cancelado.');
-      else if (code === 'auth/unauthorized-domain') setMsg('Dominio no autorizado. Agrégalo en Firebase > Authentication > Settings > Authorized domains.', 'error');
-      else if (code === 'auth/operation-not-allowed') setMsg('Habilita el proveedor Google en Firebase Authentication.', 'error');
-      else setMsg('No se pudo iniciar sesión con Google. Revisa la configuración de Firebase.', 'error');
+      setMsg(authError(err, 'No se pudo iniciar sesión con Google:'), 'error');
     } finally {
       googleBtn.disabled = false;
     }
@@ -311,6 +339,15 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
   async function doLogout() { try { await signOut(auth); } catch {} }
   $('#logout-btn') && $('#logout-btn').addEventListener('click', doLogout);
   $('#profile-logout') && $('#profile-logout').addEventListener('click', doLogout);
+
+  // Si la página vuelve de una redirección de Google, se recupera el resultado.
+  getRedirectResult(auth)
+    .then((redirectResult) => {
+      if (redirectResult && redirectResult.user) setMsg('Sesión iniciada.', 'ok');
+    })
+    .catch((err) => {
+      setMsg(authError(err, 'No se pudo completar el acceso:'), 'error');
+    });
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) { renderUser(null, null); return; }

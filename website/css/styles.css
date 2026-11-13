@@ -236,7 +236,7 @@ a:hover{color:#9cf2ac}
 .auth-sep::before,.auth-sep::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(147,197,253,.25),transparent)}
 
 /* google button */
-.btn-google{width:100%;margin-top:6px;padding:13px 18px;border-radius:14px;font-size:1rem;font-weight:600;background:linear-gradient(135deg,rgba(59,130,246,.18),rgba(168,85,247,.18));border:1px solid rgba(147,197,253,.25);color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:12px;cursor:pointer;transition:.2s}
+.btn-google{width:100%;margin-top:14px;padding:13px 18px;border-radius:14px;font-size:1rem;font-weight:600;background:linear-gradient(135deg,rgba(59,130,246,.18),rgba(168,85,247,.18));border:1px solid rgba(147,197,253,.25);color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:12px;cursor:pointer;transition:.2s}
 .btn-google:hover{background:linear-gradient(135deg,rgba(59,130,246,.28),rgba(168,85,247,.28));border-color:rgba(167,139,250,.5);box-shadow:0 12px 30px rgba(99,102,241,.25);transform:translateY(-2px)}
 .btn-google:disabled{opacity:.6;cursor:not-allowed;transform:none}
 .btn-google .g-icon{width:20px;height:20px;flex:0 0 20px}

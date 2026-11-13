@@ -33,11 +33,7 @@ public sealed class LoginViewModel : ObservableObject
         SwitchModeCommand = new RelayCommand(() => IsRegisterMode = !IsRegisterMode);
         OpenWebsiteCommand = new RelayCommand(() => FileOps.OpenUrl(AppInfo.XdWebsite));
         OpenFirebaseConsoleCommand = new RelayCommand(() => FileOps.OpenUrl(XdAuthService.FirebaseConsoleUrl));
-        ContinueWithGoogleCommand = new RelayCommand(() =>
-        {
-            FileOps.OpenUrl(XdAuthService.DesktopHandoffUrl);
-            InfoMessage = "Se abrió tu navegador: inicia sesión con Google y pulsa «Continuar en el launcher de escritorio».";
-        });
+        ContinueWithGoogleCommand = new AsyncRelayCommand(SignInWithGoogleAsync, () => !IsBusy, OnError);
     }
 
     public event Action<XdAccount>? Authenticated;
@@ -171,7 +167,7 @@ public sealed class LoginViewModel : ObservableObject
     public RelayCommand SwitchModeCommand { get; }
     public RelayCommand OpenWebsiteCommand { get; }
     public RelayCommand OpenFirebaseConsoleCommand { get; }
-    public RelayCommand ContinueWithGoogleCommand { get; }
+    public AsyncRelayCommand ContinueWithGoogleCommand { get; }
 
     /// <summary>True cuando el servidor exige habilitar el proveedor de correo.</summary>
     public bool NeedsEmailProvider { get; private set; }
@@ -234,6 +230,33 @@ public sealed class LoginViewModel : ObservableObject
             ErrorMessage = ex.Message;
             Password = string.Empty;
             ConfirmPassword = string.Empty;
+        }
+    }
+
+    private async Task SignInWithGoogleAsync()
+    {
+        ErrorMessage = string.Empty;
+        InfoMessage = string.Empty;
+
+        try
+        {
+            InfoMessage = "Completa el inicio de sesión con Google en el navegador. Volveremos aquí automáticamente.";
+            var account = await _auth.SignInWithGoogleAsync();
+            await CompleteAsync(account);
+        }
+        catch (XdAuthException ex)
+        {
+            LogService.Warn("Acceso con Google rechazado: " + ex.Message);
+            ErrorMessage = ex.Message;
+        }
+        catch (OperationCanceledException)
+        {
+            LogService.Info("El usuario canceló el acceso con Google.");
+            ErrorMessage = "Se canceló el acceso con Google.";
+        }
+        catch (Exception ex)
+        {
+            OnError(ex);
         }
     }
 
