@@ -80,8 +80,13 @@ public sealed class ShellViewModel : ObservableObject
             },
             new NavigationItem
             {
-                Key = "game", Title = "Juego", Glyph = "", Group = "Jugar",
+                Key = "bedrock", Title = "Minecraft Bedrock", Glyph = "", Group = "Jugar",
                 Subtitle = "Instalación, componentes y estado", Page = Game
+            },
+            new NavigationItem
+            {
+                Key = "game", Title = "Juego", Glyph = "", Group = "Jugar",
+                Subtitle = "Estado, componentes y archivos", Page = Game
             },
             new NavigationItem
             {
@@ -120,6 +125,8 @@ public sealed class ShellViewModel : ObservableObject
             }
         ];
 
+        var quickKeys = new[] { "home", "java", "bedrock", "versions", "mods", "downloads", "settings" };
+        QuickNavigation = Navigation.Where(item => quickKeys.Contains(item.Key)).ToList();
         _currentNavigation = Navigation[0];
         Toasts = [];
 
@@ -140,6 +147,7 @@ public sealed class ShellViewModel : ObservableObject
                 Toasts.Remove(toast);
         });
         ToggleSidebarCommand = new RelayCommand(() => IsSidebarCollapsed = !IsSidebarCollapsed);
+        OpenCommandPaletteCommand = new RelayCommand(() => CommandPaletteRequested?.Invoke());
         SignOutCommand = new RelayCommand(() =>
         {
             XdSessionStore.Delete();
@@ -203,6 +211,7 @@ public sealed class ShellViewModel : ObservableObject
     public ProfilePageViewModel ProfilePage { get; }
     public MobileConnectState MobileState { get; }
     public IReadOnlyList<NavigationItem> Navigation { get; }
+    public IReadOnlyList<NavigationItem> QuickNavigation { get; private set; } = [];
     public ObservableCollection<ToastMessage> Toasts { get; }
 
     public NavigationItem CurrentNavigation
@@ -222,9 +231,20 @@ public sealed class ShellViewModel : ObservableObject
                 OnPropertyChanged(nameof(CurrentSubtitle));
                 OnPropertyChanged(nameof(CurrentGlyph));
                 OnPropertyChanged(nameof(CurrentGroup));
+                OnPropertyChanged(nameof(CurrentNavigationKey));
                 if (value is not null)
                     OnNavigated(value.Key);
             }
+        }
+    }
+
+    public string CurrentNavigationKey
+    {
+        get => CurrentNavigation?.Key ?? "home";
+        set
+        {
+            if (!string.Equals(value, CurrentNavigation?.Key, StringComparison.OrdinalIgnoreCase))
+                Navigate(value);
         }
     }
 
@@ -256,6 +276,7 @@ public sealed class ShellViewModel : ObservableObject
 
     public string DisplayName => Profile.DisplayName;
     public string TopBarStatusText => IsInitializing ? InitializationStatus : GameStatusText;
+    public string TopBarActivityText => Game.IsGameRunning ? "Minecraft en ejecución" : "Sesión lista";
     public string AccountStatusText => Profile.IsMicrosoftAccount
         ? $"Xbox Live · {Profile.DisplayName}"
         : "Perfil local";
@@ -280,6 +301,7 @@ public sealed class ShellViewModel : ObservableObject
     public ICommand NavigateCommand { get; }
     public ICommand DismissToastCommand { get; }
     public ICommand ToggleSidebarCommand { get; }
+    public ICommand OpenCommandPaletteCommand { get; }
 
     public bool IsGameRunning => Game.IsGameRunning;
     public bool IsLightTheme => Settings.IsLightTheme;
@@ -320,6 +342,7 @@ public sealed class ShellViewModel : ObservableObject
 
     /// <summary>Solicita el cierre de sesión y el regreso a la pantalla de acceso.</summary>
     public event Action? SignOutRequested;
+    public event Action? CommandPaletteRequested;
 
     public RelayCommand SignOutCommand { get; }
 

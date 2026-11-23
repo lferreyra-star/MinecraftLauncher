@@ -12,6 +12,9 @@
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
         Opacity="0">
+    <Window.InputBindings>
+        <KeyBinding Key="K" Modifiers="Control" Command="{Binding OpenCommandPaletteCommand}" />
+    </Window.InputBindings>
     <Window.Triggers>
         <EventTrigger RoutedEvent="Window.Loaded">
             <BeginStoryboard>
