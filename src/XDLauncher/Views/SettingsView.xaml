@@ -107,9 +107,9 @@
                                            Foreground="{DynamicResource AccentLightBrush}" />
                             </Border>
                             <TextBlock Text="Configura tu experiencia" Style="{StaticResource DisplayHero}"
-                                       FontSize="34" Foreground="White" Margin="0,10,0,0" />
+                                       FontSize="34" Foreground="{DynamicResource HeroForegroundBrush}" Margin="0,10,0,0" />
                             <TextBlock Text="Identidad, apariencia, mundo y sistema. Todo se aplica al instante y se conserva entre sesiones."
-                                       Style="{StaticResource BodyText}" Foreground="#D9D3E8" MaxWidth="640" Margin="0,8,0,0" />
+                                       Style="{StaticResource BodyText}" Foreground="{DynamicResource HeroForegroundBrush}" MaxWidth="640" Margin="0,8,0,0" />
                             <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
                                 <Border Style="{StaticResource Pill}" Margin="0,0,8,0">
                                     <TextBlock Text="{Binding State.Theme, StringFormat='Tema · {0}'}" FontSize="10" FontWeight="SemiBold" />

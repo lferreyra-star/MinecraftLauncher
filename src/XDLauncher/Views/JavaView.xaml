@@ -239,11 +239,13 @@
                                 </ItemsControl>
                             <Border Style="{StaticResource InnerCard}" Padding="24"
                                     Visibility="{Binding HasVersions, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
-                                <StackPanel HorizontalAlignment="Center">
+                                <StackPanel Style="{StaticResource EmptyState}">
                                     <TextBlock Text="&#xE7BA;" FontFamily="{StaticResource IconFont}" FontSize="26"
                                                Foreground="{DynamicResource WarningBrush}" HorizontalAlignment="Center" />
                                     <TextBlock Text="Ninguna versión coincide" Style="{StaticResource CardTitle}" HorizontalAlignment="Center" Margin="0,10,0,0" />
-                                    <TextBlock Text="Cambia el filtro o pulsa Actualizar." Style="{StaticResource Muted}" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Cambia el filtro o pulsa Actualizar." Style="{StaticResource EmptyStateBody}" />
+                                    <Button Content="Actualizar versiones" Style="{StaticResource PrimaryButton}" Margin="0,16,0,0"
+                                            Command="{Binding RefreshCommand}" />
                                 </StackPanel>
                             </Border>
                         </StackPanel>

@@ -20,8 +20,8 @@
     <core:StateToColorConverter x:Key="StateToColor" />
     <core:DownloadStateToVisibilityConverter x:Key="DownloadStateToVisibility" />
 
-    <FontFamily x:Key="DisplayFont">Segoe UI Variable Display, Segoe UI</FontFamily>
-    <FontFamily x:Key="BodyFont">Segoe UI Variable Text, Segoe UI</FontFamily>
+    <FontFamily x:Key="DisplayFont">Inter, Segoe UI Variable Display, Segoe UI</FontFamily>
+    <FontFamily x:Key="BodyFont">Inter, Segoe UI Variable Text, Segoe UI</FontFamily>
     <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
     <sys:Double x:Key="Space1">8</sys:Double>
     <sys:Double x:Key="Space2">16</sys:Double>
@@ -1130,6 +1130,20 @@
         <Setter Property="CornerRadius" Value="2" />
         <Setter Property="HorizontalAlignment" Value="Left" />
         <Setter Property="Background" Value="{DynamicResource AccentGradientBrush}" />
+    </Style>
+
+    <Style x:Key="EmptyState" TargetType="StackPanel">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,16" />
+    </Style>
+    <Style x:Key="EmptyStateTitle" TargetType="TextBlock" BasedOn="{StaticResource CardTitle}">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,10,0,0" />
+    </Style>
+    <Style x:Key="EmptyStateBody" TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,4,0,0" />
     </Style>
 
     <!-- Compatibility aliases kept while legacy screens are rebuilt. -->

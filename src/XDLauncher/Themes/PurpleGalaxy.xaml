@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=System.Runtime">
     <sys:String x:Key="ThemeName">Purple Galaxy</sys:String>
@@ -73,15 +73,16 @@
 <GradientStop Color="#FF1E1441" Offset="1" />
 </LinearGradientBrush>
     <LinearGradientBrush x:Key="BackdropOverlayBrush" StartPoint="0,0" EndPoint="0,1">
-<GradientStop Color="#D9070414" Offset="0" />
-<GradientStop Color="#F2070414" Offset="0.55" />
-<GradientStop Color="#FF04020E" Offset="1" />
+<GradientStop Color="#70070414" Offset="0" />
+<GradientStop Color="#B8070414" Offset="0.55" />
+<GradientStop Color="#E604020E" Offset="1" />
 </LinearGradientBrush>
     <LinearGradientBrush x:Key="HeroScrimBrush" StartPoint="0,0" EndPoint="1,0">
-<GradientStop Color="#F2140C28" Offset="0" />
+<GradientStop Color="#8A140C28" Offset="0" />
 <GradientStop Color="#B20D081E" Offset="0.48" />
-<GradientStop Color="#12060414" Offset="1" />
+<GradientStop Color="#08060414" Offset="1" />
 </LinearGradientBrush>
+    <SolidColorBrush x:Key="HeroForegroundBrush" Color="#FFFFFFFF" />
     <LinearGradientBrush x:Key="HeroPlaceholderBrush" StartPoint="0,0" EndPoint="1,1">
 <GradientStop Color="#FF1A1038" Offset="0" />
 <GradientStop Color="#FF28194F" Offset="0.55" />

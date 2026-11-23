@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=System.Runtime">
     <sys:String x:Key="ThemeName">Crimson</sys:String>
@@ -73,15 +73,16 @@
 <GradientStop Color="#FF28101A" Offset="1" />
 </LinearGradientBrush>
     <LinearGradientBrush x:Key="BackdropOverlayBrush" StartPoint="0,0" EndPoint="0,1">
-<GradientStop Color="#D90D0406" Offset="0" />
-<GradientStop Color="#F20D0406" Offset="0.55" />
-<GradientStop Color="#FF080203" Offset="1" />
+<GradientStop Color="#700D0406" Offset="0" />
+<GradientStop Color="#B80D0406" Offset="0.55" />
+<GradientStop Color="#E6080203" Offset="1" />
 </LinearGradientBrush>
     <LinearGradientBrush x:Key="HeroScrimBrush" StartPoint="0,0" EndPoint="1,0">
-<GradientStop Color="#F21A0A0F" Offset="0" />
+<GradientStop Color="#8A1A0A0F" Offset="0" />
 <GradientStop Color="#B212070C" Offset="0.48" />
-<GradientStop Color="#12080407" Offset="1" />
+<GradientStop Color="#08080407" Offset="1" />
 </LinearGradientBrush>
+    <SolidColorBrush x:Key="HeroForegroundBrush" Color="#FFFFFFFF" />
     <LinearGradientBrush x:Key="HeroPlaceholderBrush" StartPoint="0,0" EndPoint="1,1">
 <GradientStop Color="#FF240C14" Offset="0" />
 <GradientStop Color="#FF35101C" Offset="0.55" />

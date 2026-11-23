@@ -143,7 +143,7 @@
                         <StackPanel VerticalAlignment="Bottom" Margin="18,0,18,16">
                             <TextBlock Text="JAVA EDITION" Style="{StaticResource HomeKicker}" />
                             <TextBlock Text="Crea sin límites" FontFamily="{StaticResource DisplayFont}" FontSize="20"
-                                       FontWeight="SemiBold" Foreground="White" Margin="0,6,0,0" />
+                                       FontWeight="SemiBold" Foreground="{DynamicResource HeroForegroundBrush}" Margin="0,6,0,0" />
                         </StackPanel>
                     </Grid>
                 </Button>
@@ -159,7 +159,7 @@
                         <StackPanel VerticalAlignment="Bottom" Margin="18,0,18,16">
                             <TextBlock Text="BEDROCK" Style="{StaticResource HomeKicker}" />
                             <TextBlock Text="Juega en cualquier lugar" FontFamily="{StaticResource DisplayFont}" FontSize="20"
-                                       FontWeight="SemiBold" Foreground="White" Margin="0,6,0,0" />
+                                       FontWeight="SemiBold" Foreground="{DynamicResource HeroForegroundBrush}" Margin="0,6,0,0" />
                         </StackPanel>
                     </Grid>
                 </Button>
@@ -175,7 +175,7 @@
                         <StackPanel VerticalAlignment="Bottom" Margin="18,0,18,16">
                             <TextBlock Text="MODRINTH" Style="{StaticResource HomeKicker}" />
                             <TextBlock Text="Transforma tu juego" FontFamily="{StaticResource DisplayFont}" FontSize="20"
-                                       FontWeight="SemiBold" Foreground="White" Margin="0,6,0,0" />
+                                       FontWeight="SemiBold" Foreground="{DynamicResource HeroForegroundBrush}" Margin="0,6,0,0" />
                         </StackPanel>
                     </Grid>
                 </Button>
@@ -191,7 +191,7 @@
                         <StackPanel VerticalAlignment="Bottom" Margin="18,0,18,16">
                             <TextBlock Text="DESCARGAS" Style="{StaticResource HomeKicker}" />
                             <TextBlock Text="Todo al día" FontFamily="{StaticResource DisplayFont}" FontSize="20"
-                                       FontWeight="SemiBold" Foreground="White" Margin="0,6,0,0" />
+                                       FontWeight="SemiBold" Foreground="{DynamicResource HeroForegroundBrush}" Margin="0,6,0,0" />
                         </StackPanel>
                     </Grid>
                 </Button>
@@ -213,13 +213,13 @@
                         <StackPanel Margin="26,24,26,24">
                             <TextBlock Text="NOVEDADES DEL MUNDO" Style="{StaticResource HomeKicker}" />
                             <TextBlock Text="{Binding NewsSectionTitle}" FontFamily="{StaticResource DisplayFont}" FontSize="25"
-                                       FontWeight="SemiBold" Foreground="White" Margin="0,8,0,0" TextTrimming="CharacterEllipsis" />
-                            <TextBlock Text="{Binding NewsStatus}" Style="{StaticResource HomeSmall}" Foreground="#D8D2E8" Margin="0,6,0,0" />
+                                       FontWeight="SemiBold" Foreground="{DynamicResource HeroForegroundBrush}" Margin="0,8,0,0" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding NewsStatus}" Style="{StaticResource HomeSmall}" Foreground="{DynamicResource HeroForegroundBrush}" Margin="0,6,0,0" />
                             <ItemsControl ItemsSource="{Binding News}" Margin="0,14,0,0">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Button Style="{StaticResource GhostButton}" HorizontalContentAlignment="Left"
-                                                Foreground="White" Margin="0,0,0,2"
+                                                Foreground="{DynamicResource HeroForegroundBrush}" Margin="0,0,0,2"
                                                 Command="{Binding DataContext.OpenNewsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 CommandParameter="{Binding}">
                                             <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
@@ -228,7 +228,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                             <TextBlock Text="Historias, actualizaciones y eventos aparecerán aquí cuando estén disponibles."
-                                       Style="{StaticResource HomeSmall}" Foreground="#D8D2E8" Margin="0,10,0,0"
+                                       Style="{StaticResource HomeSmall}" Foreground="{DynamicResource HeroForegroundBrush}" Margin="0,10,0,0"
                                        Visibility="{Binding ShowNews, Converter={StaticResource InverseBool}}" />
                             <Button Style="{StaticResource SecondaryButton}" Content="Actualizar" Height="40" MinWidth="130"
                                     Margin="0,16,0,0" Command="{Binding OpenUpdatesCommand}" />
@@ -274,10 +274,10 @@
                             <StackPanel Margin="6">
                                 <TextBlock Text="MÓVIL" Style="{StaticResource HomeKicker}" />
                                 <TextBlock Text="{Binding Mobile.StatusLabel}" FontFamily="{StaticResource DisplayFont}" FontSize="20"
-                                           FontWeight="SemiBold" Foreground="White" Margin="0,6,0,0" />
-                                <TextBlock Text="{Binding Mobile.StatusMessage}" Style="{StaticResource HomeSmall}" Foreground="#D8D2E8" Margin="0,4,0,0" />
+                                           FontWeight="SemiBold" Foreground="{DynamicResource HeroForegroundBrush}" Margin="0,6,0,0" />
+                                <TextBlock Text="{Binding Mobile.StatusMessage}" Style="{StaticResource HomeSmall}" Foreground="{DynamicResource HeroForegroundBrush}" Margin="0,4,0,0" />
                                 <Button Style="{StaticResource GhostButton}" Content="Conectar teléfono" Height="38" Margin="0,10,0,0"
-                                        Foreground="White" Command="{Binding OpenMobileCommand}" />
+                                        Foreground="{DynamicResource HeroForegroundBrush}" Command="{Binding OpenMobileCommand}" />
                             </StackPanel>
                         </Grid>
                     </Border>

@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using XdLauncher.Core;
 
@@ -56,10 +56,14 @@ public sealed class LauncherSettings
     public bool AutoCheckUpdates { get; set; } = true;
     public bool StartWithWindows { get; set; }
     public bool ShowNews { get; set; } = true;
+    public string MotionLevel { get; set; } = "Cinematográfico";
     public bool AnimationsEnabled { get; set; } = true;
+    public bool RespectSystemMotion { get; set; } = true;
     public bool AmbientEffectsEnabled { get; set; } = true;
     public double AmbientIntensity { get; set; } = 0.75;
     public double TransparencyLevel { get; set; } = 0.85;
+    public double BackgroundBlur { get; set; }
+    public double BackgroundOverlayIntensity { get; set; } = 0.85;
     public bool NavTransitionsEnabled { get; set; } = true;
     public bool ParticleEffectsEnabled { get; set; } = true;
     public bool HoverEffectsEnabled { get; set; } = true;
@@ -138,8 +142,13 @@ public sealed class SettingsService
                 _ => "Eclipse Dark"
             };
 
+            if (!AnimationHelper.MotionLevels.Contains(loaded.MotionLevel, StringComparer.OrdinalIgnoreCase))
+                loaded.MotionLevel = "Equilibrado";
+
             loaded.AmbientIntensity = Math.Clamp(loaded.AmbientIntensity, 0, 1);
             loaded.TransparencyLevel = Math.Clamp(loaded.TransparencyLevel, 0, 1);
+            loaded.BackgroundBlur = Math.Clamp(loaded.BackgroundBlur, 0, 8);
+            loaded.BackgroundOverlayIntensity = Math.Clamp(loaded.BackgroundOverlayIntensity, 0, 1);
             if (loaded.PerformanceMode)
             {
                 loaded.ParticleEffectsEnabled = false;

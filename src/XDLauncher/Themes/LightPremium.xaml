@@ -82,6 +82,7 @@
 <GradientStop Color="#66070E17" Offset="0.48" />
 <GradientStop Color="#08070E17" Offset="1" />
 </LinearGradientBrush>
+    <SolidColorBrush x:Key="HeroForegroundBrush" Color="#FFFFFFFF" />
     <LinearGradientBrush x:Key="HeroPlaceholderBrush" StartPoint="0,0" EndPoint="1,1">
 <GradientStop Color="#FFE8F2EE" Offset="0" />
 <GradientStop Color="#FFE4EEF8" Offset="0.55" />
