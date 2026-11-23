@@ -48,6 +48,8 @@
 
             <Border Grid.Row="2" Background="{DynamicResource ChipBrush}" CornerRadius="0,0,16,16" Padding="22,14">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="CopyDiagnosticsButton" Content="Copiar diagnóstico" Style="{StaticResource GhostButton}"
+                            Margin="0,0,10,0" MinWidth="140" Visibility="Collapsed" Click="CopyDiagnostics_Click" />
                     <Button x:Name="CancelButton" Content="Cancelar" Style="{StaticResource SecondaryButton}"
                             Margin="0,0,10,0" MinWidth="104" Click="Cancel_Click" />
                     <Button x:Name="ConfirmButton" Content="Entendido" Style="{StaticResource PrimaryButton}"
