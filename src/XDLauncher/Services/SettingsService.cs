@@ -52,6 +52,8 @@ public sealed class LauncherSettings
     public bool WindowMaximized { get; set; }
     public bool MinimizeOnLaunch { get; set; } = true;
     public bool CloseOnLaunch { get; set; }
+    public bool OnboardingCompleted { get; set; }
+    public string OnboardingLanguage { get; set; } = "Español";
     public bool VerifyBeforeLaunch { get; set; } = true;
     public bool AutoCheckUpdates { get; set; } = true;
     public bool StartWithWindows { get; set; }

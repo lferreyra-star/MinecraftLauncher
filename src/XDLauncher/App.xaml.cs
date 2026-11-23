@@ -127,7 +127,7 @@ public partial class App : Application
             ShowMainWindow(settingsService, dialogs, systemInfo, downloadService, updateService,
                 updateCheckService, account);
 
-            await AskPlatformAsync(settingsService);
+            await AskOnboardingAsync(settingsService, account);
         }
         catch (Exception ex)
         {
@@ -393,6 +393,38 @@ public partial class App : Application
         }
     }
 
+    /// <summary>Runs the first-launch wizard and falls back to the legacy platform question.</summary>
+    private async Task AskOnboardingAsync(SettingsService settingsService, XdAccount? account)
+    {
+        if (settingsService.Settings.OnboardingCompleted || _shell is null)
+        {
+            await AskPlatformAsync(settingsService);
+            return;
+        }
+
+        try
+        {
+            var onboarding = Views.Dialogs.OnboardingWindow.Ask(account?.DisplayName ?? account?.Email);
+            if (onboarding.Completed)
+            {
+                settingsService.Settings.OnboardingCompleted = true;
+                settingsService.Settings.OnboardingLanguage = onboarding.Language;
+                settingsService.Settings.AskPlatformOnStartup = false;
+                settingsService.Save();
+                _shell.Navigate(onboarding.InitialSection);
+            }
+            else
+            {
+                await AskPlatformAsync(settingsService);
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Error(ex, "No se pudo mostrar el onboarding.");
+            await AskPlatformAsync(settingsService);
+        }
+    }
+
     /// <summary>Offers the Windows game or the phone stream the first time the launcher opens.</summary>
     private async Task AskPlatformAsync(SettingsService settingsService)
     {
@@ -432,12 +464,14 @@ public partial class App : Application
         AnimationHelper.AmbientEffectsEnabled = settings.AmbientEffectsEnabled && !settings.PerformanceMode;
         AnimationHelper.AmbientIntensity = settings.AmbientIntensity;
         AnimationHelper.TransparencyLevel = settings.TransparencyLevel;
+        AnimationHelper.RespectSystemMotion = settings.RespectSystemMotion;
         AnimationHelper.NavTransitionsEnabled = settings.NavTransitionsEnabled && !settings.PerformanceMode;
         AnimationHelper.ParticleEffectsEnabled = settings.ParticleEffectsEnabled && !settings.PerformanceMode;
         AnimationHelper.HoverEffectsEnabled = settings.HoverEffectsEnabled;
         AnimationHelper.ParallaxEnabled = settings.ParallaxEnabled && !settings.PerformanceMode;
         AnimationHelper.CardAnimationsEnabled = settings.CardAnimationsEnabled && !settings.PerformanceMode;
         AnimationHelper.LoadingAnimationsEnabled = settings.LoadingAnimationsEnabled && !settings.PerformanceMode;
+        AnimationHelper.MotionLevel = settings.MotionLevel;
         AnimationHelper.PerformanceMode = settings.PerformanceMode;
         ThemeManager.ApplyTransparency(settings.TransparencyLevel);
     }
