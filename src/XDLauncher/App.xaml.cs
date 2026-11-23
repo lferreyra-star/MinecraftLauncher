@@ -1,4 +1,4 @@
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Media;
@@ -35,19 +35,7 @@ public partial class App : Application
             return;
         }
 
-        if (e.Args.Any(arg => arg.Equals("--capture-settings", StringComparison.OrdinalIgnoreCase)))
-        {
-            CaptureSettings("appearance", "settings-ultimate.png");
-            Shutdown();
-            return;
-        }
 
-        if (e.Args.Any(arg => arg.Equals("--capture-about", StringComparison.OrdinalIgnoreCase)))
-        {
-            CaptureSettings("about", "about-rebirth.png");
-            Shutdown();
-            return;
-        }
 
         SessionHandoff.RegisterProtocol();
 
@@ -476,59 +464,6 @@ public partial class App : Application
         ThemeManager.ApplyTransparency(settings.TransparencyLevel);
     }
 
-    private static void CaptureSettings(string category, string fileName)
-    {
-        try
-        {
-            TryAttachToParentConsole();
-            var settingsService = new SettingsService();
-            var dialogs = new DialogService();
-            var systemInfo = new SystemInfoService();
-            ApplyVisualSettings(settingsService.Settings);
-            ThemeManager.SetCustomAccent(settingsService.Settings.CustomAccentHex);
-            ThemeManager.Apply(settingsService.Settings.Theme, settingsService.Settings.Accent);
-
-            var state = new SettingsState(settingsService, dialogs, systemInfo);
-            state.RefreshSystemInfo();
-            var profile = new ProfileState(new AuthService(), state, dialogs);
-            var account = new XdAccount
-            {
-                UserId = "capture",
-                Email = "capture@xd.local",
-                DisplayName = "Capture",
-                IdToken = "capture",
-                Provider = "password"
-            };
-            var viewModel = new SettingsViewModel(state, profile, account) { SelectedCategory = category };
-            var view = new Views.SettingsView
-            {
-                DataContext = viewModel,
-                Width = 1400,
-                Height = 900,
-                Background = new SolidColorBrush(Color.FromRgb(6, 8, 16))
-            };
-            view.Measure(new Size(1400, 900));
-            view.Arrange(new Rect(0, 0, 1400, 900));
-            view.UpdateLayout();
-
-            var bitmap = new RenderTargetBitmap(1400, 900, 96, 96, PixelFormats.Pbgra32);
-            bitmap.Render(view);
-            bitmap.Freeze();
-            var encoder = new PngBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(bitmap));
-
-            var path = Path.Combine(@"C:\Users\EVIL\Documents\xD\captures", fileName);
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            using var stream = File.Create(path);
-            encoder.Save(stream);
-            Console.WriteLine(path);
-        }
-        catch (Exception ex)
-        {
-            LogService.Error(ex, "No se pudo capturar la vista de ajustes.");
-            Console.Error.WriteLine(ex);
-        }
-    }
 
     private async Task RunSelfTestAsync()
     {
