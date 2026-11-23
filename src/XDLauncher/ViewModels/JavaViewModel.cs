@@ -353,6 +353,28 @@ public sealed class JavaViewModel : ObservableObject, IDisposable
         }
     }
 
+    public bool CanLaunch => PrimaryCommand.CanExecute(null);
+
+    public string LaunchHint
+    {
+        get
+        {
+            if (IsBusy)
+                return "Hay una operación en curso. Espera a que termine.";
+            if (IsSelectedRunning)
+                return "El juego ya está en ejecución. Usa Cerrar juego para volver a lanzarlo.";
+            if (SelectedVersion is null)
+                return "Selecciona una versión instalada para habilitar JUGAR.";
+            if (!SelectedVersion.IsInstalled)
+                return "Instala la versión seleccionada para habilitar JUGAR.";
+            if (IsSelectedFabricPending)
+                return "Instala Fabric para este perfil antes de jugar.";
+            if (AccountWarningVisible)
+                return "Inicia sesión con Microsoft para usar el workspace Premium.";
+            return "Listo para jugar.";
+        }
+    }
+
     public int MemoryMb
     {
         get => ActiveProfile?.MemoryMb ?? ActiveStore.Config.DefaultMemoryMb;
@@ -1156,6 +1178,9 @@ public sealed class JavaViewModel : ObservableObject, IDisposable
         CloseGameCommand.RaiseCanExecuteChanged();
         InstallFabricCommand.RaiseCanExecuteChanged();
         DetectJavaCommand.RaiseCanExecuteChanged();
+        OnPropertyChanged(nameof(CanLaunch));
+        OnPropertyChanged(nameof(LaunchHint));
+        OnPropertyChanged(nameof(PrimaryActionLabel));
     }
 
     private void OnRunningChanged()

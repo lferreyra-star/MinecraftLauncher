@@ -28,7 +28,7 @@
         <Style x:Key="LaunchPlayButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
             <Setter Property="Height" Value="56" />
             <Setter Property="FontSize" Value="15" />
-            <Setter Property="ToolTip" Value="Selecciona e instala una versión" />
+            <Setter Property="ToolTip" Value="{Binding LaunchHint}" />
             <Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
             <Setter Property="Template">
                 <Setter.Value>

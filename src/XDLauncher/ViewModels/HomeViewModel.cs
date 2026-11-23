@@ -1,4 +1,5 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
+using System.Windows.Threading;
 using XdLauncher.Core;
 using XdLauncher.Models;
 using XdLauncher.Services;
@@ -12,6 +13,58 @@ public sealed class HomeViewModel : ObservableObject
     private XdAccount _account;
     private string _selectedEditionId = "bedrock";
 
+
+    private readonly DispatcherTimer _bannerTimer;
+    private int _bannerIndex;
+
+    public IReadOnlyList<string> BannerTitles => Settings.Backgrounds.Select(b => b.Name).ToList();
+
+    public int BannerIndex
+    {
+        get => _bannerIndex;
+        set
+        {
+            var list = BannerTitles;
+            if (list.Count == 0) return;
+            var next = (value + list.Count) % list.Count;
+            if (!SetProperty(ref _bannerIndex, next)) return;
+            OnPropertyChanged(nameof(CurrentBannerPath));
+            OnPropertyChanged(nameof(BannerTitle));
+            OnPropertyChanged(nameof(BannerDescription));
+            OnPropertyChanged(nameof(BannerPosition));
+        }
+    }
+
+    public string? CurrentBannerPath
+    {
+        get
+        {
+            var list = Settings.Backgrounds;
+            return list.Count == 0 ? null : list[_bannerIndex % list.Count].Path;
+        }
+    }
+
+    public string BannerTitle => BannerTitles.Count == 0 ? "XD Launcher Eclipse" : BannerTitles[_bannerIndex % BannerTitles.Count];
+
+    public string BannerDescription => BannerTitle switch
+    {
+        "Bosque cinematográfico" => "Explora un bosque con luz volumétrica y profundidad real.",
+        "Aurora boreal" => "Cielos animados con auroras sobre montañas lejanas.",
+        "Amanecer en las montañas" => "El primer luz del día sobre cumbres infinitas.",
+        "Cueva de cristal" => "Cristales luminosos en las profundidades del mundo.",
+        "Nether cinematográfico" => "Un portal ardiente hacia una dimensión hostil.",
+        "El End" => "Islas flotantes y el vacío púrpura de otra dimensión.",
+        "Bioma de cerezo" => "Pétalos rosados sobre un paisaje sereno.",
+        "Montañas nevadas" => "Cumbres blancas bajo un cielo glacial.",
+        "Ciudad nocturna" => "Ventanas encendidas en una metrópolis interminable.",
+        "Bosque nocturno" => "Siluetas oscuras y estrellas sobre el dosel.",
+        "Bosque mágico" => "Luces suaves entre árboles ancestrales.",
+        "Mundos fantásticos" => "Islas suspendidas y cascadas imposibles.",
+        _ => "Paisajes cinematográficos para tu aventura."
+    };
+
+    public string BannerPosition => $"{_bannerIndex + 1} / {Math.Max(BannerTitles.Count, 1)}";
+
     public HomeViewModel(GameState game, CatalogState catalog, ProfileState profile, SettingsState settings,
         MobileConnectState mobile, XdAccount account)
     {
@@ -21,6 +74,19 @@ public sealed class HomeViewModel : ObservableObject
         Mobile = mobile;
         _account = account;
         _settings = settings;
+        var savedIndex = settings.Backgrounds.ToList().FindIndex(b => b.Id == settings.Settings.BackgroundId);
+        _bannerIndex = savedIndex >= 0 ? savedIndex : 0;
+        _bannerTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(8) };
+        _bannerTimer.Tick += (_, _) => NextBanner();
+        _bannerTimer.Start();
+
+        NextBannerCommand = new RelayCommand(NextBanner);
+        PreviousBannerCommand = new RelayCommand(PreviousBanner);
+        SelectBannerCommand = new RelayCommand<string>(name =>
+        {
+            var index = BannerTitles.ToList().IndexOf(name);
+            if (index >= 0) BannerIndex = index;
+        });
 
         OpenNewsCommand = new RelayCommand(parameter =>
         {
@@ -108,6 +174,9 @@ public sealed class HomeViewModel : ObservableObject
     public bool IsCatalogOffline => Catalog.IsOffline;
     public AsyncRelayCommand LaunchCommand => Game.LaunchCommand;
     public AsyncRelayCommand VerifyCommand => Game.VerifyCommand;
+    public RelayCommand NextBannerCommand { get; }
+    public RelayCommand PreviousBannerCommand { get; }
+    public RelayCommand<string> SelectBannerCommand { get; }
     public RelayCommand OpenNewsCommand { get; }
     public RelayCommand OpenStoreCommand { get; }
     public RelayCommand OpenUpdatesCommand { get; }
@@ -134,6 +203,7 @@ public sealed class HomeViewModel : ObservableObject
             OnPropertyChanged(nameof(HeroDetail));
             OnPropertyChanged(nameof(MainActionLabel));
             OnPropertyChanged(nameof(MainActionGlyph));
+            OnPropertyChanged(nameof(MainActionHint));
             OnPropertyChanged(nameof(ShowVerify));
         }
     }
@@ -178,12 +248,25 @@ public sealed class HomeViewModel : ObservableObject
         _ => IsInstalled ? Game.PlayLabel : "INSTALAR DESDE STORE"
     };
 
+    public string MainActionHint => SelectedEditionId switch
+    {
+        "java" => JavaPage?.SelectedVersion is { IsInstalled: true, IsBusy: false } && !JavaPage.IsBusy
+            ? "Abre Minecraft Java con la versión seleccionada."
+            : "Elige una versión instalada en Java Edition para habilitar JUGAR.",
+        "android" => "Conecta el teléfono por USB o WiFi para jugar en streaming.",
+        _ => IsInstalled ? "Abre Minecraft Bedrock." : "Abre Microsoft Store para instalar Minecraft Bedrock."
+    };
+
     public string MainActionGlyph => SelectedEditionId switch
     {
         "java" => "\uE768",
         "android" => "\uE12C",
         _ => IsInstalled ? Game.PlayGlyph : "\uE719"
     };
+
+    private void NextBanner() => BannerIndex = _bannerIndex + 1;
+
+    private void PreviousBanner() => BannerIndex = _bannerIndex - 1;
 
     private void MainAction()
     {
@@ -244,6 +327,7 @@ public sealed class HomeViewModel : ObservableObject
         OnPropertyChanged(nameof(HeroHeadline));
         OnPropertyChanged(nameof(MainActionLabel));
         OnPropertyChanged(nameof(MainActionGlyph));
+        OnPropertyChanged(nameof(MainActionHint));
         OnPropertyChanged(nameof(ShowVerify));
     }
 }
