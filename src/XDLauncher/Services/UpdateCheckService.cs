@@ -1,8 +1,9 @@
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using XdLauncher.Core;
@@ -138,14 +139,22 @@ public sealed class UpdateCheckService
                     if (assetName.EndsWith(".exe") || assetName.EndsWith(".zip"))
                     {
                         downloadUrl = asset.GetProperty("browser_download_url").GetString() ?? "";
-                        // Intentar obtener SHA-256 si el asset lo declara
-                        if (asset.TryGetProperty("sha256", out var sha256Prop) && sha256Prop.ValueKind == JsonValueKind.String)
+                        if (asset.TryGetProperty("digest", out var digestProp) && digestProp.ValueKind == JsonValueKind.String)
                         {
-                            sha256 = sha256Prop.GetString() ?? "";
+                            var digest = digestProp.GetString() ?? string.Empty;
+                            if (digest.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase))
+                                sha256 = digest[7..];
                         }
                         break;
                     }
                 }
+            }
+
+            if (string.IsNullOrWhiteSpace(sha256))
+            {
+                var match = Regex.Match(body, @"SHA-256[:\s]*([a-fA-F0-9]{64})", RegexOptions.IgnoreCase);
+                if (match.Success)
+                    sha256 = match.Groups[1].Value;
             }
 
             // Comparar versiones usando System.Version

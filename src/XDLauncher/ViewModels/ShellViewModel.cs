@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -451,6 +451,18 @@ public sealed class ShellViewModel : ObservableObject
 
     private async Task ApplyGitHubUpdateAsync(UpdateInfo info)
     {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher is not null && !dispatcher.CheckAccess())
+        {
+            dispatcher.Invoke(() => _ = ApplyGitHubUpdateAsync(info));
+            return;
+        }
+
+        if (!_dialogs.Confirm("Actualización disponible",
+                $"Hay una nueva versión {info.LatestVersion} del launcher. ¿Descargarla e instalarla ahora?",
+                "Actualizar", "Ahora no"))
+            return;
+
         try
         {
             var updated = await _updateService.UpdateAsync(info, CancellationToken.None);
