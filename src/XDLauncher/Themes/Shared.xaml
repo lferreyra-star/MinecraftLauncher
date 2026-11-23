@@ -23,11 +23,11 @@
     <FontFamily x:Key="DisplayFont">Inter, Segoe UI Variable Display, Segoe UI</FontFamily>
     <FontFamily x:Key="BodyFont">Inter, Segoe UI Variable Text, Segoe UI</FontFamily>
     <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
-    <sys:Double x:Key="Space1">8</sys:Double>
-    <sys:Double x:Key="Space2">16</sys:Double>
-    <sys:Double x:Key="Space3">24</sys:Double>
-    <sys:Double x:Key="Space4">32</sys:Double>
-    <sys:Double x:Key="Space5">40</sys:Double>
+    <Thickness x:Key="Space1">8</Thickness>
+    <Thickness x:Key="Space2">16</Thickness>
+    <Thickness x:Key="Space3">24</Thickness>
+    <Thickness x:Key="Space4">32</Thickness>
+    <Thickness x:Key="Space5">40</Thickness>
     <CornerRadius x:Key="RadiusSm">8</CornerRadius>
     <CornerRadius x:Key="RadiusControl">11</CornerRadius>
     <CornerRadius x:Key="RadiusMd">12</CornerRadius>
