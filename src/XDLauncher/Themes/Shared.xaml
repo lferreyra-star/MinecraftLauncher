@@ -1,6 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:core="clr-namespace:XdLauncher.Core">
+                    xmlns:core="clr-namespace:XdLauncher.Core"
+                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <!-- ============================================================
          XD LAUNCHER · ECLIPSE DESIGN SYSTEM
@@ -22,6 +23,22 @@
     <FontFamily x:Key="DisplayFont">Segoe UI Variable Display, Segoe UI</FontFamily>
     <FontFamily x:Key="BodyFont">Segoe UI Variable Text, Segoe UI</FontFamily>
     <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+    <sys:Double x:Key="Space1">8</sys:Double>
+    <sys:Double x:Key="Space2">16</sys:Double>
+    <sys:Double x:Key="Space3">24</sys:Double>
+    <sys:Double x:Key="Space4">32</sys:Double>
+    <sys:Double x:Key="Space5">40</sys:Double>
+    <CornerRadius x:Key="RadiusSm">8</CornerRadius>
+    <CornerRadius x:Key="RadiusControl">11</CornerRadius>
+    <CornerRadius x:Key="RadiusMd">12</CornerRadius>
+    <CornerRadius x:Key="RadiusInner">14</CornerRadius>
+    <CornerRadius x:Key="RadiusLg">16</CornerRadius>
+    <CornerRadius x:Key="RadiusCard">18</CornerRadius>
+    <CornerRadius x:Key="RadiusPill">999</CornerRadius>
+    <Duration x:Key="DurationFast">0:0:0.16</Duration>
+    <Duration x:Key="DurationNormal">0:0:0.2</Duration>
+    <Duration x:Key="DurationSlow">0:0:0.28</Duration>
+    <Duration x:Key="DurationShimmer">0:0:0.85</Duration>
 
     <DropShadowEffect x:Key="CardShadow" BlurRadius="34" ShadowDepth="0" Opacity="0.38" Color="#000000" />
     <DropShadowEffect x:Key="SoftShadow" BlurRadius="18" ShadowDepth="0" Opacity="0.22" Color="#000000" />
@@ -135,8 +152,8 @@
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderSoftBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="18" />
-        <Setter Property="Padding" Value="20" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusCard}" />
+        <Setter Property="Padding" Value="{StaticResource Space3}" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
     </Style>
     <Style x:Key="GlassCard" TargetType="Border" BasedOn="{StaticResource Card}">
@@ -148,23 +165,23 @@
         <Setter Property="Background" Value="{DynamicResource SurfaceSunkenBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderSoftBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="14" />
-        <Setter Property="Padding" Value="16" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusInner}" />
+        <Setter Property="Padding" Value="{StaticResource Space2}" />
     </Style>
     <Style x:Key="RowCard" TargetType="Border" BasedOn="{StaticResource Card}">
         <Setter Property="Padding" Value="18,14" />
-        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusInner}" />
     </Style>
     <Style x:Key="Divider" TargetType="Border">
         <Setter Property="Height" Value="1" />
         <Setter Property="Background" Value="{DynamicResource BorderSoftBrush}" />
-        <Setter Property="Margin" Value="0,12" />
+        <Setter Property="Margin" Value="0,8" />
     </Style>
     <Style x:Key="Pill" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource ChipBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderSoftBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="999" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusPill}" />
         <Setter Property="Padding" Value="10,4" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
@@ -172,14 +189,14 @@
         <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource AccentSoftBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}" />
         <Setter Property="Padding" Value="8,3" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
     <Style x:Key="IconTile" TargetType="Border">
         <Setter Property="Width" Value="40" />
         <Setter Property="Height" Value="40" />
-        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMd}" />
         <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
@@ -214,7 +231,7 @@
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="11"
+                                CornerRadius="{StaticResource RadiusControl}"
                                 RenderTransformOrigin="0.5,0.5">
                             <Grid>
                                 <Border x:Name="Sheen" CornerRadius="10" IsHitTestVisible="False"
@@ -309,7 +326,7 @@
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="Chrome" Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="18" Padding="{TemplateBinding Padding}"
+                            CornerRadius="{StaticResource RadiusCard}" Padding="{TemplateBinding Padding}"
                             RenderTransformOrigin="0.5,0.5">
                         <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
@@ -348,7 +365,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Chrome" Background="{TemplateBinding Background}" CornerRadius="8">
+                    <Border x:Name="Chrome" Background="{TemplateBinding Background}" CornerRadius="{StaticResource RadiusSm}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -389,7 +406,7 @@
                 <ControlTemplate TargetType="ListBoxItem">
                     <Grid>
                         <Border x:Name="Chrome" Background="Transparent" BorderBrush="Transparent"
-                                BorderThickness="1" CornerRadius="12" Padding="{TemplateBinding Padding}"
+                                BorderThickness="1" CornerRadius="{StaticResource RadiusMd}" Padding="{TemplateBinding Padding}"
                                 RenderTransformOrigin="0.5,0.5">
                             <Border.RenderTransform><ScaleTransform x:Name="ChromeScale" ScaleX="1" ScaleY="1" /></Border.RenderTransform>
                             <Grid>
@@ -427,10 +444,10 @@
                             <EventTrigger RoutedEvent="MouseEnter">
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="GlyphScale" Storyboard.TargetProperty="ScaleX" To="1.14" Duration="0:0:0.16" AutoReverse="True">
+                                        <DoubleAnimation Storyboard.TargetName="GlyphScale" Storyboard.TargetProperty="ScaleX" To="1.14" Duration="{StaticResource DurationFast}" AutoReverse="True">
                                             <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
                                         </DoubleAnimation>
-                                        <DoubleAnimation Storyboard.TargetName="GlyphScale" Storyboard.TargetProperty="ScaleY" To="1.14" Duration="0:0:0.16" AutoReverse="True">
+                                        <DoubleAnimation Storyboard.TargetName="GlyphScale" Storyboard.TargetProperty="ScaleY" To="1.14" Duration="{StaticResource DurationFast}" AutoReverse="True">
                                             <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
                                         </DoubleAnimation>
                                     </Storyboard>
@@ -456,16 +473,16 @@
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="ChromeScale" Storyboard.TargetProperty="ScaleX" From="0.97" To="1" Duration="0:0:0.24">
+                                        <DoubleAnimation Storyboard.TargetName="ChromeScale" Storyboard.TargetProperty="ScaleX" From="0.97" To="1" Duration="{StaticResource DurationNormal}">
                                             <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
                                         </DoubleAnimation>
-                                        <DoubleAnimation Storyboard.TargetName="ChromeScale" Storyboard.TargetProperty="ScaleY" From="0.97" To="1" Duration="0:0:0.24">
+                                        <DoubleAnimation Storyboard.TargetName="ChromeScale" Storyboard.TargetProperty="ScaleY" From="0.97" To="1" Duration="{StaticResource DurationNormal}">
                                             <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
                                         </DoubleAnimation>
-                                        <DoubleAnimation Storyboard.TargetName="GlyphScale" Storyboard.TargetProperty="ScaleX" From="0.7" To="1" Duration="0:0:0.3">
+                                        <DoubleAnimation Storyboard.TargetName="GlyphScale" Storyboard.TargetProperty="ScaleX" From="0.7" To="1" Duration="{StaticResource DurationSlow}">
                                             <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
                                         </DoubleAnimation>
-                                        <DoubleAnimation Storyboard.TargetName="GlyphScale" Storyboard.TargetProperty="ScaleY" From="0.7" To="1" Duration="0:0:0.3">
+                                        <DoubleAnimation Storyboard.TargetName="GlyphScale" Storyboard.TargetProperty="ScaleY" From="0.7" To="1" Duration="{StaticResource DurationSlow}">
                                             <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
                                         </DoubleAnimation>
                                     </Storyboard>
@@ -496,7 +513,7 @@
                 <ControlTemplate TargetType="ListBoxItem">
                     <Grid>
                         <Border x:Name="Chrome" Background="Transparent" BorderBrush="Transparent"
-                                BorderThickness="1" CornerRadius="12" Width="48" Height="44"
+                                BorderThickness="1" CornerRadius="{StaticResource RadiusMd}" Width="48" Height="44"
                                 HorizontalAlignment="Center">
                             <Grid>
                                 <Border x:Name="Marker" Width="3" Height="20" CornerRadius="2"
@@ -561,7 +578,7 @@
                 <ControlTemplate TargetType="TextBox">
                     <Border x:Name="Chrome" Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="11" Padding="{TemplateBinding Padding}">
+                            CornerRadius="{StaticResource RadiusControl}" Padding="{TemplateBinding Padding}">
                         <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -599,7 +616,7 @@
                 <ControlTemplate TargetType="PasswordBox">
                     <Border x:Name="Chrome" Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="11" Padding="{TemplateBinding Padding}">
+                            CornerRadius="{StaticResource RadiusControl}" Padding="{TemplateBinding Padding}">
                         <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -626,7 +643,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Border x:Name="Chrome" Background="{DynamicResource InputBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="11">
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{StaticResource RadiusControl}">
                         <TextBlock Text="&#xE70D;" FontFamily="{StaticResource IconFont}" FontSize="10"
                                    HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,14,0"
                                    Foreground="{DynamicResource TextMutedBrush}" />
@@ -673,7 +690,7 @@
                                MinWidth="{TemplateBinding ActualWidth}" MaxHeight="320">
                             <Border Background="{DynamicResource SurfaceRaisedBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                    CornerRadius="12" Margin="0,6,0,14" Padding="5">
+                                    CornerRadius="{StaticResource RadiusMd}" Margin="0,6,0,14" Padding="5">
                                 <Border.Effect>
                                     <DropShadowEffect BlurRadius="26" ShadowDepth="4" Opacity="0.4" Color="#000000" />
                                 </Border.Effect>
@@ -696,7 +713,7 @@
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="ComboBoxItem">
-                                <Border x:Name="Chrome" Background="Transparent" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                <Border x:Name="Chrome" Background="Transparent" CornerRadius="{StaticResource RadiusSm}" Padding="{TemplateBinding Padding}">
                                     <ContentPresenter />
                                 </Border>
                                 <ControlTemplate.Triggers>
@@ -735,7 +752,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <ContentPresenter VerticalAlignment="Center" Margin="0,0,12,0" RecognizesAccessKey="True" />
-                        <Border x:Name="Track" Grid.Column="1" Width="44" Height="24" CornerRadius="12"
+                        <Border x:Name="Track" Grid.Column="1" Width="44" Height="24" CornerRadius="{StaticResource RadiusMd}"
                                 Background="{DynamicResource ChipStrongBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                             <Border x:Name="Knob" Width="18" Height="18" CornerRadius="9"
@@ -1005,7 +1022,7 @@
         </Setter>
     </Style>
     <Style TargetType="ScrollBar">
-        <Setter Property="Width" Value="10" />
+        <Setter Property="Width" Value="8" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Template">
             <Setter.Value>
@@ -1026,7 +1043,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="Orientation" Value="Horizontal">
                             <Setter Property="Width" Value="Auto" />
-                            <Setter Property="Height" Value="10" />
+                            <Setter Property="Height" Value="8" />
                             <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -1096,7 +1113,7 @@
             <EventTrigger RoutedEvent="Loaded">
                 <BeginStoryboard>
                     <Storyboard RepeatBehavior="Forever" AutoReverse="True">
-                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.28" To="0.9" Duration="0:0:0.85">
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.28" To="0.9" Duration="{StaticResource DurationShimmer}">
                             <DoubleAnimation.EasingFunction>
                                 <SineEase EasingMode="EaseInOut" />
                             </DoubleAnimation.EasingFunction>
