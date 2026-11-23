@@ -1,6 +1,7 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using XdLauncher.Core;
 using XdLauncher.Models;
 using XdLauncher.Services;
@@ -12,10 +13,13 @@ public sealed class ShellViewModel : ObservableObject
     private readonly DialogService _dialogs;
     private readonly UpdateService _updateService;
     private readonly UpdateCheckService _updateCheckService;
+    private XdAccount _account;
     private NavigationItem _currentNavigation;
     private bool _isInitializing;
     private bool _isFullscreen;
     private bool _isSidebarCollapsed;
+    private int _lastNavIndex;
+    private int _navigationDirection = 1;
     private string _initializationStatus = "Preparando el launcher…";
 
     // Almacenar la última información de actualización verificada
@@ -37,7 +41,7 @@ public sealed class ShellViewModel : ObservableObject
         _dialogs = dialogs;
         _updateService = updateService;
         _updateCheckService = updateCheckService;
-        Account = account;
+        _account = account;
 
         _updateService.UpdateChecked += OnUpdateChecked;
         _updateService.UpdateAvailable += OnUpdateAvailable;
@@ -57,50 +61,62 @@ public sealed class ShellViewModel : ObservableObject
         Downloads = new DownloadViewModel(downloadService, dialogs);
         Java = new JavaViewModel(Settings, Profile, dialogs);
         Home.JavaPage = Java;
+        Mods = new ModsCenterViewModel(Java, dialogs);
         SettingsPage = new SettingsViewModel(Settings, Profile, account);
+        ProfilePage = new ProfilePageViewModel(Profile, Settings, SettingsPage, account, () => Navigate("settings"));
 
 
         Navigation =
         [
             new NavigationItem
             {
-                Key = "home", Title = "Inicio", Glyph = "\uE80F",
+                Key = "home", Title = "Inicio", Glyph = "", Group = "Jugar",
                 Subtitle = "Tu centro de mando", Page = Home
             },
             new NavigationItem
             {
-                Key = "java", Title = "Minecraft Java", Glyph = "\uE945",
+                Key = "java", Title = "Minecraft Java", Glyph = "", Group = "Jugar",
                 Subtitle = "Versiones, Java y lanzamiento", Page = Java
             },
             new NavigationItem
             {
-                Key = "game", Title = "Juego", Glyph = "\uE7FC",
+                Key = "game", Title = "Juego", Glyph = "", Group = "Jugar",
                 Subtitle = "Instalación, componentes y estado", Page = Game
             },
             new NavigationItem
             {
-                Key = "versions", Title = "Versiones", Glyph = "\uE81C",
+                Key = "mobile", Title = "Móvil", Glyph = "", Group = "Jugar",
+                Subtitle = "Conecta tu teléfono Android", Page = MobileState
+            },
+            new NavigationItem
+            {
+                Key = "versions", Title = "Versiones", Glyph = "", Group = "Biblioteca",
                 Subtitle = "Actualizaciones oficiales y notas", Page = Versions
             },
             new NavigationItem
             {
-                Key = "addons", Title = "Complementos", Glyph = "\uE7B8",
+                Key = "addons", Title = "Complementos", Glyph = "", Group = "Biblioteca",
                 Subtitle = "Addons, texturas, skins y mapas", Page = Addons
             },
             new NavigationItem
             {
-                Key = "downloads", Title = "Descargas", Glyph = "\uE896",
+                Key = "mods", Title = "Centro de Mods", Glyph = "", Group = "Biblioteca",
+                Subtitle = "Modrinth · dependencias y biblioteca", Page = Mods
+            },
+            new NavigationItem
+            {
+                Key = "downloads", Title = "Descargas", Glyph = "", Group = "Biblioteca",
                 Subtitle = "Descarga Minecraft y herramientas", Page = Downloads
             },
             new NavigationItem
             {
-                Key = "settings", Title = "Ajustes", Glyph = "\uE713",
-                Subtitle = "Personalización, cuenta y sistema", Page = SettingsPage
+                Key = "profile", Title = "Perfil", Glyph = "", Group = "Sistema",
+                Subtitle = "Cuenta, identidad y sesión", Page = ProfilePage
             },
             new NavigationItem
             {
-                Key = "mobile", Title = "Móvil", Glyph = "\uE8EA",
-                Subtitle = "Conecta tu teléfono Android", Page = MobileState
+                Key = "settings", Title = "Ajustes", Glyph = "", Group = "Sistema",
+                Subtitle = "Personalización y sistema", Page = SettingsPage
             }
         ];
 
@@ -158,6 +174,7 @@ public sealed class ShellViewModel : ObservableObject
         {
             OnPropertyChanged(nameof(IsLightTheme));
             OnPropertyChanged(nameof(BackdropSource));
+            OnPropertyChanged(nameof(CurrentBackgroundPath));
         };
         MobileState.NotificationRequested += (message, isError) =>
         {
@@ -175,13 +192,15 @@ public sealed class ShellViewModel : ObservableObject
     public CatalogState Catalog { get; }
     public GameState Game { get; }
     public ProfileState Profile { get; }
-    public XdAccount Account { get; }
+    public XdAccount Account => _account;
     public HomeViewModel Home { get; }
     public VersionsViewModel Versions { get; }
     public AddonsViewModel Addons { get; }
+    public ModsCenterViewModel Mods { get; }
     public DownloadViewModel Downloads { get; }
     public JavaViewModel Java { get; }
     public SettingsViewModel SettingsPage { get; }
+    public ProfilePageViewModel ProfilePage { get; }
     public MobileConnectState MobileState { get; }
     public IReadOnlyList<NavigationItem> Navigation { get; }
     public ObservableCollection<ToastMessage> Toasts { get; }
@@ -193,10 +212,16 @@ public sealed class ShellViewModel : ObservableObject
         {
             if (value is null || SetProperty(ref _currentNavigation, value))
             {
+                var newIndex = value is null ? 0 : Navigation.ToList().IndexOf(value);
+                _navigationDirection = newIndex >= _lastNavIndex ? 1 : -1;
+                _lastNavIndex = newIndex;
+                OnPropertyChanged(nameof(NavigationDirection));
+                OnPropertyChanged(nameof(CurrentBackgroundPath));
                 OnPropertyChanged(nameof(CurrentPage));
                 OnPropertyChanged(nameof(CurrentTitle));
                 OnPropertyChanged(nameof(CurrentSubtitle));
                 OnPropertyChanged(nameof(CurrentGlyph));
+                OnPropertyChanged(nameof(CurrentGroup));
                 if (value is not null)
                     OnNavigated(value.Key);
             }
@@ -207,6 +232,9 @@ public sealed class ShellViewModel : ObservableObject
     public string CurrentTitle => CurrentNavigation.Title;
     public string CurrentSubtitle => CurrentNavigation.Subtitle;
     public string CurrentGlyph => CurrentNavigation.Glyph;
+    public string CurrentGroup => CurrentNavigation.Group;
+    public int NavigationDirection => _navigationDirection;
+    public string? CurrentBackgroundPath => Settings.GetBackgroundPathForSection(CurrentNavigation?.Key ?? "home");
 
     public bool IsInitializing
     {
@@ -227,6 +255,7 @@ public sealed class ShellViewModel : ObservableObject
     }
 
     public string DisplayName => Profile.DisplayName;
+    public string TopBarStatusText => IsInitializing ? InitializationStatus : GameStatusText;
     public string AccountStatusText => Profile.IsMicrosoftAccount
         ? $"Xbox Live · {Profile.DisplayName}"
         : "Perfil local";
@@ -255,7 +284,11 @@ public sealed class ShellViewModel : ObservableObject
     public bool IsGameRunning => Game.IsGameRunning;
     public bool IsLightTheme => Settings.IsLightTheme;
     public string? BackdropSource => Settings.BackgroundPath;
-    public bool IsFullscreen => _isFullscreen;
+    public bool IsFullscreen
+    {
+        get => _isFullscreen;
+        set => SetProperty(ref _isFullscreen, value);
+    }
     public UpdateInfo? LastUpdateInfo => _lastUpdateInfo;
 
     /// <summary>Nombre mostrado de la cuenta de XD Launcher (viene del servidor).</summary>
@@ -266,7 +299,24 @@ public sealed class ShellViewModel : ObservableObject
     public string AccountInitial => Account.Initial;
     public string? AccountAvatarPath => Account.AvatarPath;
     public string AccountProviderLabel => Account.ProviderLabel;
+    public string LauncherVersion => AppInfo.FullVersion;
     public string XdAccountStatusText => $"{Account.ProviderLabel} · {AccountEmail}";
+
+    /// <summary>Actualiza la cuenta sin recrear la ventana cuando llega un handoff desde la web.</summary>
+    public void UpdateAccount(XdAccount account)
+    {
+        _account = account;
+        Home.UpdateAccount(account);
+        SettingsPage.UpdateAccount(account);
+        ProfilePage.UpdateAccount(account);
+        OnPropertyChanged(nameof(Account));
+        OnPropertyChanged(nameof(AccountDisplayName));
+        OnPropertyChanged(nameof(AccountEmail));
+        OnPropertyChanged(nameof(AccountInitial));
+        OnPropertyChanged(nameof(AccountAvatarPath));
+        OnPropertyChanged(nameof(AccountProviderLabel));
+        OnPropertyChanged(nameof(XdAccountStatusText));
+    }
 
     /// <summary>Solicita el cierre de sesión y el regreso a la pantalla de acceso.</summary>
     public event Action? SignOutRequested;
@@ -286,7 +336,7 @@ public sealed class ShellViewModel : ObservableObject
         }
     }
 
-    public double SidebarWidth => IsSidebarCollapsed ? 76 : 244;
+    public double SidebarWidth => IsSidebarCollapsed ? 84 : 264;
     public double TitleBarHeight => 42;
     public string SidebarToggleGlyph => IsSidebarCollapsed ? "\uE76C" : "\uE76B";
 
@@ -311,12 +361,36 @@ public sealed class ShellViewModel : ObservableObject
         // ToastHub puede notificar desde hilos secundarios: siempre se vuelve al hilo de UI.
         var dispatcher = Application.Current?.Dispatcher;
         if (dispatcher is not null && !dispatcher.CheckAccess())
-            dispatcher.Invoke(() => Toasts.Add(toast));
+        {
+            dispatcher.Invoke(() =>
+            {
+                Toasts.Add(toast);
+                ScheduleToastDismiss(toast);
+            });
+        }
         else
+        {
             Toasts.Add(toast);
+            ScheduleToastDismiss(toast);
+        }
 
-        while (Toasts.Count > 5)
+        while (Toasts.Count > 4)
             Toasts.RemoveAt(0);
+    }
+
+    /// <summary>Cierra automáticamente la notificación tras unos segundos.</summary>
+    private void ScheduleToastDismiss(ToastMessage toast)
+    {
+        var timer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(toast.IsError ? 9 : 6)
+        };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            Toasts.Remove(toast);
+        };
+        timer.Start();
     }
 
     private void OnGameLaunched(LaunchResult result)

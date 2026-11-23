@@ -1,75 +1,90 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Windows.Threading;
+using XdLauncher.Core;
 using XdLauncher.Services;
 using XdLauncher.ViewModels;
 
 namespace XdLauncher.Views;
 
-/// <summary>
-/// Pantalla de acceso premium de XD Launcher. Bloquea la aplicación hasta que
-/// el servidor valida las credenciales y devuelve una sesión válida.
-/// </summary>
 public partial class LoginWindow : Window
 {
     private readonly LoginViewModel _viewModel;
+    private readonly Random _random = new();
 
     public LoginWindow(LoginViewModel viewModel)
     {
         InitializeComponent();
         _viewModel = viewModel;
         DataContext = viewModel;
-
-        _viewModel.Authenticated += OnAuthenticated;
-        Loaded += async (_, _) => await _viewModel.CheckServerAsync();
+        _viewModel.Authenticated += _ => { };
+        Loaded += async (_, _) =>
+        {
+            await _viewModel.CheckServerAsync();
+            StartParticles();
+        };
         Closing += (_, _) =>
         {
-            if (!IsAuthenticated)
-                LogService.Info("El usuario cerró la pantalla de acceso.");
-            _viewModel.Authenticated -= OnAuthenticated;
+            _viewModel.CancelPendingOperations();
+            _viewModel.Authenticated -= _ => { };
         };
     }
 
-    /// <summary>Indica si el usuario completò el acceso correctamente.</summary>
     public bool IsAuthenticated { get; private set; }
 
-    /// <summary>
-    /// La ventana NO se cierra aquí: el cierre lo controla la aplicación después de
-    /// registrar la cuenta, para evitar una carrera en la que el evento de cierre
-    /// resolviera la espera con "sin sesión" y cerrara el launcher.
-    /// </summary>
-    private void OnAuthenticated(XdLauncher.Services.XdAccount account)
+    public void CompleteExternalLogin(XdAccount account) => _viewModel.CompleteExternalLogin(account);
+
+    private void StartParticles()
     {
-        IsAuthenticated = true;
-        DialogResult = true;
+        var accent = Application.Current?.TryFindResource("AccentColor") is Color color
+            ? color
+            : Color.FromRgb(0x5C, 0xE0, 0x7A);
+
+        var width = Math.Max(ActualWidth, 960);
+        var height = Math.Max(ActualHeight, 640);
+
+        for (var i = 0; i < AnimationHelper.ParticleCount; i++)
+        {
+            var size = _random.NextDouble() * 1.8 + 0.6;
+            var dot = new Ellipse
+            {
+                Width = size,
+                Height = size,
+                Fill = new SolidColorBrush(Color.FromArgb((byte)(18 + _random.Next(28)), accent.R, accent.G, accent.B)),
+                IsHitTestVisible = false,
+                Opacity = 0.55
+            };
+
+            var startTop = _random.NextDouble() * height;
+            Canvas.SetLeft(dot, _random.NextDouble() * width);
+            Canvas.SetTop(dot, startTop);
+            ParticleLayer.Children.Add(dot);
+
+            var duration = TimeSpan.FromSeconds(14 + _random.NextDouble() * 14);
+            var animation = new DoubleAnimation
+            {
+                From = startTop,
+                To = -20,
+                Duration = duration,
+                FillBehavior = FillBehavior.Stop,
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
+            };
+            dot.BeginAnimation(Canvas.TopProperty, animation);
+        }
     }
 
     private void TogglePassword_Click(object sender, RoutedEventArgs e)
     {
         if (_viewModel.TogglePasswordCommand.CanExecute(null))
             _viewModel.TogglePasswordCommand.Execute(null);
-
-        var show = _viewModel.ShowPassword;
-        SecretBox.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
-        PlainBox.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
-        if (show)
-        {
-            PlainBox.Text = _viewModel.Password;
-            PlainBox.CaretIndex = PlainBox.Text.Length;
-            PlainBox.Focus();
-        }
-        else
-        {
-            _viewModel.Password = PlainBox.Text;
-            SecretBox.Password = _viewModel.Password;
-            SecretBox.Focus();
-        }
     }
 
     private void SecretBox_PasswordChanged(object sender, RoutedEventArgs e)
-    {
-        if (!_viewModel.ShowPassword)
-            _viewModel.Password = SecretBox.Password;
-    }
+        => _viewModel.Password = SecretBox.Password;
 
     private void ConfirmBox_PasswordChanged(object sender, RoutedEventArgs e)
         => _viewModel.ConfirmPassword = ConfirmBox.Password;
@@ -80,9 +95,6 @@ public partial class LoginWindow : Window
             _viewModel.ContinueWithGoogleCommand.Execute(null);
     }
 
-    private void OpenWebsiteHandoff_Click(object sender, RoutedEventArgs e)
-        => FileOps.OpenUrl(XdLauncher.Services.XdAuthService.DesktopHandoffUrl);
-
     private void OpenFirebaseConsole_Click(object sender, RoutedEventArgs e)
     {
         if (_viewModel.OpenFirebaseConsoleCommand.CanExecute(null))
@@ -91,43 +103,37 @@ public partial class LoginWindow : Window
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
+    private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount == 2)
+        {
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+            return;
+        }
+
+        if (e.LeftButton == MouseButtonState.Pressed)
+            DragMove();
+    }
+
     private void Primary_Click(object sender, RoutedEventArgs e)
     {
         if (_viewModel.IsRegisterMode)
         {
-            if (_viewModel.RegisterCommand.CanExecute(null))
-                _viewModel.RegisterCommand.Execute(null);
+            _viewModel.RegisterCommand.Execute(null);
         }
-        else if (_viewModel.SignInCommand.CanExecute(null))
+        else
         {
             _viewModel.SignInCommand.Execute(null);
         }
     }
 
-    private void Recover_Click(object sender, RoutedEventArgs e)
+    private void Secondary_Click(object sender, RoutedEventArgs e)
     {
-        if (_viewModel.RecoverCommand.CanExecute(null))
-            _viewModel.RecoverCommand.Execute(null);
-    }
-
-    private void SwitchMode_Click(object sender, RoutedEventArgs e)
-    {
-        if (_viewModel.SwitchModeCommand.CanExecute(null))
+        if (_viewModel.IsRegisterMode)
             _viewModel.SwitchModeCommand.Execute(null);
-    }
-
-    private void OpenWebsite_Click(object sender, RoutedEventArgs e)
-    {
-        if (_viewModel.OpenWebsiteCommand.CanExecute(null))
-            _viewModel.OpenWebsiteCommand.Execute(null);
-    }
-
-    private void PasswordBox_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Enter)
-            return;
-
-        e.Handled = true;
-        Primary_Click(sender, e);
+        else
+            _viewModel.RegisterCommand.Execute(null);
     }
 }

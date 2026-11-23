@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -5,6 +6,19 @@ using System.Text.Json;
 using XdLauncher.Models;
 
 namespace XdLauncher.Services;
+
+/// <summary>Etapas del acceso con Google que la interfaz muestra en tiempo real.</summary>
+public enum GoogleSignInStage
+{
+    OpeningBrowser,
+    WaitingForAuthorization,
+    VerifyingAccount,
+    SynchronizingProfile,
+    Completed
+}
+
+/// <summary>Progreso del acceso con Google.</summary>
+public sealed record GoogleSignInProgress(GoogleSignInStage Stage, string Message);
 
 /// <summary>Error de autenticación contra el sistema de cuentas de XD Launcher.</summary>
 public sealed class XdAuthException : Exception
@@ -166,27 +180,94 @@ public sealed class XdAuthService
     /// Acepta un token de sesión de Firebase ya emitido (por ejemplo, el que entrega la web
     /// tras iniciar sesión con Google) y devuelve la cuenta validada contra el servidor.
     /// </summary>
-    public async Task<XdAccount> SignInWithIdTokenAsync(string idToken, CancellationToken cancellationToken = default)
+    public async Task<XdAccount> SignInWithIdTokenAsync(string idToken, CancellationToken cancellationToken = default,
+        string? refreshToken = null)
     {
-        var account = await LookupAsync(idToken, cancellationToken);
+        var account = await LookupAsync(idToken, cancellationToken, refreshToken);
         LogService.Info($"Sesión de XD Launcher validada por token: {account.Email}");
         return account;
     }
 
     /// <summary>
     /// Inicia sesión con Google sin salir de la aplicación: levanta un puente local que
-    /// pide el consentimiento en el navegador del sistema y valida el idToken devuelto
-    /// contra el servidor de autenticación.
+    /// pide el consentimiento en el navegador del sistema y valida la sesión devuelta
+    /// contra el servidor de autenticación. El flujo es el OAuth de Firebase por
+    /// redirección (state y PKCE los gestiona el SDK de Firebase); no se inventan
+    /// credenciales ni se usa ningún flujo paralelo.
     /// </summary>
-    public async Task<XdAccount> SignInWithGoogleAsync(CancellationToken cancellationToken = default)
+    public async Task<XdAccount> SignInWithGoogleAsync(
+        TimeSpan? timeout = null,
+        IProgress<GoogleSignInProgress>? progress = null,
+        CancellationToken cancellationToken = default)
     {
-        using var bridge = new LocalAuthBridge();
-        LogService.Info("Abriendo el acceso con Google en el navegador del sistema.");
+        LocalAuthBridge bridge;
+        try
+        {
+            bridge = new LocalAuthBridge();
+        }
+        catch (Exception ex) when (ex is System.Net.Sockets.SocketException or UnauthorizedAccessException)
+        {
+            throw new XdAuthException(
+                "No se pudo abrir el canal local de autenticación. Revisa el firewall y vuelve a intentarlo.",
+                "GOOGLE_BRIDGE", ex);
+        }
 
-        var idToken = await bridge.RequestGoogleTokenAsync(TimeSpan.FromMinutes(5), cancellationToken);
-        var account = await SignInWithIdTokenAsync(idToken, cancellationToken);
-        account.Provider = "google.com";
-        return account;
+        using (bridge)
+        {
+            LogService.Info("Abriendo el acceso con Google en el navegador del sistema.");
+            progress?.Report(new GoogleSignInProgress(GoogleSignInStage.OpeningBrowser,
+                "Conectando con Google…"));
+
+            bridge.StatusChanged += message => progress?.Report(new GoogleSignInProgress(
+                GoogleSignInStage.WaitingForAuthorization, message));
+
+            GoogleBridgeToken token;
+            try
+            {
+                token = await bridge.RequestGoogleTokenAsync(timeout ?? TimeSpan.FromMinutes(4), cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                LogService.Info("El acceso con Google se canceló o caducó.");
+                throw;
+            }
+            catch (TimeoutException ex)
+            {
+                throw new XdAuthException(ex.Message, "GOOGLE_TIMEOUT", ex);
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new XdAuthException(ex.Message, "GOOGLE_ERROR", ex);
+            }
+            catch (System.Net.Sockets.SocketException ex)
+            {
+                throw new XdAuthException(
+                    "No se pudo abrir el canal local de autenticación. Revisa el firewall y vuelve a intentarlo.",
+                    "GOOGLE_BRIDGE", ex);
+            }
+            catch (Win32Exception ex)
+            {
+                throw new XdAuthException("No se pudo abrir el navegador para acceder con Google.", "GOOGLE_BROWSER", ex);
+            }
+
+            progress?.Report(new GoogleSignInProgress(GoogleSignInStage.VerifyingAccount,
+                "Verificando tu cuenta con el servidor…"));
+
+            var account = await SignInWithIdTokenAsync(token.IdToken, cancellationToken, token.RefreshToken);
+            account.Provider = "google.com";
+
+            progress?.Report(new GoogleSignInProgress(GoogleSignInStage.SynchronizingProfile,
+                "Sincronizando tu perfil de XD Launcher…"));
+            using (var syncTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+            {
+                syncTimeout.CancelAfter(TimeSpan.FromSeconds(8));
+                await SyncProfileAsync(account, syncTimeout.Token);
+            }
+
+            progress?.Report(new GoogleSignInProgress(GoogleSignInStage.Completed,
+                "Acceso concedido. Preparando el launcher…"));
+            return account;
+        }
     }
 
     /// <summary>Envía el correo real de recuperación de contraseña de Firebase.</summary>
@@ -218,7 +299,7 @@ public sealed class XdAuthService
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
         var idToken = GetString(root, "id_token") ?? throw new XdAuthException("El servidor no devolvió un token de sesión.");
-        var expiresIn = root.TryGetProperty("expires_in", out var exp) && exp.TryGetInt32(out var seconds) ? seconds : 3600;
+        var expiresIn = ReadInt32(root, "expires_in", 3600);
         var newRefresh = GetString(root, "refresh_token") ?? refreshToken;
 
         var user = await LookupAsync(idToken, cancellationToken);
@@ -236,7 +317,8 @@ public sealed class XdAuthService
     }
 
     /// <summary>Consulta los datos reales del usuario en el servidor.</summary>
-    public async Task<XdAccount> LookupAsync(string idToken, CancellationToken cancellationToken = default)
+    public async Task<XdAccount> LookupAsync(string idToken, CancellationToken cancellationToken = default,
+        string? refreshToken = null)
     {
         var body = new Dictionary<string, object> { ["idToken"] = idToken };
         var json = await PostAsync($"{IdentityBase}:lookup?key={ApiKey}", body, cancellationToken);
@@ -257,6 +339,7 @@ public sealed class XdAuthService
             PhotoUrl = GetString(user, "photoUrl"),
             Provider = GetString(user, "providerId") ?? "password",
             IdToken = idToken,
+            RefreshToken = string.IsNullOrWhiteSpace(refreshToken) ? null : refreshToken,
             ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(55)
         };
     }
@@ -317,16 +400,22 @@ public sealed class XdAuthService
             };
 
             var fieldPaths = new List<object> { "uid", "name", "email", "photoURL", "provider" };
-            var transforms = new Dictionary<string, object>
+            var transforms = new List<object>
             {
-                ["lastLoginAt"] = new Dictionary<string, object> { ["setToServerValue"] = "REQUEST_TIME" }
+                new Dictionary<string, object>
+                {
+                    ["fieldPath"] = "lastLoginAt",
+                    ["setToServerValue"] = "REQUEST_TIME"
+                }
             };
 
             if (!exists)
             {
-                fields["createdAt"] = new Dictionary<string, object>();
-                fieldPaths.Add("createdAt");
-                transforms["createdAt"] = new Dictionary<string, object> { ["setToServerValue"] = "REQUEST_TIME" };
+                transforms.Add(new Dictionary<string, object>
+                {
+                    ["fieldPath"] = "createdAt",
+                    ["setToServerValue"] = "REQUEST_TIME"
+                });
             }
 
             var write = new Dictionary<string, object>
@@ -414,7 +503,7 @@ public sealed class XdAuthService
         var root = doc.RootElement;
         var idToken = GetString(root, "idToken") ?? throw new XdAuthException("El servidor no devolvió un token de sesión.");
         var refreshToken = GetString(root, "refreshToken");
-        var expiresIn = root.TryGetProperty("expiresIn", out var exp) && exp.TryGetInt64(out var seconds) ? seconds : 3600;
+        var expiresIn = ReadInt32(root, "expiresIn", 3600);
         var localId = GetString(root, "localId");
         var email = GetString(root, "email");
         var displayName = GetString(root, "displayName");
@@ -500,6 +589,20 @@ public sealed class XdAuthService
         => element.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String
             ? value.GetString()
             : null;
+
+    private static int ReadInt32(JsonElement element, string property, int fallback)
+    {
+        if (!element.TryGetProperty(property, out var value))
+            return fallback;
+
+        if (value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out var number))
+            return number;
+
+        if (value.ValueKind == JsonValueKind.String && int.TryParse(value.GetString(), out var parsed))
+            return parsed;
+
+        return fallback;
+    }
 
     private static string? ReadString(JsonElement fields, string name)
     {

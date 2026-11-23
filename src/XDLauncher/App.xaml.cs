@@ -1,6 +1,10 @@
-﻿using System.Runtime.InteropServices;
+using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using XdLauncher.Core;
 using XdLauncher.Services;
 using XdLauncher.ViewModels;
 
@@ -12,6 +16,8 @@ public partial class App : Application
 
     private Mutex? _singleInstanceMutex;
     private ShellViewModel? _shell;
+    private Views.LoginWindow? _loginWindow;
+    private XdAccount? _pendingHandoffAccount;
     private bool _shuttingDown;
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -29,6 +35,20 @@ public partial class App : Application
             return;
         }
 
+        if (e.Args.Any(arg => arg.Equals("--capture-settings", StringComparison.OrdinalIgnoreCase)))
+        {
+            CaptureSettings("appearance", "settings-ultimate.png");
+            Shutdown();
+            return;
+        }
+
+        if (e.Args.Any(arg => arg.Equals("--capture-about", StringComparison.OrdinalIgnoreCase)))
+        {
+            CaptureSettings("about", "about-rebirth.png");
+            Shutdown();
+            return;
+        }
+
         SessionHandoff.RegisterProtocol();
 
         var handoffUri = e.Args.FirstOrDefault(arg =>
@@ -36,7 +56,7 @@ public partial class App : Application
 
         if (!AcquireSingleInstance())
         {
-            // Si ya hay una instancia, se le reenvía el traspaso de sesión y seDvuelve el foco.
+            // Si ya hay una instancia, se le reenvía el traspaso de sesión y se devuelve el foco.
             if (handoffUri is not null)
                 SessionHandoff.ForwardToRunningInstance(handoffUri);
             ActivateExistingWindow();
@@ -54,6 +74,8 @@ public partial class App : Application
 
             // Read the theme before creating any window so the first frame is already themed.
             var settingsService = new SettingsService();
+            ApplyVisualSettings(settingsService.Settings);
+            ThemeManager.SetCustomAccent(settingsService.Settings.CustomAccentHex);
             ThemeManager.Apply(settingsService.Settings.Theme, settingsService.Settings.Accent);
 
             var splash = new Views.SplashWindow();
@@ -82,6 +104,8 @@ public partial class App : Application
                 splash.Report("Validando la sesión recibida del navegador…", 0.75);
                 account = await AcceptHandoffAsync(auth, handoffUri);
             }
+
+            account ??= TakePendingHandoff();
 
             if (account is null)
             {
@@ -126,27 +150,63 @@ public partial class App : Application
         if (stored is null)
             return null;
 
-        var refreshToken = XdSessionStore.UnprotectToken(stored.ProtectedRefreshToken);
-        if (string.IsNullOrWhiteSpace(refreshToken))
-        {
-            XdSessionStore.Delete();
-            return null;
-        }
-
         try
         {
-            var account = await auth.RefreshAsync(refreshToken);
-            XdSessionStore.Save(account);
-            await auth.SyncProfileAsync(account);
-            await auth.DownloadAvatarAsync(account);
-            return account;
+            var refreshToken = XdSessionStore.UnprotectToken(stored.ProtectedRefreshToken);
+            if (!string.IsNullOrWhiteSpace(refreshToken))
+            {
+                var account = await auth.RefreshAsync(refreshToken);
+                await PersistRestoredSessionAsync(auth, account);
+                return account;
+            }
+
+            // Las sesiones de Google no tienen refresh token: se reutiliza el idToken
+            // mientras siga vigente y se valida contra el servidor antes de entrar.
+            var idToken = XdSessionStore.UnprotectToken(stored.ProtectedIdToken);
+            if (!string.IsNullOrWhiteSpace(idToken) && stored.ExpiresAt > DateTimeOffset.UtcNow.AddMinutes(2))
+            {
+                var account = await auth.SignInWithIdTokenAsync(idToken);
+                account.Provider = stored.Provider ?? account.Provider;
+                await PersistRestoredSessionAsync(auth, account);
+                return account;
+            }
         }
-        catch (Exception ex)
+        catch (XdAuthException ex)
         {
             LogService.Warn("La sesión guardada ya no es válida: " + ex.Message);
             XdSessionStore.Delete();
             return null;
         }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            // Sin conexión no se borra la sesión: se reintenta en el próximo arranque.
+            LogService.Warn("No se pudo validar la sesión guardada por un problema de red: " + ex.Message);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            LogService.Warn("La sesión guardada ya no es válida: " + ex);
+            try
+            {
+                if (File.Exists(XdSessionStore.SessionFile))
+                    File.Copy(XdSessionStore.SessionFile, XdSessionStore.SessionFile + ".invalid", true);
+            }
+            catch
+            {
+                // El diagnóstico no debe impedir el arranque.
+            }
+            XdSessionStore.Delete();
+            return null;
+        }
+
+        return null;
+    }
+
+    private static async Task PersistRestoredSessionAsync(XdAuthService auth, XdAccount account)
+    {
+        XdSessionStore.Save(account);
+        await auth.SyncProfileAsync(account);
+        await auth.DownloadAvatarAsync(account);
     }
 
     /// <summary>Valida el token de sesión traspasado desde la web y abre la sesión.</summary>
@@ -158,7 +218,8 @@ public partial class App : Application
 
         try
         {
-            var account = await auth.SignInWithIdTokenAsync(token);
+            var refreshToken = SessionHandoff.ExtractRefreshToken(uri);
+            var account = await auth.SignInWithIdTokenAsync(token, refreshToken: refreshToken);
             XdSessionStore.Save(account);
             await auth.SyncProfileAsync(account);
             await auth.DownloadAvatarAsync(account);
@@ -183,26 +244,65 @@ public partial class App : Application
             return;
         }
 
+        _ = CompleteHandoffAsync(uri);
+    }
+
+    private async Task CompleteHandoffAsync(string uri)
+    {
         var auth = new XdAuthService();
-        _ = AcceptHandoffAsync(auth, uri).ContinueWith(task =>
+        var account = await AcceptHandoffAsync(auth, uri);
+        if (account is null)
         {
-            var account = task.Result;
-            if (account is null)
+            ToastHub.Error("La sesión recibida del navegador no es válida o ya caducó.");
+            return;
+        }
+
+        var login = _loginWindow;
+        if (login is { IsAuthenticated: false })
+        {
+            // Si la pantalla de acceso ya está creada, se completa en ella. Si todavía
+            // no se ha mostrado (carrera durante el arranque), ShowLoginAsync encontrará
+            // la cuenta pendiente antes de abrir la ventana.
+            if (login.IsLoaded)
             {
-                Dispatcher.Invoke(() => ToastHub.Error("La sesión recibida del navegador no es válida."));
+                login.CompleteExternalLogin(account);
                 return;
             }
 
-            Dispatcher.Invoke(() => ToastHub.Success($"Sesión iniciada como {account.DisplayName ?? account.Email}."));
-        }, TaskScheduler.Default);
+            _pendingHandoffAccount = account;
+            return;
+        }
+
+        if (_shell is not null)
+        {
+            var previousEmail = _shell.Account.Email;
+            _shell.UpdateAccount(account);
+            ToastHub.Success(string.Equals(previousEmail, account.Email, StringComparison.OrdinalIgnoreCase)
+                ? "Sesión de XD Launcher sincronizada."
+                : $"Sesión cambiada a {account.DisplayName ?? account.Email}.");
+            return;
+        }
+
+        _pendingHandoffAccount = account;
+    }
+
+    /// <summary>Consume la cuenta recibida por handoff mientras arrancaba la interfaz.</summary>
+    private XdAccount? TakePendingHandoff()
+    {
+        var account = _pendingHandoffAccount;
+        _pendingHandoffAccount = null;
+        return account;
     }
 
     /// <summary>Muestra la pantalla de acceso y devuelve la cuenta validada.</summary>
     private async Task<XdAccount?> ShowLoginAsync(XdAuthService auth)
     {
+        if (TakePendingHandoff() is { } ready)
+            return ready;
+
         var loginViewModel = new ViewModels.LoginViewModel(auth);
         var login = new Views.LoginWindow(loginViewModel);
-        login.Show();
+        _loginWindow = login;
 
         var tcs = new TaskCompletionSource<XdAccount?>();
         loginViewModel.Authenticated += account =>
@@ -213,9 +313,18 @@ public partial class App : Application
         };
         login.Closed += (_, _) =>
         {
+            if (ReferenceEquals(_loginWindow, login))
+                _loginWindow = null;
+
             if (!login.IsAuthenticated)
                 tcs.TrySetResult(null);
         };
+
+        login.Show();
+
+        // El handoff puede haber llegado entre la comprobación anterior y este punto.
+        if (TakePendingHandoff() is { } late)
+            loginViewModel.CompleteExternalLogin(late);
 
         return await tcs.Task;
     }
@@ -255,31 +364,33 @@ public partial class App : Application
         UpdateCheckService updateCheckService)
     {
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        _shell = null;
         window.Close();
+        _ = SignInAfterSignOutAsync(settingsService, dialogs, systemInfo, downloadService, updateService,
+            updateCheckService);
+    }
 
-        var auth = new XdAuthService();
-        var loginViewModel = new ViewModels.LoginViewModel(auth);
-        var login = new Views.LoginWindow(loginViewModel);
-        login.Show();
-
-        loginViewModel.Authenticated += account =>
+    private async Task SignInAfterSignOutAsync(SettingsService settingsService, DialogService dialogs,
+        SystemInfoService systemInfo, MinecraftDownloadService downloadService, UpdateService updateService,
+        UpdateCheckService updateCheckService)
+    {
+        try
         {
-            _ = auth.DownloadAvatarAsync(account);
-            login.Close();
+            var account = await ShowLoginAsync(new XdAuthService());
+            if (account is null)
+            {
+                Shutdown();
+                return;
+            }
+
             ShowMainWindow(settingsService, dialogs, systemInfo, downloadService, updateService,
                 updateCheckService, account);
-        };
-        login.Closed += (_, _) =>
+        }
+        catch (Exception ex)
         {
-            if (!login.IsAuthenticated)
-                Shutdown();
-        };
-
-        login.Closed += (_, _) =>
-        {
-            if (!login.IsAuthenticated)
-                Shutdown();
-        };
+            LogService.Error(ex, "No se pudo volver a la pantalla de acceso.");
+            Shutdown(1);
+        }
     }
 
     /// <summary>Offers the Windows game or the phone stream the first time the launcher opens.</summary>
@@ -313,6 +424,76 @@ public partial class App : Application
         }
 
         await Task.CompletedTask;
+    }
+
+    private static void ApplyVisualSettings(LauncherSettings settings)
+    {
+        AnimationHelper.AnimationsEnabled = settings.AnimationsEnabled && !settings.PerformanceMode;
+        AnimationHelper.AmbientEffectsEnabled = settings.AmbientEffectsEnabled && !settings.PerformanceMode;
+        AnimationHelper.AmbientIntensity = settings.AmbientIntensity;
+        AnimationHelper.TransparencyLevel = settings.TransparencyLevel;
+        AnimationHelper.NavTransitionsEnabled = settings.NavTransitionsEnabled && !settings.PerformanceMode;
+        AnimationHelper.ParticleEffectsEnabled = settings.ParticleEffectsEnabled && !settings.PerformanceMode;
+        AnimationHelper.HoverEffectsEnabled = settings.HoverEffectsEnabled;
+        AnimationHelper.ParallaxEnabled = settings.ParallaxEnabled && !settings.PerformanceMode;
+        AnimationHelper.CardAnimationsEnabled = settings.CardAnimationsEnabled && !settings.PerformanceMode;
+        AnimationHelper.LoadingAnimationsEnabled = settings.LoadingAnimationsEnabled && !settings.PerformanceMode;
+        AnimationHelper.PerformanceMode = settings.PerformanceMode;
+        ThemeManager.ApplyTransparency(settings.TransparencyLevel);
+    }
+
+    private static void CaptureSettings(string category, string fileName)
+    {
+        try
+        {
+            TryAttachToParentConsole();
+            var settingsService = new SettingsService();
+            var dialogs = new DialogService();
+            var systemInfo = new SystemInfoService();
+            ApplyVisualSettings(settingsService.Settings);
+            ThemeManager.SetCustomAccent(settingsService.Settings.CustomAccentHex);
+            ThemeManager.Apply(settingsService.Settings.Theme, settingsService.Settings.Accent);
+
+            var state = new SettingsState(settingsService, dialogs, systemInfo);
+            state.RefreshSystemInfo();
+            var profile = new ProfileState(new AuthService(), state, dialogs);
+            var account = new XdAccount
+            {
+                UserId = "capture",
+                Email = "capture@xd.local",
+                DisplayName = "Capture",
+                IdToken = "capture",
+                Provider = "password"
+            };
+            var viewModel = new SettingsViewModel(state, profile, account) { SelectedCategory = category };
+            var view = new Views.SettingsView
+            {
+                DataContext = viewModel,
+                Width = 1400,
+                Height = 900,
+                Background = new SolidColorBrush(Color.FromRgb(6, 8, 16))
+            };
+            view.Measure(new Size(1400, 900));
+            view.Arrange(new Rect(0, 0, 1400, 900));
+            view.UpdateLayout();
+
+            var bitmap = new RenderTargetBitmap(1400, 900, 96, 96, PixelFormats.Pbgra32);
+            bitmap.Render(view);
+            bitmap.Freeze();
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+
+            var path = Path.Combine(@"C:\Users\EVIL\Documents\xD\captures", fileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            using var stream = File.Create(path);
+            encoder.Save(stream);
+            Console.WriteLine(path);
+        }
+        catch (Exception ex)
+        {
+            LogService.Error(ex, "No se pudo capturar la vista de ajustes.");
+            Console.Error.WriteLine(ex);
+        }
     }
 
     private async Task RunSelfTestAsync()

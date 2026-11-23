@@ -43,10 +43,18 @@ public sealed class SettingsState : ObservableObject
 
         Backgrounds = new ObservableCollection<BackgroundOption>
         {
-            new() { Id = "bosque", Name = "Bosque profundo", Path = Paths.GetBuiltInBackground("bosque") ?? string.Empty },
+            new() { Id = "bosque", Name = "Bosque cinematográfico", Path = Paths.GetBuiltInBackground("bosque") ?? string.Empty },
             new() { Id = "aurora", Name = "Aurora boreal", Path = Paths.GetBuiltInBackground("aurora") ?? string.Empty },
-            new() { Id = "amanecer", Name = "Amanecer", Path = Paths.GetBuiltInBackground("amanecer") ?? string.Empty },
-            new() { Id = "cueva", Name = "Cueva de cristal", Path = Paths.GetBuiltInBackground("cueva") ?? string.Empty }
+            new() { Id = "amanecer", Name = "Amanecer en las montañas", Path = Paths.GetBuiltInBackground("amanecer") ?? string.Empty },
+            new() { Id = "cueva", Name = "Cueva de cristal", Path = Paths.GetBuiltInBackground("cueva") ?? string.Empty },
+            new() { Id = "nether", Name = "Nether cinematográfico", Path = Paths.GetBuiltInBackground("nether") ?? string.Empty },
+            new() { Id = "end", Name = "El End", Path = Paths.GetBuiltInBackground("end") ?? string.Empty },
+            new() { Id = "cerezo", Name = "Bioma de cerezo", Path = Paths.GetBuiltInBackground("cerezo") ?? string.Empty },
+            new() { Id = "nevado", Name = "Montañas nevadas", Path = Paths.GetBuiltInBackground("nevado") ?? string.Empty },
+            new() { Id = "ciudad", Name = "Ciudad nocturna", Path = Paths.GetBuiltInBackground("ciudad") ?? string.Empty },
+            new() { Id = "nocturno", Name = "Bosque nocturno", Path = Paths.GetBuiltInBackground("nocturno") ?? string.Empty },
+            new() { Id = "magico", Name = "Bosque mágico", Path = Paths.GetBuiltInBackground("magico") ?? string.Empty },
+            new() { Id = "fantastico", Name = "Mundos fantásticos", Path = Paths.GetBuiltInBackground("fantastico") ?? string.Empty }
         };
         AddCustomBackgroundIfPresent();
 
@@ -55,7 +63,21 @@ public sealed class SettingsState : ObservableObject
             new AccentOption { Name = "Verde", Hex = "#5CE07A" },
             new AccentOption { Name = "Esmeralda", Hex = "#2DD4A7" },
             new AccentOption { Name = "Lima", Hex = "#B4E64B" },
-            new AccentOption { Name = "Cian", Hex = "#45C8F5" }
+            new AccentOption { Name = "Cian", Hex = "#45C8F5" },
+            new AccentOption { Name = "Océano", Hex = "#4F8DFD" },
+            new AccentOption { Name = "Violeta", Hex = "#A78BFA" },
+            new AccentOption { Name = "Rosa", Hex = "#F472B6" },
+            new AccentOption { Name = "Ámbar", Hex = "#F5B942" },
+            new AccentOption { Name = "Coral", Hex = "#F87171" },
+            new AccentOption { Name = "XD Emerald", Hex = "#5CE07A" },
+            new AccentOption { Name = "Obsidian", Hex = "#64748B" },
+            new AccentOption { Name = "Cyberpunk", Hex = "#F472B6" },
+            new AccentOption { Name = "Aurora", Hex = "#34D399" },
+            new AccentOption { Name = "Midnight", Hex = "#6366F1" },
+            new AccentOption { Name = "Arctic", Hex = "#38BDF8" },
+            new AccentOption { Name = "Neon Pulse", Hex = "#A855F7" },
+            new AccentOption { Name = "Crimson", Hex = "#EF4444" },
+            new AccentOption { Name = "Personalizado", Hex = "#5CE07A" }
         ];
 
         WindowSizes =
@@ -108,7 +130,7 @@ public sealed class SettingsState : ObservableObject
         get => Settings.Theme;
         set
         {
-            if (value is not ("Dark" or "Light") || Settings.Theme == value)
+            if (!ThemeManager.ThemeNames.Contains(value, StringComparer.OrdinalIgnoreCase) || Settings.Theme == value)
                 return;
             Settings.Theme = value;
             SaveAndNotify(nameof(Theme), nameof(IsDarkTheme), nameof(IsLightTheme), nameof(ThemeLabel));
@@ -117,19 +139,11 @@ public sealed class SettingsState : ObservableObject
         }
     }
 
-    public bool IsDarkTheme
-    {
-        get => Theme == "Dark";
-        set { if (value) Theme = "Dark"; }
-    }
+    public bool IsDarkTheme => !ThemeManager.IsLight(Theme);
 
-    public bool IsLightTheme
-    {
-        get => Theme == "Light";
-        set { if (value) Theme = "Light"; }
-    }
+    public bool IsLightTheme => ThemeManager.IsLight(Theme);
 
-    public string ThemeLabel => Theme == "Light" ? "Claro" : "Oscuro";
+    public string ThemeLabel => Theme;
 
     public string Accent
     {
@@ -145,11 +159,107 @@ public sealed class SettingsState : ObservableObject
         }
     }
 
+    public string CustomAccentHex
+    {
+        get => Settings.CustomAccentHex;
+        set
+        {
+            var hex = string.IsNullOrWhiteSpace(value) ? "#5CE07A" : value.Trim();
+            if (Settings.CustomAccentHex == hex)
+                return;
+            Settings.CustomAccentHex = hex;
+            SaveAndNotify(nameof(CustomAccentHex));
+            ApplyTheme();
+        }
+    }
+
+    public string PreferredChannel
+    {
+        get => Settings.PreferredChannel;
+        set
+        {
+            if (value is not ("Retail" or "Preview") || Settings.PreferredChannel == value)
+                return;
+            Settings.PreferredChannel = value;
+            SaveAndNotify(nameof(PreferredChannel));
+        }
+    }
+
+    public string JavaPlayerName
+    {
+        get => Settings.Java.PlayerName;
+        set
+        {
+            var name = string.IsNullOrWhiteSpace(value) ? "Jugador" : value.Trim();
+            if (Settings.Java.PlayerName == name)
+                return;
+            Settings.Java.PlayerName = name;
+            SaveAndNotify(nameof(JavaPlayerName));
+        }
+    }
+
+    public int JavaMemoryMb
+    {
+        get => Settings.Java.MemoryMb;
+        set
+        {
+            var normalized = Math.Clamp(value, 1024, 32768);
+            if (Settings.Java.MemoryMb == normalized)
+                return;
+            Settings.Java.MemoryMb = normalized;
+            SaveAndNotify(nameof(JavaMemoryMb));
+        }
+    }
+
+    public string JavaPath
+    {
+        get => Settings.Java.JavaPath;
+        set
+        {
+            var path = value?.Trim() ?? string.Empty;
+            if (Settings.Java.JavaPath == path)
+                return;
+            Settings.Java.JavaPath = path;
+            SaveAndNotify(nameof(JavaPath));
+        }
+    }
+
+    public string JavaGameDirectory
+    {
+        get => Settings.Java.GameDirectory;
+        set
+        {
+            var path = value?.Trim() ?? string.Empty;
+            if (Settings.Java.GameDirectory == path)
+                return;
+            Settings.Java.GameDirectory = path;
+            SaveAndNotify(nameof(JavaGameDirectory));
+        }
+    }
+
     /// <summary>Applies the theme dictionary and the accent palette immediately.</summary>
+
+    private void ApplyVisualSettings()
+    {
+        AnimationHelper.AnimationsEnabled = Settings.AnimationsEnabled && !Settings.PerformanceMode;
+        AnimationHelper.AmbientEffectsEnabled = Settings.AmbientEffectsEnabled && !Settings.PerformanceMode;
+        AnimationHelper.AmbientIntensity = Settings.AmbientIntensity;
+        AnimationHelper.TransparencyLevel = Settings.TransparencyLevel;
+        AnimationHelper.NavTransitionsEnabled = Settings.NavTransitionsEnabled && !Settings.PerformanceMode;
+        AnimationHelper.ParticleEffectsEnabled = Settings.ParticleEffectsEnabled && !Settings.PerformanceMode;
+        AnimationHelper.HoverEffectsEnabled = Settings.HoverEffectsEnabled;
+        AnimationHelper.ParallaxEnabled = Settings.ParallaxEnabled && !Settings.PerformanceMode;
+        AnimationHelper.CardAnimationsEnabled = Settings.CardAnimationsEnabled && !Settings.PerformanceMode;
+        AnimationHelper.LoadingAnimationsEnabled = Settings.LoadingAnimationsEnabled && !Settings.PerformanceMode;
+        AnimationHelper.PerformanceMode = Settings.PerformanceMode;
+        ThemeManager.ApplyTransparency(Settings.TransparencyLevel);
+    }
+
     private void ApplyTheme()
     {
         try
         {
+            ThemeManager.SetCustomAccent(Settings.CustomAccentHex);
             ThemeManager.Apply(Settings.Theme, Settings.Accent);
             LogService.Info($"Tema aplicado: {Settings.Theme} · acento {Settings.Accent}.");
         }
@@ -270,6 +380,138 @@ public sealed class SettingsState : ObservableObject
         set { Settings.ShowNews = value; SaveAndNotify(nameof(ShowNews)); }
     }
 
+    public bool AnimationsEnabled
+    {
+        get => Settings.AnimationsEnabled;
+        set
+        {
+            if (Settings.AnimationsEnabled == value)
+                return;
+            Settings.AnimationsEnabled = value;
+            AnimationHelper.AnimationsEnabled = value;
+            SaveAndNotify(nameof(AnimationsEnabled), nameof(AnimationsEnabledLabel));
+        }
+    }
+
+    public string AnimationsEnabledLabel => Settings.AnimationsEnabled ? "Activadas" : "Desactivadas";
+
+    public bool AmbientEffectsEnabled
+    {
+        get => Settings.AmbientEffectsEnabled;
+        set
+        {
+            if (Settings.AmbientEffectsEnabled == value)
+                return;
+            Settings.AmbientEffectsEnabled = value;
+            AnimationHelper.AmbientEffectsEnabled = value;
+            SaveAndNotify(nameof(AmbientEffectsEnabled), nameof(AmbientEffectsEnabledLabel));
+        }
+    }
+
+    public string AmbientEffectsEnabledLabel => Settings.AmbientEffectsEnabled ? "Activados" : "Desactivados";
+
+    public double AmbientIntensity
+    {
+        get => Settings.AmbientIntensity;
+        set
+        {
+            var v = Math.Clamp(value, 0, 1);
+            if (Math.Abs(Settings.AmbientIntensity - v) < 0.001) return;
+            Settings.AmbientIntensity = v;
+            ApplyVisualSettings();
+            SaveAndNotify(nameof(AmbientIntensity));
+        }
+    }
+
+    public double TransparencyLevel
+    {
+        get => Settings.TransparencyLevel;
+        set
+        {
+            var v = Math.Clamp(value, 0, 1);
+            if (Math.Abs(Settings.TransparencyLevel - v) < 0.001) return;
+            Settings.TransparencyLevel = v;
+            ApplyVisualSettings();
+            SaveAndNotify(nameof(TransparencyLevel));
+        }
+    }
+
+    public bool NavTransitionsEnabled
+    {
+        get => Settings.NavTransitionsEnabled;
+        set { Settings.NavTransitionsEnabled = value; ApplyVisualSettings(); SaveAndNotify(nameof(NavTransitionsEnabled)); }
+    }
+
+    public bool ParticleEffectsEnabled
+    {
+        get => Settings.ParticleEffectsEnabled;
+        set { Settings.ParticleEffectsEnabled = value; ApplyVisualSettings(); SaveAndNotify(nameof(ParticleEffectsEnabled)); }
+    }
+
+    public bool HoverEffectsEnabled
+    {
+        get => Settings.HoverEffectsEnabled;
+        set { Settings.HoverEffectsEnabled = value; ApplyVisualSettings(); SaveAndNotify(nameof(HoverEffectsEnabled)); }
+    }
+
+    public bool ParallaxEnabled
+    {
+        get => Settings.ParallaxEnabled;
+        set { Settings.ParallaxEnabled = value; ApplyVisualSettings(); SaveAndNotify(nameof(ParallaxEnabled)); }
+    }
+
+    public bool CardAnimationsEnabled
+    {
+        get => Settings.CardAnimationsEnabled;
+        set { Settings.CardAnimationsEnabled = value; ApplyVisualSettings(); SaveAndNotify(nameof(CardAnimationsEnabled)); }
+    }
+
+    public bool LoadingAnimationsEnabled
+    {
+        get => Settings.LoadingAnimationsEnabled;
+        set { Settings.LoadingAnimationsEnabled = value; ApplyVisualSettings(); SaveAndNotify(nameof(LoadingAnimationsEnabled)); }
+    }
+
+    public bool PerformanceMode
+    {
+        get => Settings.PerformanceMode;
+        set
+        {
+            Settings.PerformanceMode = value;
+            if (value)
+            {
+                Settings.ParticleEffectsEnabled = false;
+                Settings.ParallaxEnabled = false;
+                Settings.CardAnimationsEnabled = false;
+                Settings.AmbientEffectsEnabled = false;
+            }
+            ApplyVisualSettings();
+            SaveAndNotify(nameof(PerformanceMode), nameof(ParticleEffectsEnabled),
+                nameof(ParallaxEnabled), nameof(CardAnimationsEnabled), nameof(AmbientEffectsEnabled));
+        }
+    }
+
+    public string? GetBackgroundPathForSection(string section)
+    {
+        if (Settings.BackgroundId == "custom" && !string.IsNullOrWhiteSpace(Settings.CustomBackgroundPath))
+            return Settings.CustomBackgroundPath;
+
+        var id = section switch
+        {
+            "java" => "cueva",
+            "game" => "ciudad",
+            "versions" => "amanecer",
+            "addons" => "cerezo",
+            "mods" => "magico",
+            "downloads" => "aurora",
+            "settings" => "fantastico",
+            "profile" => "end",
+            "mobile" => "nocturno",
+            _ => Settings.BackgroundId
+        };
+        return Paths.GetBuiltInBackground(id) ?? Paths.GetBuiltInBackground("bosque");
+    }
+
     public bool StartWithWindows
     {
         get => Settings.StartWithWindows;
@@ -332,6 +574,8 @@ public sealed class SettingsState : ObservableObject
         _isApplying = true;
         try
         {
+            ApplyVisualSettings();
+            ThemeManager.SetCustomAccent(Settings.CustomAccentHex);
             ThemeManager.Apply(Settings.Theme, Settings.Accent);
 
             var actualStartup = StartupService.IsEnabled();
@@ -458,6 +702,8 @@ public sealed class SettingsState : ObservableObject
 
         StartupService.SetEnabled(false, out _);
         _service.Reset();
+        ApplyVisualSettings();
+        ThemeManager.Apply(Settings.Theme, Settings.Accent);
         OnPropertyChanged(string.Empty);
         AppearanceChanged?.Invoke();
         ScaleChanged?.Invoke();

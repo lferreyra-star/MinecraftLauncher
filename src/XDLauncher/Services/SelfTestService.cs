@@ -1,7 +1,12 @@
 using System.Diagnostics;
+using System.Net.Http;
 using System.Security.Principal;
 using System.Text;
+using System.Text.Json;
+using XdLauncher.Core;
 using XdLauncher.Models;
+using XdLauncher.ViewModels;
+using XdLauncher.Views;
 
 namespace XdLauncher.Services;
 
@@ -249,7 +254,103 @@ public sealed class SelfTestService
         }
 
         Line(string.Empty);
-        Line("[10] Minecraft Java Edition · Premium / No-Premium");
+        Line("[10] Puente local de Google (handoff y timeout)");
+        try
+        {
+            using var bridge = new LocalAuthBridge();
+            using var http = new HttpClient
+            {
+                BaseAddress = new Uri($"http://127.0.0.1:{bridge.Port}"),
+                Timeout = TimeSpan.FromSeconds(10)
+            };
+
+            var pending = bridge.RequestGoogleTokenAsync(TimeSpan.FromSeconds(8), cancellationToken,
+                openBrowser: false);
+            await Task.Delay(150, cancellationToken);
+
+            var page = await http.GetAsync("/", cancellationToken);
+            var health = await http.GetAsync("/health", cancellationToken);
+            Line($"  Página local: {(int)page.StatusCode} · health: {(int)health.StatusCode}");
+
+            var wrongJson = JsonSerializer.Serialize(new { session = "nonce-incorrecto", token = "x" });
+            using var wrongContent = new StringContent(wrongJson, Encoding.UTF8, "application/json");
+            var wrong = await http.PostAsync("/token", wrongContent, cancellationToken);
+            if (wrong.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                Pass("El endpoint de token rechaza nonces desconocidos.");
+            else
+            {
+                Fail($"El endpoint de token aceptó un nonce inválido ({(int)wrong.StatusCode}).");
+                failures++;
+            }
+
+            var goodJson = JsonSerializer.Serialize(new
+            {
+                session = bridge.Session,
+                token = "token-de-autodiagnostico",
+                refreshToken = "refresh-de-autodiagnostico"
+            });
+            using var goodContent = new StringContent(goodJson, Encoding.UTF8, "application/json");
+            var delivered = await http.PostAsync("/token", goodContent, cancellationToken);
+            var result = await pending.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
+            if (delivered.IsSuccessStatusCode &&
+                result.IdToken == "token-de-autodiagnostico" &&
+                result.RefreshToken == "refresh-de-autodiagnostico")
+                Pass("El token y el refresh token llegan al launcher por el puente local.");
+            else
+            {
+                Fail("El puente no entregó el token esperado.");
+                failures++;
+            }
+
+            using (var timeoutBridge = new LocalAuthBridge())
+            {
+                var clock = Stopwatch.StartNew();
+                try
+                {
+                    await timeoutBridge.RequestGoogleTokenAsync(TimeSpan.FromMilliseconds(400),
+                        cancellationToken, openBrowser: false);
+                    Fail("La espera del puente no terminó con TimeoutException.");
+                    failures++;
+                }
+                catch (TimeoutException)
+                {
+                    if (clock.Elapsed < TimeSpan.FromSeconds(4))
+                        Pass($"El timeout del puente completa la espera en {clock.ElapsedMilliseconds} ms.");
+                    else
+                    {
+                        Fail($"El timeout del puente tardó demasiado ({clock.ElapsedMilliseconds} ms).");
+                        failures++;
+                    }
+                }
+            }
+
+            using (var cancelBridge = new LocalAuthBridge())
+            {
+                var clock = Stopwatch.StartNew();
+                var waiting = cancelBridge.RequestGoogleTokenAsync(TimeSpan.FromSeconds(10),
+                    cancellationToken, openBrowser: false);
+                await Task.Delay(150, cancellationToken);
+                cancelBridge.Cancel();
+                try
+                {
+                    await waiting.WaitAsync(TimeSpan.FromSeconds(4), cancellationToken);
+                    Fail("La cancelación del puente no terminó la espera.");
+                    failures++;
+                }
+                catch (OperationCanceledException)
+                {
+                    Pass($"La cancelación del puente termina la espera en {clock.ElapsedMilliseconds} ms.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Fail("Error probando el puente local de Google: " + ex.Message);
+            failures++;
+        }
+
+        Line(string.Empty);
+        Line("[11] Minecraft Java Edition · Premium / No-Premium");
         try
         {
             var premiumWorkspace = Paths.CreatePremiumJavaWorkspace();
@@ -346,6 +447,261 @@ public sealed class SelfTestService
         catch (Exception ex)
         {
             Fail("Error en las comprobaciones de Minecraft Java: " + ex.Message);
+            failures++;
+        }
+
+        Line(string.Empty);
+        Line("[12] Interfaz XAML y pipeline de animaciones");
+        try
+        {
+            var previousAnimations = AnimationHelper.AnimationsEnabled;
+            AnimationHelper.AnimationsEnabled = true;
+
+            _ = new SplashWindow();
+            var loginViewModel = new LoginViewModel(new XdAuthService());
+            _ = new LoginWindow(loginViewModel);
+
+            var account = new XdAccount
+            {
+                UserId = "selftest",
+                Email = "selftest@xdlauncher.invalid",
+                DisplayName = "Auto Test",
+                IdToken = "selftest",
+                Provider = "password"
+            };
+            var shell = new ShellViewModel(
+                new SettingsService(),
+                new GameService(),
+                new AuthService(),
+                new AddonService(),
+                new StoreCatalogService(),
+                new SystemInfoService(),
+                new DialogService(),
+                new MinecraftDownloadService(),
+                new UpdateService(),
+                new UpdateCheckService("lferreyra-star/MinecraftLauncher", "0.0.0"),
+                account);
+            var main = new XdLauncher.MainWindow(shell);
+            main.RunVisualSmokeTest();
+            shell.Shutdown();
+
+            AnimationHelper.AnimationsEnabled = previousAnimations;
+            Pass("Splash, acceso, shell y transformaciones RenderTransform se cargan sin excepciones.");
+        }
+        catch (Exception ex)
+        {
+            Fail("Error cargando la interfaz o sus animaciones: " + ex.Message);
+            failures++;
+        }
+
+        Line(string.Empty);
+        Line("[13] Catálogo real de mods (Modrinth API)");
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(25));
+            var modrinth = new ModrinthService();
+
+            var versions = await modrinth.GetGameVersionsAsync(timeout.Token);
+            var loaders = await modrinth.GetLoadersAsync(timeout.Token);
+            Line($"  Versiones publicadas: {versions.Count} · loaders: {string.Join(", ", loaders)}");
+
+            var page = await modrinth.SearchAsync("sodium", "1.20.1", "Fabric", null, "Popularidad", 0, 5, timeout.Token);
+            if (page.Projects.Count > 0)
+            {
+                Line($"  Primero: {page.Projects[0].Name} · descargas {page.Projects[0].Downloads:N0}");
+                var versionsForProject = await modrinth.GetVersionsAsync(page.Projects[0].Id, "1.20.1", "Fabric", timeout.Token);
+                if (versionsForProject.Count > 0)
+                    Pass($"Búsqueda real y resolución de versiones correctas ({page.Total} resultados, {versionsForProject.Count} versiones compatibles).");
+                else
+                    Fail("La API respondió pero no devolvió versiones compatibles para el primer resultado.");
+            }
+            else
+            {
+                Fail("La búsqueda real de Modrinth no devolvió resultados.");
+                failures++;
+            }
+        }
+        catch (Exception ex)
+        {
+            Fail("No se pudo consultar Modrinth: " + ex.Message);
+            failures++;
+        }
+
+        Line(string.Empty);
+        Line("[14] Instalación real de un mod desde Modrinth");
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromMinutes(2));
+            var modrinth = new ModrinthService();
+            var installer = new ModInstallService(modrinth);
+
+            var page = await modrinth.SearchAsync("sodium", "1.20.1", "Fabric", null, "Popularidad", 0, 3, timeout.Token);
+            var project = page.Projects.FirstOrDefault(p => string.Equals(p.Slug, "sodium", StringComparison.OrdinalIgnoreCase))
+                          ?? page.Projects.FirstOrDefault();
+            if (project is null)
+                throw new InvalidOperationException("Modrinth no devolvió ningún proyecto para probar.");
+
+            var tempRoot = Path.Combine(Path.GetTempPath(), "xd-modtest-" + Guid.NewGuid().ToString("N"));
+            var workspace = new JavaWorkspace(JavaWorkspaceKind.NoPremium, tempRoot);
+            var profile = new JavaProfile { VersionId = "1.20.1", ModLoader = JavaModLoaders.Fabric };
+            workspace.EnsureProfileDirectories(profile);
+
+            var result = await installer.InstallAsync(project, "1.20.1", "Fabric", workspace, profile,
+                includeOptionalDependencies: false, null, timeout.Token);
+
+            if (result.Installed.Count == 0)
+                throw new InvalidOperationException("La instalación no registró ningún mod.");
+
+            var installed = result.Installed[0];
+            var installedPath = Path.Combine(workspace.GetModsDirectory(profile), installed.FileName);
+            if (!File.Exists(installedPath) || new FileInfo(installedPath).Length <= 0)
+                throw new InvalidOperationException("El archivo del mod no se instaló correctamente.");
+
+            var library = installer.GetProfileLibrary(workspace, profile);
+            if (library.Count == 0 || !string.Equals(library[0].ProjectId, installed.ProjectId, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("La biblioteca no conservó el mod instalado.");
+
+            var installedSizeKb = new FileInfo(installedPath).Length / 1024;
+
+            installer.SetEnabled(installed, workspace, false);
+            if (!File.Exists(installedPath + ".disabled"))
+                throw new InvalidOperationException("La desactivación no renombró el archivo.");
+            installer.SetEnabled(installed, workspace, true);
+            if (!File.Exists(installedPath))
+                throw new InvalidOperationException("La reactivación no restauró el archivo.");
+
+            try
+            {
+                await installer.InstallAsync(project, "1.12.2", "Forge", workspace, profile,
+                    includeOptionalDependencies: false, null, timeout.Token);
+                Fail("El instalador aceptó una combinación incompatible 1.12.2/Forge.");
+                failures++;
+            }
+            catch (InvalidOperationException)
+            {
+                Pass("El instalador rechazó una combinación incompatible (1.12.2/Forge).");
+            }
+
+            installer.Remove(installed, workspace);
+            if (File.Exists(installedPath) || installer.GetProfileLibrary(workspace, profile).Count != 0)
+                throw new InvalidOperationException("La eliminación no limpió archivo y biblioteca.");
+
+            Pass($"Instalación real verificada: {installed.Name} · {installedSizeKb} KB");
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                    Directory.Delete(tempRoot, true);
+            }
+            catch
+            {
+                // El directorio temporal se limpiará en el próximo reinicio.
+            }
+        }
+        catch (Exception ex)
+        {
+            Fail("Error en la instalación real del mod: " + ex.Message);
+            failures++;
+        }
+
+        Line(string.Empty);
+        Line("[15] Dependencias obligatorias reales");
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromMinutes(2));
+            var modrinth = new ModrinthService();
+            var installer = new ModInstallService(modrinth);
+            var page = await modrinth.SearchAsync("iris", "1.20.1", "Fabric", null, "Popularidad", 0, 5, timeout.Token);
+            var project = page.Projects.FirstOrDefault(p => string.Equals(p.Slug, "iris", StringComparison.OrdinalIgnoreCase))
+                          ?? page.Projects.FirstOrDefault();
+            if (project is null)
+                throw new InvalidOperationException("No se encontró un proyecto con dependencias para probar.");
+
+            var tempRoot = Path.Combine(Path.GetTempPath(), "xd-deptest-" + Guid.NewGuid().ToString("N"));
+            var workspace = new JavaWorkspace(JavaWorkspaceKind.NoPremium, tempRoot);
+            var profile = new JavaProfile { VersionId = "1.20.1", ModLoader = JavaModLoaders.Fabric };
+            workspace.EnsureProfileDirectories(profile);
+
+            var result = await installer.InstallAsync(project, "1.20.1", "Fabric", workspace, profile,
+                includeOptionalDependencies: false, null, timeout.Token);
+
+            var names = result.Installed.Select(item => item.Name).ToArray();
+            if (!names.Any(n => string.Equals(n, project.Name, StringComparison.OrdinalIgnoreCase)) ||
+                result.Installed.Count < 2)
+                throw new InvalidOperationException("No se instalaron las dependencias obligatorias: " + string.Join(", ", names));
+
+            Pass("Dependencias instaladas automáticamente: " + string.Join(" + ", names));
+            try { if (Directory.Exists(tempRoot)) Directory.Delete(tempRoot, true); } catch { }
+        }
+        catch (Exception ex)
+        {
+            Fail("Error probando dependencias reales: " + ex.Message);
+            failures++;
+        }
+
+        Line(string.Empty);
+        Line("[16] Descubrimiento real de modpacks");
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(25));
+            var modrinth = new ModrinthService();
+            var page = await modrinth.SearchAsync(string.Empty, null, null, null, "Popularidad", 0, 5,
+                timeout.Token, projectType: "modpack");
+            if (page.Projects.Count == 0)
+                throw new InvalidOperationException("Modrinth no devolvió modpacks compatibles.");
+
+            var first = page.Projects[0];
+            var versions = await modrinth.GetVersionsAsync(first.Id, null, null, timeout.Token);
+            if (!versions.Any(v => v.Files.Any(f => f.Url.EndsWith(".mrpack", StringComparison.OrdinalIgnoreCase))))
+                throw new InvalidOperationException("El primer modpack no tiene archivos .mrpack.");
+
+            Pass($"Modpacks reales: {page.Total}. Primero: {first.Name} · {versions.Count} versión(es).");
+        }
+        catch (Exception ex)
+        {
+            Fail("Error probando modpacks reales: " + ex.Message);
+            failures++;
+        }
+
+        Line(string.Empty);
+        Line("[17] Temas del centro de ajustes");
+        try
+        {
+            ThemeManager.SetCustomAccent("#FF00FF");
+            ThemeManager.Apply("Dark", "Personalizado");
+            var brush = System.Windows.Application.Current?.Resources["AccentBrush"] as System.Windows.Media.SolidColorBrush;
+            if (brush is null || brush.Color != System.Windows.Media.Colors.Magenta)
+                throw new InvalidOperationException("El acento personalizado no se aplicó globalmente.");
+
+            ThemeManager.Apply("Dark", "Verde");
+            Pass("El tema personalizado cambia AccentBrush en toda la aplicación.");
+        }
+        catch (Exception ex)
+        {
+            Fail("Error probando temas: " + ex.Message);
+            failures++;
+        }
+
+        Line(string.Empty);
+        Line("[18] Sistema visual global");
+        try
+        {
+            ThemeManager.Apply("Light", "Verde");
+            var lightBg = System.Windows.Application.Current?.Resources["WindowBackgroundBrush"] as System.Windows.Media.SolidColorBrush;
+            ThemeManager.Apply("Dark", "Verde");
+            var darkBg = System.Windows.Application.Current?.Resources["WindowBackgroundBrush"] as System.Windows.Media.SolidColorBrush;
+
+            if (lightBg is null || darkBg is null || lightBg.Color == darkBg.Color)
+                throw new InvalidOperationException("El fondo global no cambia entre temas.");
+            Pass("Temas claros/oscuros aplicados al sistema visual centralizado.");
+        }
+        catch (Exception ex)
+        {
+            Fail("Error probando el sistema visual global: " + ex.Message);
             failures++;
         }
 

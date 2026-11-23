@@ -43,6 +43,7 @@ public sealed class LauncherSettings
     public int SchemaVersion { get; set; } = 3;
     public string Theme { get; set; } = "Dark";
     public string Accent { get; set; } = "Verde";
+    public string CustomAccentHex { get; set; } = "#5CE07A";
     public string BackgroundId { get; set; } = "bosque";
     public string? CustomBackgroundPath { get; set; }
     public double UiScale { get; set; } = 1.0;
@@ -55,6 +56,17 @@ public sealed class LauncherSettings
     public bool AutoCheckUpdates { get; set; } = true;
     public bool StartWithWindows { get; set; }
     public bool ShowNews { get; set; } = true;
+    public bool AnimationsEnabled { get; set; } = true;
+    public bool AmbientEffectsEnabled { get; set; } = true;
+    public double AmbientIntensity { get; set; } = 0.75;
+    public double TransparencyLevel { get; set; } = 0.85;
+    public bool NavTransitionsEnabled { get; set; } = true;
+    public bool ParticleEffectsEnabled { get; set; } = true;
+    public bool HoverEffectsEnabled { get; set; } = true;
+    public bool ParallaxEnabled { get; set; } = true;
+    public bool CardAnimationsEnabled { get; set; } = true;
+    public bool LoadingAnimationsEnabled { get; set; } = true;
+    public bool PerformanceMode { get; set; }
     public string LocalProfileName { get; set; } = "Jugador";
     public string? LocalAvatarPath { get; set; }
     public bool UseLocalProfile { get; set; } = true;
@@ -70,7 +82,7 @@ public sealed class LauncherSettings
     public JavaSettings Java { get; set; } = new();
 
     [JsonIgnore]
-    public string ThemeLabel => Theme == "Light" ? "Claro" : "Oscuro";
+    public string ThemeLabel => Theme;
 }
 
 public sealed class SettingsService
@@ -110,10 +122,30 @@ public sealed class SettingsService
             loaded.WindowWidth = Math.Clamp(loaded.WindowWidth, 1100, 3840);
             loaded.WindowHeight = Math.Clamp(loaded.WindowHeight, 700, 2160);
             loaded.UiScale = Math.Clamp(loaded.UiScale, 0.85, 1.15);
-            if (loaded.BackgroundId is not ("bosque" or "aurora" or "amanecer" or "cueva" or "custom"))
+            string[] validBackgrounds =
+            [
+                "bosque", "aurora", "amanecer", "cueva", "nether", "end", "cerezo",
+                "nevado", "ciudad", "nocturno", "magico", "fantastico", "custom"
+            ];
+            if (!validBackgrounds.Contains(loaded.BackgroundId, StringComparer.OrdinalIgnoreCase))
                 loaded.BackgroundId = "bosque";
-            if (loaded.Theme is not ("Dark" or "Light"))
-                loaded.Theme = "Dark";
+
+            loaded.Theme = loaded.Theme switch
+            {
+                "Dark" => "Eclipse Dark",
+                "Light" => "Light Premium",
+                _ when ThemeManager.ThemeNames.Contains(loaded.Theme, StringComparer.OrdinalIgnoreCase) => loaded.Theme,
+                _ => "Eclipse Dark"
+            };
+
+            loaded.AmbientIntensity = Math.Clamp(loaded.AmbientIntensity, 0, 1);
+            loaded.TransparencyLevel = Math.Clamp(loaded.TransparencyLevel, 0, 1);
+            if (loaded.PerformanceMode)
+            {
+                loaded.ParticleEffectsEnabled = false;
+                loaded.ParallaxEnabled = false;
+                loaded.CardAnimationsEnabled = false;
+            }
             if (loaded.PreferredChannel is not ("Retail" or "Preview"))
                 loaded.PreferredChannel = "Retail";
 

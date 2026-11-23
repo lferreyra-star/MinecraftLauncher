@@ -1,410 +1,264 @@
-﻿<UserControl x:Class="XdLauncher.Views.HomeView"
+<UserControl x:Class="XdLauncher.Views.HomeView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel x:Name="DashboardRoot" Margin="0,0,6,28">
+    <UserControl.Resources>
+        <Style x:Key="HomeKicker" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="9.5" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentLightBrush}" />
+        </Style>
+        <Style x:Key="HomeSection" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        </Style>
+        <Style x:Key="HomeBody" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource BodyFont}" />
+            <Setter Property="FontSize" Value="13.5" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style x:Key="HomeSmall" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style x:Key="HomeTile" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root" Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1"
+                                CornerRadius="14" Padding="14">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource SurfaceStrongBrush}" />
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentSoftBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
 
-            <!-- Hero -->
-            <Grid Height="356" RenderTransformOrigin="0.5,0.5">
-                <Grid.RenderTransform>
-                    <TranslateTransform Y="0" />
-                </Grid.RenderTransform>
-                <Grid.Triggers>
-                    <EventTrigger RoutedEvent="Loaded">
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.35" />
-                                <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Y" From="18" To="0" Duration="0:0:0.35">
-                                    <DoubleAnimation.EasingFunction>
-                                        <CubicEase EasingMode="EaseOut" />
-                                    </DoubleAnimation.EasingFunction>
-                                </DoubleAnimation>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </EventTrigger>
-                </Grid.Triggers>
-                <Border CornerRadius="22" Background="{DynamicResource SurfaceStrongBrush}" />
-                <Border CornerRadius="22">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid x:Name="DashboardRoot" Margin="0,0,4,16" MaxWidth="1400" HorizontalAlignment="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="284" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="320" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ==================== IDENTIDAD Y SESIÓN ==================== -->
+            <StackPanel Margin="0,0,12,0" Grid.Column="0" Grid.RowSpan="2">
+                <Border Style="{StaticResource Card}" Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="HOLA" Style="{StaticResource HomeKicker}" />
+                        <TextBlock Text="{Binding Greeting}" Style="{StaticResource HomeSection}" FontSize="22" />
+                        <TextBlock Text="{Binding WelcomeName}" Style="{StaticResource HomeBody}" Margin="0,8,0,0" />
+                        <Border Width="40" Height="40" CornerRadius="13" Background="{DynamicResource SurfaceSunkenBrush}"
+                                BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" Margin="0,16,0,0">
+                            <Grid>
+                                <TextBlock Text="{Binding AccountInitial}" FontFamily="{StaticResource DisplayFont}"
+                                           FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <Image Source="{Binding AccountAvatarPath, Converter={StaticResource ImagePath}}"
+                                       Stretch="UniformToFill" Visibility="{Binding AccountAvatarPath, Converter={StaticResource NullToVisibility}}" />
+                            </Grid>
+                        </Border>
+                        <TextBlock Text="{Binding AccountEmail}" Style="{StaticResource HomeSmall}" Margin="0,10,0,0" />
+                        <TextBlock Text="{Binding AccountProviderLabel}" Style="{StaticResource HomeBody}" FontWeight="SemiBold" Margin="0,10,0,0" />
+                        <TextBlock Text="{Binding AccountStatusText}" Style="{StaticResource HomeSmall}" />
+                        <Border Height="1" Background="{DynamicResource BorderSoftBrush}" Margin="0,16,0,16" />
+                        <Button Style="{StaticResource HomeTile}" Content="Perfil XD · Cuenta"
+                                Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="profile" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,14,0,0" Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="CONEXIÓN" Style="{StaticResource HomeKicker}" />
+                        <TextBlock Text="{Binding AccountProviderLabel}" Style="{StaticResource HomeBody}" FontWeight="SemiBold" Margin="0,10,0,0" />
+                        <TextBlock Text="{Binding AccountEmail}" Style="{StaticResource HomeSmall}" Margin="0,5,0,0" />
+                        <TextBlock Text="Sesión protegida y automática con Firebase." Style="{StaticResource HomeSmall}" Margin="0,10,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,14,0,0" Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="ACCESOS RÁPIDOS" Style="{StaticResource HomeKicker}" />
+                        <Button Style="{StaticResource HomeTile}" Content="Minecraft Java"
+                                Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="java" Margin="0,8,0,0" />
+                        <Button Style="{StaticResource HomeTile}" Content="Juego" Margin="8,8,0,0"
+                                Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="game" />
+                        <Button Style="{StaticResource HomeTile}" Content="Modrinth" Margin="8,8,0,0"
+                                Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="mods" />
+                        <Button Style="{StaticResource HomeTile}" Content="Descargas" Margin="8,8,0,0"
+                                Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="downloads" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- ==================== JUEGO / CÓMPLICES ==================== -->
+            <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                <Border Style="{StaticResource HeroBanner}" Height="218" Margin="0,0,0,14">
                     <Border.Background>
-                        <ImageBrush ImageSource="{Binding BackgroundPath, Converter={StaticResource ImagePath}}"
+                        <ImageBrush ImageSource="{Binding DataContext.CurrentBackgroundPath, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ImagePath}}"
                                     Stretch="UniformToFill" />
                     </Border.Background>
-                </Border>
-                <Border CornerRadius="22" Background="{DynamicResource HeroScrimBrush}" />
-                <Border CornerRadius="22" BorderBrush="#33FFFFFF" BorderThickness="1" />
-
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <Grid Margin="28,24,28,0">
-                        <StackPanel Orientation="Horizontal">
-                            <Border Background="#33000000" BorderBrush="#55FFFFFF" BorderThickness="1"
-                                    CornerRadius="20" Padding="11,5">
-                                <TextBlock Text="{Binding EditionBadgeLabel}" FontSize="10" FontWeight="Bold"
-                                           Foreground="#E9FFF1" />
-                            </Border>
-                            <Border Background="#3328C76F" BorderBrush="#885CE07A" BorderThickness="1"
-                                    CornerRadius="20" Padding="11,5" Margin="8,0,0,0"
-                                    Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE896;" FontFamily="{StaticResource IconFont}" FontSize="10"
-                                               Foreground="#D7FFE2" Margin="0,1,5,0" />
-                                    <TextBlock Text="Actualización disponible" FontSize="10" FontWeight="SemiBold"
-                                               Foreground="#D7FFE2" />
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Border Background="#33000000" BorderBrush="#44FFFFFF" BorderThickness="1"
-                                    CornerRadius="20" Padding="11,5">
-                                <TextBlock Text="{Binding Game.ChannelLabel}" FontSize="10" FontWeight="SemiBold"
-                                           Foreground="#E9FFF1" />
-                            </Border>
-                        </StackPanel>
-                    </Grid>
-
-                    <StackPanel Grid.Row="2" Margin="30,0,30,28">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                            <Grid Width="40" Height="40">
-                                <Border CornerRadius="20" Background="{DynamicResource AccentSoftBrush}"
-                                        BorderBrush="#66FFFFFF" BorderThickness="1" />
-                                <TextBlock Text="{Binding AccountInitial}" FontWeight="Bold" FontSize="16"
-                                           Foreground="{DynamicResource AccentLightBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                <Border CornerRadius="20">
-                                    <Border.Background>
-                                        <ImageBrush ImageSource="{Binding AccountAvatarPath, Converter={StaticResource ImagePath}}"
-                                                    Stretch="UniformToFill" />
-                                    </Border.Background>
-                                </Border>
-                            </Grid>
-                            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Greeting}" FontSize="11" Foreground="#B9D0C1"
-                                           FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding WelcomeName}" FontSize="14" FontWeight="SemiBold"
-                                           Foreground="#FFFFFFFF" />
-                            </StackPanel>
-                        </StackPanel>
-
-                        <TextBlock Text="{Binding HeroHeadline}" Style="{StaticResource HeroTitle}" />
-                        <TextBlock Text="{Binding HeroDetail}" Foreground="#D6E4DA" FontSize="13"
-                                   MaxWidth="640" HorizontalAlignment="Left" Margin="0,8,0,0" />
-
-                        <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
-                            <Button Style="{StaticResource PrimaryButton}" Padding="24,0" Height="48"
-                                    MinWidth="210" Command="{Binding MainActionCommand}">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding MainActionGlyph}" FontFamily="{StaticResource IconFont}"
-                                               FontSize="14" Margin="0,1,9,0" />
-                                    <TextBlock Text="{Binding MainActionLabel}" FontSize="14" FontWeight="SemiBold" />
-                                </StackPanel>
-                            </Button>
-                            <Button Style="{StaticResource SecondaryButton}" Height="48" Margin="10,0,0,0"
-                                    Content="Verificar instalación" Padding="18,0"
-                                    Visibility="{Binding ShowVerify, Converter={StaticResource BoolToVisibility}}"
-                                    Command="{Binding VerifyCommand}" />
-                            <Button Style="{StaticResource GhostButton}" Height="48" Margin="4,0,0,0"
-                                    Foreground="#E7F3EB" Content="Buscar actualizaciones"
-                                    Command="{Binding OpenUpdatesCommand}" />
-                        </StackPanel>
-                    </StackPanel>
-                </Grid>
-            </Grid>
-
-            <!-- Edition selector -->
-            <Border Style="{StaticResource Card}" Margin="0,16,0,0" Padding="16">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock Text="EDICIÓN" Style="{StaticResource Caption}" VerticalAlignment="Center"
-                               Margin="0,0,14,0" />
-
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <RadioButton Content="Java Edition" Style="{StaticResource SegmentRadio}"
-                                     GroupName="HomeEdition" Margin="0,0,8,0"
-                                     Command="{Binding SelectEditionCommand}" CommandParameter="java"
-                                     IsChecked="{Binding IsJavaEdition, Mode=OneWay}" />
-                        <RadioButton Content="Bedrock · Windows" Style="{StaticResource SegmentRadio}"
-                                     GroupName="HomeEdition" Margin="0,0,8,0"
-                                     Command="{Binding SelectEditionCommand}" CommandParameter="bedrock"
-                                     IsChecked="{Binding IsBedrockEdition, Mode=OneWay}" />
-                        <RadioButton Content="Bedrock · Android" Style="{StaticResource SegmentRadio}"
-                                     GroupName="HomeEdition"
-                                     Command="{Binding SelectEditionCommand}" CommandParameter="android"
-                                     IsChecked="{Binding IsAndroidEdition, Mode=OneWay}" />
-                    </StackPanel>
-
-                    <TextBlock Grid.Column="2" Text="{Binding EditionDescription}" Style="{StaticResource Muted}"
-                               VerticalAlignment="Center" MaxWidth="330" Margin="14,0,0,0"
-                               TextAlignment="Right" />
-                </Grid>
-            </Border>
-
-            <!-- Quick stats -->
-            <Grid Margin="0,16,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <Border Style="{StaticResource Card}" Padding="18" Margin="0,0,8,0">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE7FC;" FontFamily="{StaticResource IconFont}" FontSize="13"
-                                       Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
-                            <TextBlock Text="INSTALACIÓN" Style="{StaticResource Caption}" Margin="8,0,0,0"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                        <TextBlock Text="{Binding Game.ChannelLabel}" Style="{StaticResource StatValue}" Margin="0,8,0,0" />
-                        <TextBlock Text="{Binding Game.PackageStatusLabel}" Style="{StaticResource Caption}"
-                                   Margin="0,4,0,0" />
-                    </StackPanel>
-                </Border>
-
-                <Border Grid.Column="1" Style="{StaticResource Card}" Padding="18" Margin="4,0,4,0">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE895;" FontFamily="{StaticResource IconFont}" FontSize="13"
-                                       Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
-                            <TextBlock Text="VERSIÓN INSTALADA" Style="{StaticResource Caption}" Margin="8,0,0,0"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                        <TextBlock Text="{Binding Game.VersionLabel}" Style="{StaticResource StatValue}" Margin="0,8,0,0"
-                                   TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{Binding Game.InstallDateLabel, StringFormat='Instalada el {0}'}"
-                                   Style="{StaticResource Caption}" Margin="0,4,0,0" />
-                    </StackPanel>
-                </Border>
-
-                <Border Grid.Column="2" Style="{StaticResource Card}" Padding="18" Margin="8,0,0,0">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE77B;" FontFamily="{StaticResource IconFont}" FontSize="13"
-                                       Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
-                            <TextBlock Text="CUENTA" Style="{StaticResource Caption}" Margin="8,0,0,0"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                        <TextBlock Text="{Binding AccountDisplayName}" Style="{StaticResource StatValue}" Margin="0,8,0,0"
-                                   TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{Binding AccountStatusLabel}" Style="{StaticResource Caption}"
-                                   Margin="0,4,0,0" TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
-                </Border>
-            </Grid>
-
-            <!-- Quick access -->
-            <Grid Margin="0,16,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <Button Grid.Column="0" Style="{StaticResource CardButton}" Margin="0,0,8,0"
-                        Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="java">
-                    <Border Style="{StaticResource Card}" Padding="18">
-                        <StackPanel>
-                            <Border Width="44" Height="44" CornerRadius="12" Background="{DynamicResource ChipBrush}" HorizontalAlignment="Left">
-                                <TextBlock Text="&#xE945;" FontFamily="{StaticResource IconFont}" FontSize="18"
-                                           Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Border>
-                            <TextBlock Text="Minecraft Java" Style="{StaticResource CardTitle}" Margin="0,12,0,0" />
-                            <TextBlock Text="Versiones, perfiles, Java y mods en un solo lugar." Style="{StaticResource Muted}" Margin="0,4,0,0" />
-                        </StackPanel>
-                    </Border>
-                </Button>
-
-                <Button Grid.Column="1" Style="{StaticResource CardButton}" Margin="4,0,4,0"
-                        Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="versions">
-                    <Border Style="{StaticResource Card}" Padding="18">
-                        <StackPanel>
-                            <Border Width="44" Height="44" CornerRadius="12" Background="{DynamicResource ChipBrush}" HorizontalAlignment="Left">
-                                <TextBlock Text="&#xE81C;" FontFamily="{StaticResource IconFont}" FontSize="18"
-                                           Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Border>
-                            <TextBlock Text="Versiones y actualizaciones" Style="{StaticResource CardTitle}" Margin="0,12,0,0" />
-                            <TextBlock Text="Comprueba el estado de Bedrock y notas oficiales." Style="{StaticResource Muted}" Margin="0,4,0,0" />
-                        </StackPanel>
-                    </Border>
-                </Button>
-
-                <Button Grid.Column="2" Style="{StaticResource CardButton}" Margin="8,0,0,0"
-                        Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="addons">
-                    <Border Style="{StaticResource Card}" Padding="18">
-                        <StackPanel>
-                            <Border Width="44" Height="44" CornerRadius="12" Background="{DynamicResource ChipBrush}" HorizontalAlignment="Left">
-                                <TextBlock Text="&#xE7B8;" FontFamily="{StaticResource IconFont}" FontSize="18"
-                                           Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Border>
-                            <TextBlock Text="Complementos" Style="{StaticResource CardTitle}" Margin="0,12,0,0" />
-                            <TextBlock Text="Addons, texturas, skins y mapas instalados." Style="{StaticResource Muted}" Margin="0,4,0,0" />
-                        </StackPanel>
-                    </Border>
-                </Button>
-            </Grid>
-
-            <!-- Minecraft Mobile Connect -->
-            <Border Style="{StaticResource Card}" Margin="0,16,0,0">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <Border Width="40" Height="40" CornerRadius="11" Background="{DynamicResource ChipBrush}">
-                            <TextBlock Text="&#xE8EA;" FontFamily="{StaticResource IconFont}" FontSize="17"
-                                       Foreground="{DynamicResource AccentBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Grid>
+                        <Border Style="{StaticResource HeroOverlay}" />
+                    <StackPanel Margin="24" VerticalAlignment="Bottom">
+                        <Border Style="{StaticResource Badge}" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding EditionBadgeLabel}" FontSize="9.5" FontWeight="Bold"
+                                       Foreground="{DynamicResource AccentLightBrush}" />
                         </Border>
-                        <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="MINECRAFT MOBILE CONNECT" Style="{StaticResource SectionTitle}" />
-                            <TextBlock Text="Juega al Minecraft Bedrock original de tu teléfono Android desde el PC"
-                                       Style="{StaticResource Muted}" />
+                        <TextBlock Text="{Binding HeroHeadline}" Style="{StaticResource HeroTitle}" FontSize="30" Margin="0,10,0,0" />
+                        <TextBlock Text="{Binding HeroDetail}" Style="{StaticResource BodyText}" MaxWidth="560" Margin="0,6,0,0" />
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                            <Button Style="{StaticResource PrimaryButton}" Height="42" MinWidth="180"
+                                    Content="{Binding MainActionLabel}" Command="{Binding MainActionCommand}" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="42" Margin="8,0,0,0"
+                                    Content="Verificar" Command="{Binding VerifyCommand}"
+                                    Visibility="{Binding ShowVerify, Converter={StaticResource BoolToVisibility}}" />
                         </StackPanel>
                     </StackPanel>
-
-                    <Grid Margin="0,16,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Margin="0,0,16,0">
-                            <TextBlock Text="DISPOSITIVO" Style="{StaticResource Caption}" />
-                            <TextBlock Text="{Binding Mobile.DeviceName}" FontWeight="SemiBold" FontSize="14" Margin="0,4,0,0" />
-                            <TextBlock Text="{Binding Mobile.StatusLabel}" Style="{StaticResource Caption}" Margin="0,3,0,0" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="1" Margin="0,0,20,0" VerticalAlignment="Center">
-                            <TextBlock Text="RESOLUCIÓN" Style="{StaticResource Caption}" />
-                            <TextBlock Text="{Binding Mobile.Resolution}" FontWeight="SemiBold" FontSize="13" Margin="0,3,0,0" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="2" Margin="0,0,20,0" VerticalAlignment="Center">
-                            <TextBlock Text="FPS" Style="{StaticResource Caption}" />
-                            <TextBlock Text="{Binding Mobile.FpsLabel}" FontWeight="SemiBold" FontSize="13" Margin="0,3,0,0" />
-                        </StackPanel>
-                        <Button Grid.Column="3" Content="Abrir sección" Style="{StaticResource GhostButton}"
-                                VerticalAlignment="Center" Command="{Binding OpenMobileCommand}" />
-                    </Grid>
-
-                    <WrapPanel Margin="0,16,0,0">
-                        <Button Content="JUGAR" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8"
-                                Command="{Binding Mobile.PlayCommand}" />
-                        <Button Content="CONECTAR CELULAR" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
-                                Command="{Binding Mobile.ConnectCommand}" />
-                        <Button Content="CONECTAR POR USB" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
-                                Command="{Binding Mobile.ConnectUsbCommand}" />
-                        <Button Content="CONECTAR POR WIFI" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
-                                Command="{Binding Mobile.ConnectWifiCommand}" />
-                    </WrapPanel>
-
-                    <WrapPanel>
-                        <Button Content="INICIAR TRANSMISIÓN" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
-                                Command="{Binding Mobile.StartStreamCommand}" />
-                        <Button Content="DETENER TRANSMISIÓN" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
-                                Command="{Binding Mobile.StopStreamCommand}" />
-                        <Button Content="PANTALLA COMPLETA" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
-                                Command="{Binding Mobile.FullscreenCommand}" />
-                    </WrapPanel>
-
-                    <WrapPanel>
-                        <Button Content="CONFIGURAR CONTROLES" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
-                                Command="{Binding Mobile.ConfigureControlsCommand}" />
-                        <Button Content="DESCONECTAR" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
-                                Command="{Binding Mobile.DisconnectCommand}" />
-                    </WrapPanel>
-                </StackPanel>
-            </Border>
-
-            <!-- News -->
-            <Grid Margin="0,26,0,10">
-                <StackPanel>
-                    <TextBlock Text="{Binding NewsSectionTitle}" Style="{StaticResource SectionTitle}" />
-                    <TextBlock Text="{Binding NewsSectionSubtitle}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding NewsStatus}" Style="{StaticResource Caption}" VerticalAlignment="Center"
-                               MaxWidth="330" TextTrimming="CharacterEllipsis" />
-                    <Button Content="Actualizar" Style="{StaticResource GhostButton}" Margin="8,0,0,0"
-                            Command="{Binding Catalog.RefreshCommand}" />
-                </StackPanel>
-            </Grid>
-
-            <ItemsControl ItemsSource="{Binding News}" Visibility="{Binding HasNews, Converter={StaticResource BoolToVisibility}}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Button Style="{StaticResource CardButton}" Margin="0,0,12,12"
-                                Command="{Binding DataContext.OpenNewsCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                CommandParameter="{Binding}">
-                            <Border Width="322" Height="184" CornerRadius="16" Background="{DynamicResource ChipBrush}">
-                                <Grid>
-                                    <Border CornerRadius="16">
-                                        <Border.Background>
-                                            <ImageBrush ImageSource="{Binding ImagePath, Converter={StaticResource ImagePath}}"
-                                                        Stretch="UniformToFill" />
-                                        </Border.Background>
-                                    </Border>
-                                    <Border CornerRadius="16">
-                                        <Border.Background>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#22000000" Offset="0" />
-                                                <GradientStop Color="#E6000000" Offset="1" />
-                                            </LinearGradientBrush>
-                                        </Border.Background>
-                                    </Border>
-                                    <Grid Margin="16">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="*" />
-                                            <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions>
-                                        <Border Background="#66000000" CornerRadius="14" Padding="9,3"
-                                                HorizontalAlignment="Left" VerticalAlignment="Top">
-                                            <TextBlock Text="{Binding Category}" FontSize="10" FontWeight="SemiBold"
-                                                       Foreground="#E9FFF1" />
-                                        </Border>
-                                        <TextBlock Grid.Row="1" Text="{Binding Title}" FontSize="16"
-                                                   FontWeight="SemiBold" Foreground="#FFFFFFFF"
-                                                   VerticalAlignment="Bottom" MaxHeight="62" TextTrimming="CharacterEllipsis" />
-                                        <Grid Grid.Row="2" Margin="0,8,0,0">
-                                            <TextBlock Text="{Binding DateLabel}" FontSize="10" Foreground="#B9D0C1" />
-                                            <TextBlock Text="Leer más  &#xE76C;" FontFamily="{StaticResource IconFont}"
-                                                       FontSize="10" Foreground="#D7FFE2" HorizontalAlignment="Right" />
-                                        </Grid>
                                     </Grid>
-                                </Grid>
-                            </Border>
-                        </Button>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                </Border>
+                <Border Style="{StaticResource Card}" Padding="20" Margin="0,0,0,14">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="STATUS" Style="{StaticResource HomeKicker}" />
+                            <TextBlock Text="{Binding Game.StatusHeadline}" Style="{StaticResource HomeSection}" Margin="0,10,0,0" />
+                            <TextBlock Text="{Binding Game.StatusDetail}" Style="{StaticResource HomeBody}" Margin="0,6,0,0" />
+                            <WrapPanel Margin="0,16,0,0">
+                                <Border Background="{DynamicResource ChipBrush}" CornerRadius="9" Padding="8,5" Margin="0,0,6,6">
+                                    <TextBlock Text="{Binding Game.VersionLabel, StringFormat='Versión {0}'}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                </Border>
+                                <Border Background="{DynamicResource ChipBrush}" CornerRadius="9" Padding="8,5" Margin="0,0,6,6">
+                                    <TextBlock Text="{Binding Game.ChannelLabel}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                </Border>
+                                <Border Background="{DynamicResource ChipBrush}" CornerRadius="9" Padding="8,5" Margin="0,0,6,6">
+                                    <TextBlock Text="{Binding Game.InstallDateLabel}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                </Border>
+                            </WrapPanel>
+                            <TextBlock Text="{Binding Game.ComponentsSummary}" Style="{StaticResource HomeSmall}" Margin="0,10,0,0" />
+                            <TextBlock Text="{Binding Game.UpdateStatus}" Style="{StaticResource HomeSmall}" Margin="0,6,0,0" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="0" Grid.Column="1" VerticalAlignment="Top" Margin="0,0,0,14">
+                            <Button Style="{StaticResource PrimaryButton}" Height="46" MinWidth="220"
+                                    Command="{Binding MainActionCommand}" Content="{Binding MainActionLabel}"
+                                    Foreground="{DynamicResource AccentTextBrush}" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="46" Margin="8,10,0,0"
+                                    Visibility="{Binding ShowVerify, Converter={StaticResource BoolToVisibility}}"
+                                    Command="{Binding VerifyCommand}" Content="Verificar" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="46" Margin="8,10,0,0"
+                                    Command="{Binding OpenUpdatesCommand}" Content="Novedades" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
 
-            <Border Style="{StaticResource Card}" Visibility="{Binding HasNews, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
-                <StackPanel Orientation="Horizontal">
-                    <Border Width="44" Height="44" CornerRadius="12" Background="{DynamicResource ChipBrush}">
-                        <TextBlock Text="&#xE7BA;" FontFamily="{StaticResource IconFont}" FontSize="17"
-                                   Foreground="{DynamicResource WarningBrush}"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="No hay novedades disponibles" Style="{StaticResource CardTitle}" />
-                        <TextBlock Text="Comprueba tu conexión y vuelve a intentarlo. También puedes abrir Microsoft Store."
-                                   Style="{StaticResource Muted}" Margin="0,3,0,0" />
+                <Border Style="{StaticResource Card}" Margin="0,14,0,0" Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="ESTADO DE SERVICIOS" Style="{StaticResource HomeKicker}" />
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Text="FIREBASE AUTH" Style="{StaticResource HomeBody}" FontWeight="SemiBold" />
+                            <TextBlock Grid.Column="2" Text="●" Foreground="{DynamicResource SuccessBrush}" FontSize="10" VerticalAlignment="Center" />
+                        </Grid>
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Text="MICROSOFT STORE" Style="{StaticResource HomeBody}" FontWeight="SemiBold" />
+                            <TextBlock Grid.Column="2" Text="●" Foreground="{DynamicResource SuccessBrush}" FontSize="10" VerticalAlignment="Center" />
+                        </Grid>
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Text="MOBILE CONNECT" Style="{StaticResource HomeBody}" FontWeight="SemiBold" />
+                            <TextBlock Grid.Column="2" Text="●" Foreground="{DynamicResource SuccessBrush}" FontSize="10" VerticalAlignment="Center" />
+                        </Grid>
+                        <Button Style="{StaticResource HomeTile}" Content="Minecraft Java" Margin="0,14,0,0"
+                                Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="java" />
+                        <Button Style="{StaticResource HomeTile}" Content="Centro de Mods" Margin="0,8,0,0"
+                                Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="mods" />
+                        <Button Style="{StaticResource HomeTile}" Content="Descargas" Margin="0,8,0,0"
+                                Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="downloads" />
                     </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- ==================== NOVEDADES ==================== -->
+            <Border Style="{StaticResource Card}" Grid.Column="1" Grid.Row="1" Margin="0,14,0,0" Padding="20" Height="420" Visibility="{Binding ShowNews, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="NOVEDADES" Style="{StaticResource HomeKicker}" />
+                    <TextBlock Text="{Binding NewsSectionTitle}" Style="{StaticResource HomeSection}" Margin="0,8,0,0" />
+                    <TextBlock Text="{Binding NewsSectionSubtitle}" Style="{StaticResource HomeBody}" Margin="0,6,0,0" />
+                    <TextBlock Text="{Binding NewsStatus}" Style="{StaticResource HomeSmall}" Margin="0,10,0,0" />
+                    <ListBox ItemsSource="{Binding News}" Margin="0,12,0,0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource HomeTile}" Margin="0,0,0,8"
+                                        Command="{Binding DataContext.OpenNewsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        CommandParameter="{Binding}">
+                                    <Grid>
+                                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Text="{Binding Title}" FontWeight="SemiBold" Margin="0,0,0,6" />
+                                        <StackPanel Grid.Row="1" Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Category}" Style="{StaticResource HomeSmall}" />
+                                            <TextBlock Text=" · " Style="{StaticResource HomeSmall}" />
+                                            <TextBlock Text="{Binding DateLabel}" Style="{StaticResource HomeSmall}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </StackPanel>
             </Border>
-        </StackPanel>
+            <StackPanel Grid.Column="1" Grid.Row="1" Margin="0,14,0,0" Visibility="{Binding ShowNews, Converter={StaticResource InverseBool}}">
+                <Border Style="{StaticResource Card}" Padding="20" Height="420">
+                    <StackPanel>
+                        <TextBlock Text="NOVEDADES" Style="{StaticResource HomeKicker}" />
+                        <TextBlock Text="Aún no se han cargado" Style="{StaticResource HomeSection}" Margin="0,10,0,0" />
+                        <TextBlock Text="Disfruta cuando estén disponibles." Style="{StaticResource HomeBody}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- ==================== MÓVIL ==================== -->
+            <Border Style="{StaticResource Card}" Grid.Column="2" Grid.RowSpan="2" Margin="0,0,0,14" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="MÓVIL" Style="{StaticResource HomeKicker}" />
+                    <TextBlock Text="{Binding Mobile.StatusLabel}" Style="{StaticResource HomeSection}" Margin="0,10,0,0" />
+                    <TextBlock Text="{Binding Mobile.StatusMessage}" Style="{StaticResource HomeBody}" Margin="0,6,0,0" />
+                    <Button Style="{StaticResource HomeTile}" Content="Conectar teléfono" Margin="0,14,0,0"
+                            Command="{Binding OpenMobileCommand}" />
+                </StackPanel>
+            </Border>
+        </Grid>
     </ScrollViewer>
 </UserControl>

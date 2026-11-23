@@ -9,6 +9,7 @@ namespace XdLauncher.ViewModels;
 public sealed class HomeViewModel : ObservableObject
 {
     private readonly SettingsState _settings;
+    private XdAccount _account;
     private string _selectedEditionId = "bedrock";
 
     public HomeViewModel(GameState game, CatalogState catalog, ProfileState profile, SettingsState settings,
@@ -18,7 +19,7 @@ public sealed class HomeViewModel : ObservableObject
         Catalog = catalog;
         Profile = profile;
         Mobile = mobile;
-        Account = account;
+        _account = account;
         _settings = settings;
 
         OpenNewsCommand = new RelayCommand(parameter =>
@@ -56,8 +57,22 @@ public sealed class HomeViewModel : ObservableObject
     public CatalogState Catalog { get; }
     public ProfileState Profile { get; }
     public MobileConnectState Mobile { get; }
-    public XdAccount Account { get; }
+    public XdAccount Account => _account;
     public SettingsState Settings => _settings;
+
+    /// <summary>Actualiza la cuenta mostrada cuando el handoff web cambia de usuario.</summary>
+    public void UpdateAccount(XdAccount account)
+    {
+        _account = account;
+        OnPropertyChanged(nameof(Account));
+        OnPropertyChanged(nameof(WelcomeName));
+        OnPropertyChanged(nameof(AccountDisplayName));
+        OnPropertyChanged(nameof(AccountEmail));
+        OnPropertyChanged(nameof(AccountInitial));
+        OnPropertyChanged(nameof(AccountAvatarPath));
+        OnPropertyChanged(nameof(AccountProviderLabel));
+        OnPropertyChanged(nameof(AccountStatusLabel));
+    }
     public JavaViewModel? JavaPage { get; set; }
 
     public ObservableCollection<NewsItem> News => Catalog.News;

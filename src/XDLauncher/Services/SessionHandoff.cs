@@ -36,7 +36,12 @@ public static class SessionHandoff
     }
 
     /// <summary>Extrae el token de sesión de una URI xdlauncher://auth?token=...</summary>
-    public static string? ExtractToken(string? uri)
+    public static string? ExtractToken(string? uri) => ExtractParameter(uri, "token");
+
+    /// <summary>Extrae el refresh token opcional que envía la web para sesiones duraderas.</summary>
+    public static string? ExtractRefreshToken(string? uri) => ExtractParameter(uri, "refresh");
+
+    private static string? ExtractParameter(string? uri, string parameter)
     {
         if (string.IsNullOrWhiteSpace(uri) || !uri.StartsWith(Scheme, StringComparison.OrdinalIgnoreCase))
             return null;
@@ -52,7 +57,8 @@ public static class SessionHandoff
 
                 var key = Uri.UnescapeDataString(pair[..separator]);
                 var value = Uri.UnescapeDataString(pair[(separator + 1)..]);
-                if (key.Equals("token", StringComparison.OrdinalIgnoreCase))
+                if (key.Equals(parameter, StringComparison.OrdinalIgnoreCase) &&
+                    !string.IsNullOrWhiteSpace(value))
                     return value;
             }
         }

@@ -1,13 +1,46 @@
 <Application x:Class="XdLauncher.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:XdLauncher.ViewModels"
+             xmlns:views="clr-namespace:XdLauncher.Views"
              ShutdownMode="OnMainWindowClose">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Themes/Shared.xaml" />
-                <ResourceDictionary Source="Themes/Dark.xaml" />
+                <ResourceDictionary Source="Themes/EclipseDark.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+                <views:HomeView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:JavaViewModel}">
+                <views:JavaView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:GameState}">
+                <views:GameView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:VersionsViewModel}">
+                <views:VersionsView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:AddonsViewModel}">
+                <views:AddonsView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ModsCenterViewModel}">
+                <views:ModsCenterView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:DownloadViewModel}">
+                <views:DownloadView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ProfilePageViewModel}">
+                <views:ProfileView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+                <views:SettingsView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:MobileConnectState}">
+                <views:MobileView />
+            </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

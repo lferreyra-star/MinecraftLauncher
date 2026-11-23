@@ -1,4 +1,4 @@
-using System.Windows;
+using System.Net.Http;
 using XdLauncher.Core;
 using XdLauncher.Services;
 
@@ -10,6 +10,8 @@ namespace XdLauncher.ViewModels;
 /// </summary>
 public sealed class LoginViewModel : ObservableObject
 {
+    private const int GoogleTimeoutMinutes = 4;
+    private static readonly TimeSpan GoogleTimeout = TimeSpan.FromMinutes(GoogleTimeoutMinutes);
     private readonly XdAuthService _auth;
     private string _email = string.Empty;
     private string _password = string.Empty;
@@ -19,21 +21,33 @@ public sealed class LoginViewModel : ObservableObject
     private bool _isBusy;
     private bool _showPassword;
     private bool _isServerReachable = true;
+    private bool _needsEmailProvider;
+    private bool _googleFailed;
+    private bool _isGoogleAuth;
+    private string _googleStatusMessage = string.Empty;
     private string _errorMessage = string.Empty;
     private string _infoMessage = string.Empty;
+    private string _busyLabel = "Conectando…";
+    private int _busyDepth;
+    private CancellationTokenSource? _googleCts;
+    private bool _isSuccess;
+    private string _successMessage = "Acceso concedido";
+    private string _successDetail = "Preparando tu launcher…";
+    private bool _completionStarted;
 
     public LoginViewModel(XdAuthService auth)
     {
         _auth = auth;
 
-        SignInCommand = new AsyncRelayCommand(SignInAsync, () => CanSubmit, OnError);
-        RegisterCommand = new AsyncRelayCommand(RegisterAsync, () => CanSubmit, OnError);
-        RecoverCommand = new AsyncRelayCommand(RecoverAsync, () => CanSubmit, OnError);
+        SignInCommand = new AsyncRelayCommand(SignInAsync, () => !IsBusy, OnError);
+        RegisterCommand = new AsyncRelayCommand(RegisterAsync, () => !IsBusy, OnError);
+        RecoverCommand = new AsyncRelayCommand(RecoverAsync, () => !IsBusy, OnError);
         TogglePasswordCommand = new RelayCommand(() => ShowPassword = !ShowPassword);
         SwitchModeCommand = new RelayCommand(() => IsRegisterMode = !IsRegisterMode);
         OpenWebsiteCommand = new RelayCommand(() => FileOps.OpenUrl(AppInfo.XdWebsite));
         OpenFirebaseConsoleCommand = new RelayCommand(() => FileOps.OpenUrl(XdAuthService.FirebaseConsoleUrl));
-        ContinueWithGoogleCommand = new AsyncRelayCommand(SignInWithGoogleAsync, () => !IsBusy, OnError);
+        ContinueWithGoogleCommand = new AsyncRelayCommand(() => SignInWithGoogleAsync(), () => !IsBusy, OnError);
+        CancelGoogleCommand = new RelayCommand(CancelGoogle, () => IsGoogleAuth);
     }
 
     public event Action<XdAccount>? Authenticated;
@@ -103,7 +117,6 @@ public sealed class LoginViewModel : ObservableObject
                 return;
 
             OnPropertyChanged(nameof(StatusLabel));
-            OnPropertyChanged(nameof(IsBusy));
             RaiseCommandStates();
         }
     }
@@ -113,7 +126,7 @@ public sealed class LoginViewModel : ObservableObject
         get => _isServerReachable;
         private set
         {
-            if (!SetProperty(ref _isServerReachable, value))
+            if (SetProperty(ref _isServerReachable, value))
                 OnPropertyChanged(nameof(ServerStatusLabel));
         }
     }
@@ -123,14 +136,8 @@ public sealed class LoginViewModel : ObservableObject
         get => _errorMessage;
         private set
         {
-            if (!SetProperty(ref _errorMessage, value))
-            {
+            if (SetProperty(ref _errorMessage, value))
                 OnPropertyChanged(nameof(HasError));
-                NeedsEmailProvider = value.Contains("no tiene habilitado", StringComparison.OrdinalIgnoreCase) ||
-                                    value.Contains("Correo/contraseña", StringComparison.OrdinalIgnoreCase) ||
-                                    value.Contains("proveedor", StringComparison.OrdinalIgnoreCase);
-                OnPropertyChanged(nameof(NeedsEmailProvider));
-            }
         }
     }
 
@@ -139,7 +146,7 @@ public sealed class LoginViewModel : ObservableObject
         get => _infoMessage;
         private set
         {
-            if (!SetProperty(ref _infoMessage, value))
+            if (SetProperty(ref _infoMessage, value))
                 OnPropertyChanged(nameof(HasInfo));
         }
     }
@@ -149,7 +156,7 @@ public sealed class LoginViewModel : ObservableObject
     public bool ShowRegisterFields => IsRegisterMode;
     public string PasswordVisibilityGlyph => ShowPassword ? "\uE890" : "\uE7B3";
     public string ServerStatusLabel => IsServerReachable ? "Servidor en línea" : "Servidor sin conexión";
-    public string StatusLabel => IsBusy ? "Conectando…" : string.Empty;
+    public string StatusLabel => IsBusy ? _busyLabel : string.Empty;
     public string PrimaryActionLabel => IsRegisterMode ? "CREAR CUENTA" : "INICIAR SESIÓN";
     public string PrimaryActionGlyph => IsRegisterMode ? "\uE710" : "\uE890";
     public string SecondaryActionLabel => IsRegisterMode ? "Ya tengo cuenta" : "CREAR CUENTA";
@@ -158,7 +165,72 @@ public sealed class LoginViewModel : ObservableObject
         ? "Registra tu cuenta de XD Launcher para desbloquear el launcher"
         : "Accede con tu cuenta de XD Launcher para continuar";
 
-    private bool CanSubmit => !IsBusy && !string.IsNullOrWhiteSpace(Email) && !string.IsNullOrWhiteSpace(Password);
+    /// <summary>True cuando Firebase exige habilitar el proveedor de correo.</summary>
+    public bool NeedsEmailProvider
+    {
+        get => _needsEmailProvider;
+        private set => SetProperty(ref _needsEmailProvider, value);
+    }
+
+    /// <summary>True cuando el último intento con Google falló y el botón invita a reintentar.</summary>
+    public bool GoogleFailed
+    {
+        get => _googleFailed;
+        private set
+        {
+            if (SetProperty(ref _googleFailed, value))
+                OnPropertyChanged(nameof(GoogleActionLabel));
+        }
+    }
+
+    public string GoogleActionLabel => IsGoogleAuth
+        ? "CONECTANDO CON GOOGLE…"
+        : GoogleFailed ? "REINTENTAR CON GOOGLE" : "CONTINUAR CON GOOGLE";
+
+    /// <summary>True mientras el flujo de Google está activo (permite cancelarlo).</summary>
+    public bool IsGoogleAuth
+    {
+        get => _isGoogleAuth;
+        private set
+        {
+            if (!SetProperty(ref _isGoogleAuth, value))
+                return;
+
+            OnPropertyChanged(nameof(ShowGoogleProgress));
+            OnPropertyChanged(nameof(GoogleActionLabel));
+            OnPropertyChanged(nameof(CanCancelGoogle));
+            RaiseCommandStates();
+        }
+    }
+
+    /// <summary>Etapa actual del acceso con Google para mostrarla en la interfaz.</summary>
+    public string GoogleStatusMessage
+    {
+        get => _googleStatusMessage;
+        private set => SetProperty(ref _googleStatusMessage, value);
+    }
+
+    public bool ShowGoogleProgress => IsGoogleAuth;
+    public bool CanCancelGoogle => IsGoogleAuth;
+
+    /// <summary>True mientras se muestra la transición cinematográfica de acceso concedido.</summary>
+    public bool IsSuccess
+    {
+        get => _isSuccess;
+        private set => SetProperty(ref _isSuccess, value);
+    }
+
+    public string SuccessMessage
+    {
+        get => _successMessage;
+        private set => SetProperty(ref _successMessage, value);
+    }
+
+    public string SuccessDetail
+    {
+        get => _successDetail;
+        private set => SetProperty(ref _successDetail, value);
+    }
 
     public AsyncRelayCommand SignInCommand { get; }
     public AsyncRelayCommand RegisterCommand { get; }
@@ -168,15 +240,13 @@ public sealed class LoginViewModel : ObservableObject
     public RelayCommand OpenWebsiteCommand { get; }
     public RelayCommand OpenFirebaseConsoleCommand { get; }
     public AsyncRelayCommand ContinueWithGoogleCommand { get; }
-
-    /// <summary>True cuando el servidor exige habilitar el proveedor de correo.</summary>
-    public bool NeedsEmailProvider { get; private set; }
+    public RelayCommand CancelGoogleCommand { get; }
 
     /// <summary>Comprueba la conexión con el servidor de XD Launcher.</summary>
     public async Task CheckServerAsync()
     {
         IsServerReachable = await _auth.PingAsync();
-        if (!IsServerReachable)
+        if (!IsServerReachable && !IsBusy && !HasError)
             ErrorMessage = "No se puede contactar con el servidor de XD Launcher. Revisa tu conexión.";
     }
 
@@ -184,10 +254,12 @@ public sealed class LoginViewModel : ObservableObject
     {
         ErrorMessage = string.Empty;
         InfoMessage = string.Empty;
+        NeedsEmailProvider = false;
 
         if (!ValidateCredentials())
             return;
 
+        BeginBusy("Conectando…");
         try
         {
             var account = await _auth.SignInAsync(Email, Password);
@@ -196,7 +268,11 @@ public sealed class LoginViewModel : ObservableObject
         catch (XdAuthException ex)
         {
             ErrorMessage = ex.Message;
-            Password = string.Empty;
+            NeedsEmailProvider = ex.Code is "OPERATION_NOT_ALLOWED" or "PASSWORD_LOGIN_DISABLED";
+        }
+        finally
+        {
+            EndBusy();
         }
     }
 
@@ -204,6 +280,7 @@ public sealed class LoginViewModel : ObservableObject
     {
         ErrorMessage = string.Empty;
         InfoMessage = string.Empty;
+        NeedsEmailProvider = false;
 
         if (!ValidateCredentials())
             return;
@@ -220,6 +297,13 @@ public sealed class LoginViewModel : ObservableObject
             return;
         }
 
+        if (Password.Length < 6)
+        {
+            ErrorMessage = "La contraseña debe tener al menos 6 caracteres.";
+            return;
+        }
+
+        BeginBusy("Creando cuenta…");
         try
         {
             var account = await _auth.RegisterAsync(Email, Password, DisplayName);
@@ -232,44 +316,109 @@ public sealed class LoginViewModel : ObservableObject
             if (ex.Code is "OPERATION_NOT_ALLOWED" or "PASSWORD_LOGIN_DISABLED")
             {
                 LogService.Info("El proveedor de correo está deshabilitado: se ofrece el alta con Google.");
+                NeedsEmailProvider = true;
                 ErrorMessage = "El servidor no permite crear cuentas con contraseña. "
                                + "Vamos a crearla con Google, que usa el mismo sistema de cuentas.";
-                Password = string.Empty;
-                ConfirmPassword = string.Empty;
-                await SignInWithGoogleAsync();
+                await SignInWithGoogleAsync(providerFallback: true);
                 return;
             }
 
             ErrorMessage = ex.Message;
-            Password = string.Empty;
-            ConfirmPassword = string.Empty;
+        }
+        finally
+        {
+            EndBusy();
         }
     }
 
-    private async Task SignInWithGoogleAsync()
+    private async Task SignInWithGoogleAsync(bool providerFallback = false)
     {
-        ErrorMessage = string.Empty;
-        InfoMessage = string.Empty;
+        if (!providerFallback)
+        {
+            ErrorMessage = string.Empty;
+            NeedsEmailProvider = false;
+        }
 
+        InfoMessage = string.Empty;
+        GoogleFailed = false;
+        _googleCts?.Dispose();
+        _googleCts = new CancellationTokenSource();
+        IsGoogleAuth = true;
+        GoogleStatusMessage = "Conectando con Google…";
+        BeginBusy("Conectando con Google…");
+        InfoMessage = "Pulsa «Continuar con Google» en la página del navegador. Esta ventana se actualizará automáticamente.";
         try
         {
-            InfoMessage = "Completa el inicio de sesión con Google en el navegador. Volveremos aquí automáticamente.";
-            var account = await _auth.SignInWithGoogleAsync();
-            await CompleteAsync(account);
+            var progress = new Progress<GoogleSignInProgress>(update =>
+            {
+                if (!IsGoogleAuth)
+                    return;
+
+                GoogleStatusMessage = update.Message;
+                _busyLabel = update.Message;
+                OnPropertyChanged(nameof(StatusLabel));
+            });
+
+            var account = await _auth.SignInWithGoogleAsync(
+                GoogleTimeout, progress, _googleCts.Token);
+
+            GoogleStatusMessage = "Acceso concedido. Preparando el launcher…";
+            InfoMessage = string.Empty;
+            await CompleteAsync(account, cinematic: true, syncProfile: false);
         }
         catch (XdAuthException ex)
         {
             LogService.Warn("Acceso con Google rechazado: " + ex.Message);
-            ErrorMessage = ex.Message;
+            InfoMessage = string.Empty;
+            ErrorMessage = ex.Code switch
+            {
+                "GOOGLE_TIMEOUT" => $"Google no respondió en {GoogleTimeoutMinutes} minutos. El launcher dejó de esperar. "
+                    + "Pulsa «Reintentar con Google» o usa correo y contraseña.",
+                "GOOGLE_BROWSER" => "No se pudo abrir el navegador. Abre tu navegador manualmente "
+                    + "o usa el acceso por correo y contraseña.",
+                "GOOGLE_BRIDGE" => ex.Message,
+                _ => ex.Message
+            };
+            NeedsEmailProvider = providerFallback;
+            GoogleFailed = true;
         }
         catch (OperationCanceledException)
         {
             LogService.Info("El usuario canceló el acceso con Google.");
-            ErrorMessage = "Se canceló el acceso con Google.";
+            InfoMessage = string.Empty;
+            ErrorMessage = "Se canceló el acceso con Google. Pulsa «Reintentar con Google» si quieres volver a intentarlo.";
+            GoogleFailed = true;
         }
         catch (Exception ex)
         {
+            InfoMessage = string.Empty;
             OnError(ex);
+            GoogleFailed = true;
+        }
+        finally
+        {
+            _googleCts?.Dispose();
+            _googleCts = null;
+            IsGoogleAuth = false;
+            GoogleStatusMessage = string.Empty;
+            EndBusy();
+        }
+    }
+
+    /// <summary>Cancela la espera del acceso con Google sin bloquear la interfaz.</summary>
+    private void CancelGoogle()
+    {
+        if (!IsGoogleAuth)
+            return;
+
+        GoogleStatusMessage = "Cancelando el acceso con Google…";
+        try
+        {
+            _googleCts?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // El flujo ya había terminado.
         }
     }
 
@@ -277,13 +426,15 @@ public sealed class LoginViewModel : ObservableObject
     {
         ErrorMessage = string.Empty;
         InfoMessage = string.Empty;
+        NeedsEmailProvider = false;
 
-        if (string.IsNullOrWhiteSpace(Email))
+        if (string.IsNullOrWhiteSpace(Email) || !Email.Contains('@'))
         {
-            ErrorMessage = "Escribe tu correo para enviarte el enlace de recuperación.";
+            ErrorMessage = "Escribe un correo válido para enviarte el enlace de recuperación.";
             return;
         }
 
+        BeginBusy("Enviando correo…");
         try
         {
             await _auth.SendPasswordResetAsync(Email);
@@ -292,6 +443,10 @@ public sealed class LoginViewModel : ObservableObject
         catch (XdAuthException ex)
         {
             ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            EndBusy();
         }
     }
 
@@ -312,19 +467,112 @@ public sealed class LoginViewModel : ObservableObject
         return true;
     }
 
-    private async Task CompleteAsync(XdAccount account)
+    /// <summary>
+    /// Completa un acceso ya validado (por ejemplo, el traspaso de sesión desde la web).
+    /// La sesión debe haberse guardado antes de llamar a este método.
+    /// </summary>
+    public void CompleteExternalLogin(XdAccount account)
+        => _ = CompleteExternalLoginAsync(account);
+
+    private async Task CompleteExternalLoginAsync(XdAccount account)
     {
+        if (!BeginCompletion(account, "Sesión recibida desde la web. Preparando tu launcher…"))
+            return;
+
+        try
+        {
+            _googleCts?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // El flujo ya había terminado.
+        }
+
+        await FinishCompletionAsync(account, cinematic: true, syncProfile: false);
+    }
+
+    private async Task CompleteAsync(XdAccount account, bool cinematic = false, bool syncProfile = true)
+    {
+        if (!BeginCompletion(account, "Preparando tu launcher…"))
+            return;
+
+        await FinishCompletionAsync(account, cinematic, syncProfile);
+    }
+
+    private bool BeginCompletion(XdAccount account, string detail)
+    {
+        if (_completionStarted)
+            return false;
+
+        _completionStarted = true;
         XdSessionStore.Save(account);
-        await _auth.SyncProfileAsync(account);
         Password = string.Empty;
         ConfirmPassword = string.Empty;
+        ErrorMessage = string.Empty;
+        InfoMessage = string.Empty;
+        NeedsEmailProvider = false;
+        SuccessMessage = "Acceso concedido";
+        SuccessDetail = detail;
+        IsSuccess = true;
+        return true;
+    }
+
+    private async Task FinishCompletionAsync(XdAccount account, bool cinematic, bool syncProfile)
+    {
+        if (cinematic && !AnimationHelper.ReduceMotion)
+            await Task.Delay(850);
+        else
+            await Task.Delay(120);
+
         Authenticated?.Invoke(account);
+
+        if (syncProfile)
+            await _auth.SyncProfileAsync(account);
+    }
+
+    /// <summary>Cancela el flujo de Google si la ventana de acceso se está cerrando.</summary>
+    public void CancelPendingOperations()
+    {
+        try
+        {
+            _googleCts?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Nada pendiente.
+        }
     }
 
     private void OnError(Exception ex)
     {
         LogService.Error(ex, "Error en el inicio de sesión de XD Launcher.");
-        ErrorMessage = ex is XdAuthException auth ? auth.Message : "No se pudo iniciar sesión. Inténtalo de nuevo.";
+        ErrorMessage = ex switch
+        {
+            XdAuthException auth => auth.Message,
+            HttpRequestException => "No se pudo conectar con el servidor de XD Launcher. Revisa tu conexión a Internet.",
+            TaskCanceledException => "El servidor tardó demasiado en responder. Inténtalo de nuevo.",
+            _ => "No se pudo completar la operación. Inténtalo de nuevo."
+        };
+    }
+
+    private void BeginBusy(string label)
+    {
+        _busyLabel = label;
+        _busyDepth++;
+        if (_busyDepth == 1)
+            IsBusy = true;
+        else
+            OnPropertyChanged(nameof(StatusLabel));
+    }
+
+    private void EndBusy()
+    {
+        if (_busyDepth == 0)
+            return;
+
+        _busyDepth--;
+        if (_busyDepth == 0)
+            IsBusy = false;
     }
 
     private void RaiseCommandStates()
@@ -332,5 +580,7 @@ public sealed class LoginViewModel : ObservableObject
         SignInCommand.RaiseCanExecuteChanged();
         RegisterCommand.RaiseCanExecuteChanged();
         RecoverCommand.RaiseCanExecuteChanged();
+        ContinueWithGoogleCommand.RaiseCanExecuteChanged();
+        CancelGoogleCommand.RaiseCanExecuteChanged();
     }
 }

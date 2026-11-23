@@ -352,9 +352,13 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
     }
   });
 
-  // Google: primero se intenta el popup (mantiene la página sin recargar) y si el
-  // navegador lo bloquea se cae a la redirección completa, que nunca se bloquea.
-  // Ambos caminos terminan en Firebase Auth, así que la cuenta es la misma.
+  // Google: se intenta el popup (mantiene la página sin recargar). Solo se cae a la
+  // redirección completa cuando el navegador bloquea la ventana emergente. Errores
+  // de configuración (dominio no autorizado, proveedor desactivado, red) se muestran
+  // directamente: redirigir en esos casos provoca bucles de vuelta a la web.
+  const canFallbackToRedirect = (code) =>
+    code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment';
+
   const startGoogle = async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
@@ -364,17 +368,12 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
       if (result && result.user) return result.user;
     } catch (err) {
       const code = err && err.code ? err.code : '';
-      if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+      if (canFallbackToRedirect(code)) {
         // Ventana emergente bloqueada: se navega a Google y se vuelve a la web.
         await signInWithRedirect(auth, provider);
         return null;
       }
-      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
-        throw err;
-      }
-      // Cualquier otro fallo del popup se resuelve con redirección.
-      await signInWithRedirect(auth, provider);
-      return null;
+      throw err;
     }
     return null;
   };
@@ -398,22 +397,27 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
   // ===== Traspaso de sesión al launcher de escritorio (xdlauncher://) =====
   const DESKTOP_SCHEME = 'xdlauncher://auth';
   const isDesktopFlow = new URLSearchParams(window.location.search).get('desktop') === '1';
+  let handoffSent = false;
 
-  async function handoffToDesktop(user) {
-    if (!user) return;
+  async function handoffToDesktop(user, force = false) {
+    if (!user || (handoffSent && !force)) return;
+    handoffSent = true;
     try {
-      const idToken = await user.getIdToken();
-      const payload = new URLSearchParams({ token: idToken });
-      window.location.href = `${DESKTOP_SCHEME}?${payload.toString()}`;
-      setMsg('Sesión enviada al launcher. Vuelve a la aplicación de escritorio.', 'ok');
+      const idToken = await user.getIdToken(true);
+      if (!idToken) throw new Error('Firebase no devolvió un token de sesión.');
+      const params = new URLSearchParams({ token: idToken });
+      if (user.refreshToken) params.set('refresh', user.refreshToken);
+      setMsg('Enviando la sesión al launcher… Vuelve a la aplicación de escritorio.', 'ok');
+      window.location.href = `${DESKTOP_SCHEME}?${params.toString()}`;
     } catch (e) {
-      setMsg('No se pudo enviar la sesión al launcher.', 'error');
+      handoffSent = false;
+      setMsg('No se pudo enviar la sesión al launcher. Vuelve al launcher e inténtalo de nuevo.', 'error');
     }
   }
 
   const desktopBtn = $('#desktop-handoff-btn');
   desktopBtn && desktopBtn.addEventListener('click', () => {
-    if (auth && auth.currentUser) handoffToDesktop(auth.currentUser);
+    if (auth && auth.currentUser) handoffToDesktop(auth.currentUser, true);
     else setMsg('Inicia sesión primero para conectar el launcher de escritorio.', 'error');
   });
 

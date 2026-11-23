@@ -49,8 +49,19 @@ public sealed class JavaWorkspace
     public string GetModsDirectory(JavaProfile profile)
         => Path.Combine(GetGameDirectory(profile), "mods");
 
+    public string GetConfigDirectory(JavaProfile profile)
+        => Path.Combine(GetGameDirectory(profile), "config");
+
     public string GetSavesDirectory(JavaProfile profile)
         => Path.Combine(GetGameDirectory(profile), "saves");
+
+    public void EnsureProfileDirectories(JavaProfile profile)
+    {
+        Directory.CreateDirectory(GetGameDirectory(profile));
+        Directory.CreateDirectory(GetModsDirectory(profile));
+        Directory.CreateDirectory(GetConfigDirectory(profile));
+        Directory.CreateDirectory(GetSavesDirectory(profile));
+    }
 
     public void EnsureDirectories()
     {
@@ -83,6 +94,7 @@ public sealed class JavaProfile
     public string GameDirectory { get; set; } = string.Empty;
     public string ModLoader { get; set; } = JavaModLoaders.Vanilla;
     public string FabricLoaderVersion { get; set; } = string.Empty;
+    public string LoaderVersion { get; set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
     public DateTimeOffset? LastPlayedAt { get; set; }
 }
@@ -91,6 +103,17 @@ public static class JavaModLoaders
 {
     public const string Vanilla = "Vanilla";
     public const string Fabric = "Fabric";
+    public const string Forge = "Forge";
+    public const string NeoForge = "NeoForge";
+    public const string Quilt = "Quilt";
+
+    public static readonly string[] All = [Vanilla, Fabric, Forge, NeoForge, Quilt];
+
+    public static bool IsKnown(string? value)
+        => value is not null && All.Any(item => string.Equals(item, value, StringComparison.OrdinalIgnoreCase));
+
+    public static string Normalize(string? value)
+        => All.FirstOrDefault(item => string.Equals(item, value, StringComparison.OrdinalIgnoreCase)) ?? Vanilla;
 }
 
 public sealed class JavaWorkspaceConfig
@@ -177,7 +200,7 @@ public sealed class JavaProfileStore
         lock (_gate)
         {
             var index = _profiles.FindIndex(item =>
-                item.VersionId.Equals(profile.VersionId, StringComparison.OrdinalIgnoreCase));
+                item.Id.Equals(profile.Id, StringComparison.OrdinalIgnoreCase));
             if (index >= 0)
                 _profiles[index] = profile;
             else
@@ -220,14 +243,13 @@ public sealed class JavaProfileStore
             {
                 profile.MemoryMb = Math.Clamp(profile.MemoryMb, 1024, 32768);
                 profile.PlayerName = NormalizePlayerName(profile.PlayerName);
-                profile.ModLoader = profile.ModLoader == JavaModLoaders.Fabric
-                    ? JavaModLoaders.Fabric
-                    : JavaModLoaders.Vanilla;
+                profile.ModLoader = JavaModLoaders.Normalize(profile.ModLoader);
             }
 
             return loaded
                 .Where(profile => !string.IsNullOrWhiteSpace(profile.VersionId))
-                .GroupBy(profile => profile.VersionId, StringComparer.OrdinalIgnoreCase)
+                .GroupBy(profile => string.IsNullOrWhiteSpace(profile.Id) ? profile.VersionId : profile.Id,
+                    StringComparer.OrdinalIgnoreCase)
                 .Select(group => group.First())
                 .ToList();
         }

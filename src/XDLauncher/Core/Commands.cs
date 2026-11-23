@@ -172,5 +172,6 @@ public sealed class NavigationItem
     public string Title { get; set; }
     public string Glyph { get; set; }
     public string Subtitle { get; set; }
+    public string Group { get; set; } = "General";
     public object Page { get; set; }
 }

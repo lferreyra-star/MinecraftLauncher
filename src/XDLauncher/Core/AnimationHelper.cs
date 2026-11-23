@@ -15,11 +15,59 @@ public static class AnimationHelper
     private static readonly Duration Normal = TimeSpan.FromMilliseconds(250);
     private static readonly Duration Slow = TimeSpan.FromMilliseconds(400);
 
-    /// <summary>True cuando el sistema pide reducir las animaciones.</summary>
+    /// <summary>Preferencia del usuario para las animaciones de la interfaz.</summary>
+    public static bool AnimationsEnabled { get; set; } = true;
+
+    /// <summary>Preferencia del usuario para los fondos ambientales animados.</summary>
+    public static bool AmbientEffectsEnabled { get; set; } = true;
+
+    /// <summary>Intensidad de la iluminación y las partículas ambientales (0..1).</summary>
+    public static double AmbientIntensity { get; set; } = 0.75;
+
+    /// <summary>Nivel de transparencia de paneles y cristales (0..1).</summary>
+    public static double TransparencyLevel { get; set; } = 0.85;
+
+    /// <summary>Transiciones laterales entre secciones.</summary>
+    public static bool NavTransitionsEnabled { get; set; } = true;
+
+    /// <summary>Partículas ambientales.</summary>
+    public static bool ParticleEffectsEnabled { get; set; } = true;
+
+    /// <summary>Iluminación y elevación al pasar el cursor.</summary>
+    public static bool HoverEffectsEnabled { get; set; } = true;
+
+    /// <summary>Parallax suave del fondo.</summary>
+    public static bool ParallaxEnabled { get; set; } = true;
+
+    /// <summary>Aparición escalonada de tarjetas.</summary>
+    public static bool CardAnimationsEnabled { get; set; } = true;
+
+    /// <summary>Animaciones de carga y skeletons.</summary>
+    public static bool LoadingAnimationsEnabled { get; set; } = true;
+
+    /// <summary>Modo visual de alto rendimiento: desactiva efectos costosos.</summary>
+    public static bool PerformanceMode { get; set; }
+
+    /// <summary>True cuando se pueden reproducir efectos ambientales.</summary>
+    public static bool AmbientMotionEnabled => AmbientEffectsEnabled && !ReduceMotion && !PerformanceMode;
+
+    /// <summary>Partículas activas según intensidad y modo rendimiento.</summary>
+    public static bool ParticlesActive => AmbientMotionEnabled && ParticleEffectsEnabled;
+
+    /// <summary>Número seguro de partículas para el equipo actual.</summary>
+    public static int ParticleCount => ParticlesActive ? (int)(30 * AmbientIntensity) : 0;
+
+    /// <summary>Opacidad de los orbes ambientales.</summary>
+    public static double AmbientOpacity => AmbientMotionEnabled ? 0.25 + (AmbientIntensity * 0.55) : 0;
+
+    /// <summary>True cuando el usuario o el sistema piden reducir las animaciones.</summary>
     public static bool ReduceMotion
     {
         get
         {
+            if (!AnimationsEnabled)
+                return true;
+
             try
             {
                 return !SystemParameters.ClientAreaAnimation;
@@ -72,6 +120,49 @@ public static class AnimationHelper
 
         element.BeginAnimation(UIElement.OpacityProperty, fade);
         translate.BeginAnimation(TranslateTransform.YProperty, slide);
+    }
+
+    /// <summary>Transición horizontal de página con dirección (-1 atrás, 1 adelante).</summary>
+    public static void AnimatePageTransition(FrameworkElement element, double direction)
+    {
+        if (element is null)
+            return;
+
+        element.BeginAnimation(UIElement.OpacityProperty, null);
+        var translate = FindTranslate(element);
+        translate?.BeginAnimation(TranslateTransform.XProperty, null);
+
+        if (ReduceMotion || !NavTransitionsEnabled)
+        {
+            element.Opacity = 1;
+            if (translate is not null) translate.X = 0;
+            return;
+        }
+
+        var fade = new DoubleAnimation
+        {
+            From = 0,
+            To = 1,
+            Duration = Normal,
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        var slide = new DoubleAnimation
+        {
+            From = 34 * direction,
+            To = 0,
+            Duration = Slow,
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+
+        element.BeginAnimation(UIElement.OpacityProperty, fade);
+        translate?.BeginAnimation(TranslateTransform.XProperty, slide);
+    }
+
+    private static TranslateTransform? FindTranslate(FrameworkElement element)
+    {
+        if (element.RenderTransform is TransformGroup group)
+            return group.Children.OfType<TranslateTransform>().FirstOrDefault();
+        return element.RenderTransform as TranslateTransform;
     }
 
     /// <summary>Entrada escalonada de los hijos de un contenedor.</summary>

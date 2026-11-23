@@ -93,8 +93,8 @@ public sealed class AuthService
             VerificationUri = GetString(root, "verification_uri") ?? "https://microsoft.com/link",
             VerificationUriComplete = GetString(root, "verification_uri_complete"),
             Message = GetString(root, "message") ?? "Abre la página indicada e introduce el código.",
-            ExpiresIn = root.TryGetProperty("expires_in", out var expires) ? expires.GetInt32() : 900,
-            Interval = root.TryGetProperty("interval", out var interval) ? interval.GetInt32() : 5
+            ExpiresIn = ReadInt32(root, "expires_in", 900),
+            Interval = ReadInt32(root, "interval", 5)
         };
     }
 
@@ -269,7 +269,7 @@ public sealed class AuthService
     {
         var access = GetString(root, "access_token") ?? throw new AuthException("Microsoft no devolvió un token de acceso.");
         var refresh = GetString(root, "refresh_token");
-        var expires = root.TryGetProperty("expires_in", out var exp) ? exp.GetInt32() : 3600;
+        var expires = ReadInt32(root, "expires_in", 3600);
         return new OAuthToken(access, refresh, expires);
     }
 
@@ -482,6 +482,20 @@ public sealed class AuthService
            value.ValueKind == JsonValueKind.String
             ? value.GetString()
             : null;
+
+    private static int ReadInt32(JsonElement element, string name, int fallback)
+    {
+        if (!element.TryGetProperty(name, out var value))
+            return fallback;
+
+        if (value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out var number))
+            return number;
+
+        if (value.ValueKind == JsonValueKind.String && int.TryParse(value.GetString(), out var parsed))
+            return parsed;
+
+        return fallback;
+    }
 
     private sealed record OAuthToken(string AccessToken, string? RefreshToken, int ExpiresInSeconds);
     private sealed record XboxAuth(string UserHash, string XstsToken);

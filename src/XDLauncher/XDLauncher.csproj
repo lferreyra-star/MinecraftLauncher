@@ -26,6 +26,7 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <PublishReadyToRun>false</PublishReadyToRun>
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <EnableDefaultPageItems>true</EnableDefaultPageItems>
     <StartupObject>XdLauncher.Program</StartupObject>
   </PropertyGroup>
 
@@ -49,5 +50,14 @@
     <!-- Vigilar los XAML con dotnet watch (no se vigilan por defecto) -->
     <Watch Include="**\*.xaml" Exclude="bin\**;obj\**" />
   </ItemGroup>
+
+  <!-- Evita que un *_wpftmp.csproj huérfano de un build interrumpido
+       referencie archivos .g.cs que el pase de markup ya no regenera. -->
+  <Target Name="RemoveStaleWpfTempProjects" BeforeTargets="PrepareForBuild">
+    <ItemGroup>
+      <StaleWpfTempProject Include="$(MSBuildProjectDirectory)\*_wpftmp.csproj" />
+    </ItemGroup>
+    <Delete Files="@(StaleWpfTempProject)" ContinueOnError="true" />
+  </Target>
 
 </Project>
