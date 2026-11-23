@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -76,6 +76,20 @@ public sealed class UpperTextConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object parameter, CultureInfo culture)
         => (value as string)?.ToUpper(culture) ?? string.Empty;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => Binding.DoNothing;
+}
+
+public sealed class BoolToTextConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var options = (parameter as string ?? "SÍ|NO").Split('|');
+        var affirmative = options.Length > 0 ? options[0] : "SÍ";
+        var negative = options.Length > 1 ? options[1] : "NO";
+        return value is bool flag && flag ? affirmative : negative;
+    }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => Binding.DoNothing;
@@ -237,4 +251,19 @@ public sealed class DownloadStateToVisibilityConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => Binding.DoNothing;
+}
+
+public sealed class PercentToGaugeOffsetConverter : System.Windows.Data.IValueConverter
+{
+    private const double Circumference = 349;
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var percent = value is double number ? number : 0;
+        percent = Math.Clamp(percent, 0, 100);
+        return Circumference * (1 - percent / 100d);
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => System.Windows.Data.Binding.DoNothing;
 }

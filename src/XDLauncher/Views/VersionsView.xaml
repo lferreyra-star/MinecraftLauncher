@@ -1,4 +1,4 @@
-<UserControl x:Class="XdLauncher.Views.VersionsView"
+﻿<UserControl x:Class="XdLauncher.Views.VersionsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -49,15 +49,38 @@
                         <TextBlock Text="{Binding DisplayName}" Style="{StaticResource Caption}" Margin="0,8,0,0" />
                         <Grid Margin="0,8,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <TextBlock Text="NIEVACIÓN" Style="{StaticResource StatLabel}" />
-                            <Border Style="{StaticResource Badge}" Background="{DynamicResource ErrorSoftBrush}"
-                                    BorderBrush="{DynamicResource ErrorBrush}" Grid.Column="1" Margin="10,0,0,0">
+                            <TextBlock Text="ACTUALIZACIÓN" Style="{StaticResource StatLabel}" />
+                            <Border Grid.Column="1" Margin="10,0,0,0">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource Badge}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding UpdateStatus}" Value="Actualización disponible">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Setter Property="Background" Value="{DynamicResource ErrorSoftBrush}" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <TextBlock Text="{Binding UpdateStatus}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ErrorBrush}" />
                             </Border>
                         </Grid>
                     </StackPanel>
                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
                         <Border x:Name="UpdateBadge" Padding="12,7" Margin="0,0,0,10">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Setter Property="CornerRadius" Value="10" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding UpdateStatus}" Value="Actualización disponible">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Setter Property="Background" Value="{DynamicResource ErrorSoftBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{Binding UpdateStatus}" Style="{StaticResource Caption}" />
                                 <TextBlock Text="!" FontFamily="{StaticResource IconFont}" FontSize="12"
