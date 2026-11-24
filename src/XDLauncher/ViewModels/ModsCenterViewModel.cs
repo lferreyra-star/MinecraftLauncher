@@ -93,6 +93,8 @@ public sealed class ModsCenterViewModel : ObservableObject
     public ObservableCollection<string> GameVersions { get; }
     public ObservableCollection<string> Loaders { get; }
     public ObservableCollection<ModrinthVersion> ModVersions { get; }
+    public ObservableCollection<JavaVersionEntry> JavaVersions => _java.Versions;
+    public event Action? OpenJavaRequested;
     public IReadOnlyList<string> Categories { get; }
     public IReadOnlyList<string> SortOptions { get; }
 
@@ -179,6 +181,26 @@ public sealed class ModsCenterViewModel : ObservableObject
             InstallSelectedVersionCommand.RaiseCanExecuteChanged();
         }
     }
+
+    public JavaVersionEntry? SelectedJavaVersion
+    {
+        get => _java.SelectedVersion;
+        set
+        {
+            if (ReferenceEquals(_java.SelectedVersion, value))
+                return;
+            _java.SelectedVersion = value;
+            OnPropertyChanged(nameof(SelectedJavaVersion));
+            OnPropertyChanged(nameof(TargetFolder));
+            OnPropertyChanged(nameof(CompatibilitySummary));
+            ClearModVersions();
+            if (value is not null && SelectedProject is not null)
+                _ = LoadVersionsAsync(SelectedProject);
+            _ = RefreshLibraryAsync();
+        }
+    }
+
+    public bool HasJavaVersion => _java.SelectedVersion is not null;
 
     public ModrinthVersion? SelectedModVersion
     {
@@ -311,6 +333,15 @@ public sealed class ModsCenterViewModel : ObservableObject
     {
         try
         {
+            await _java.EnsureLoadedAsync();
+            await RunOnUiAsync(() =>
+            {
+                OnPropertyChanged(nameof(JavaVersions));
+                OnPropertyChanged(nameof(HasJavaVersion));
+                OnPropertyChanged(nameof(SelectedJavaVersion));
+                OnPropertyChanged(nameof(TargetFolder));
+            });
+
             var versions = await _modrinth.GetGameVersionsAsync();
             await RunOnUiAsync(() =>
             {
@@ -649,7 +680,10 @@ public sealed class ModsCenterViewModel : ObservableObject
         var version = _java.SelectedVersion;
         if (version is null)
         {
-            _dialogs.ShowError("Centro de mods", "Selecciona una versión Java para abrir su carpeta de mods.");
+            if (_dialogs.Confirm("Centro de mods",
+                    "Selecciona una versión Java para abrir su carpeta de mods. ¿Quieres ir a Minecraft Java?",
+                    "Ir a Java", "Ahora no"))
+                OpenJavaRequested?.Invoke();
             return;
         }
         var workspace = _java.ActiveWorkspace;

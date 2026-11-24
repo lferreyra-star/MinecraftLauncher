@@ -62,6 +62,7 @@ public sealed class ShellViewModel : ObservableObject
         Java = new JavaViewModel(Settings, Profile, dialogs);
         Home.JavaPage = Java;
         Mods = new ModsCenterViewModel(Java, dialogs);
+        Mods.OpenJavaRequested += () => Navigate("java");
         SettingsPage = new SettingsViewModel(Settings, Profile, account);
         ProfilePage = new ProfilePageViewModel(Profile, Settings, SettingsPage, account, () => Navigate("settings"));
 
