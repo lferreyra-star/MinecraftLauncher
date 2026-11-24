@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -104,7 +104,8 @@ public sealed class ModInstallService
         JavaProfile profile,
         bool includeOptionalDependencies,
         IProgress<ModInstallProgress>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        ModrinthVersion? selectedVersion = null)
     {
         if (string.IsNullOrWhiteSpace(project.Id))
             throw new InvalidOperationException("El proyecto de Modrinth no tiene identificador.");
@@ -119,7 +120,10 @@ public sealed class ModInstallService
         var skipped = new List<string>();
 
         var versions = await _modrinth.GetVersionsAsync(project.Id, gameVersion, loader, cancellationToken);
-        var target = versions.FirstOrDefault(v => ModrinthService.IsCompatible(v, gameVersion, loader));
+        var target = selectedVersion;
+        if (target is not null && !ModrinthService.IsCompatible(target, gameVersion, loader))
+            throw new InvalidOperationException($"La versión elegida de '{project.Name}' no es compatible con {gameVersion} y {loader}.");
+        target ??= versions.FirstOrDefault(v => ModrinthService.IsCompatible(v, gameVersion, loader));
         if (target is null)
             throw new InvalidOperationException($"No hay una versión de '{project.Name}' compatible con {gameVersion} y {loader}.");
 
@@ -158,12 +162,13 @@ public sealed class ModInstallService
         IProgress<ModInstallProgress>? progress,
         CancellationToken cancellationToken)
     {
-        var target = await _modrinth.GetVersionAsync(current.VersionId, cancellationToken);
-        if (target is null)
-            target = (await _modrinth.GetVersionsAsync(current.ProjectId, current.MinecraftVersion, current.Loader, cancellationToken))
-                .FirstOrDefault(v => ModrinthService.IsCompatible(v, current.MinecraftVersion, current.Loader));
-        if (target is null)
-            throw new InvalidOperationException("No se encontró una versión de actualización compatible.");
+        var versions = await _modrinth.GetVersionsAsync(current.ProjectId, current.MinecraftVersion, current.Loader, cancellationToken);
+        var target = versions
+            .Where(v => !string.Equals(v.Id, current.VersionId, StringComparison.OrdinalIgnoreCase))
+            .FirstOrDefault(v => ModrinthService.IsCompatible(v, current.MinecraftVersion, current.Loader));
+        target ??= await _modrinth.GetVersionAsync(current.VersionId, cancellationToken);
+        if (target is null || string.Equals(target.Id, current.VersionId, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("No hay una versión más reciente compatible para actualizar.");
 
         var primary = SelectPrimary(target, progress);
         if (string.IsNullOrWhiteSpace(primary.Url))
