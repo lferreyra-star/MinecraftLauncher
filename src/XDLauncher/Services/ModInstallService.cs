@@ -26,6 +26,7 @@ public sealed class InstalledModpack
     public string ProfileId { get; set; } = string.Empty;
     public string GameDirectory { get; set; } = string.Empty;
     public string Workspace { get; set; } = string.Empty;
+    public string? IconUrl { get; set; }
     public DateTimeOffset InstalledAt { get; set; } = DateTimeOffset.Now;
 }
 
@@ -398,6 +399,7 @@ public sealed class ModInstallService
             ProfileId = profile.Id,
             GameDirectory = gameDirectory,
             Workspace = workspace.Kind.ToString(),
+            IconUrl = project.IconUrl,
             InstalledAt = DateTimeOffset.Now
         };
 
