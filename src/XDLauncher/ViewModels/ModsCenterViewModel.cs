@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
 using XdLauncher.Core;
@@ -26,6 +26,9 @@ public sealed class ModsCenterViewModel : ObservableObject
     private int _offset;
     private int _total;
     private ModrinthProject? _selectedProject;
+    private ModrinthVersion? _selectedModVersion;
+    private bool _isLoadingVersions;
+    private string _targetFolder = string.Empty;
     private string _progressStage = string.Empty;
     private string _progressDetail = string.Empty;
     private double _progressPercent;
@@ -45,6 +48,7 @@ public sealed class ModsCenterViewModel : ObservableObject
         ModpackLibrary = [];
         GameVersions = [];
         Loaders = [];
+        ModVersions = [];
         Categories =
         [
             "Todas", "technology", "magic", "adventure", "combat", "mobs",
@@ -55,6 +59,10 @@ public sealed class ModsCenterViewModel : ObservableObject
         SearchCommand = new AsyncRelayCommand(() => SearchAsync(reset: true), () => !IsLoading, OnError);
         LoadMoreCommand = new AsyncRelayCommand(() => SearchAsync(reset: false), () => !IsLoading && Projects.Count < Total, OnError);
         InstallCommand = new AsyncRelayCommand<ModrinthProject>(InstallAsync, project => !IsInstalling && project is not null, OnError);
+        LoadVersionsCommand = new AsyncRelayCommand<ModrinthProject>(LoadVersionsAsync,
+            project => !IsLoadingVersions && !IsInstalling && project is not null, OnError);
+        InstallSelectedVersionCommand = new AsyncRelayCommand(InstallSelectedVersionAsync,
+            () => !IsInstalling && SelectedProject is not null && SelectedModVersion is not null, OnError);
         RefreshCommand = new AsyncRelayCommand(async () => { await SearchAsync(reset: true); await RefreshLibraryAsync(); }, () => !IsLoading, OnError);
         ToggleCommand = new RelayCommand<InstalledMod>(Toggle, mod => mod is not null);
         RemoveCommand = new RelayCommand<InstalledMod>(Remove, mod => mod is not null);
@@ -84,12 +92,15 @@ public sealed class ModsCenterViewModel : ObservableObject
     public ObservableCollection<InstalledModpack> ModpackLibrary { get; }
     public ObservableCollection<string> GameVersions { get; }
     public ObservableCollection<string> Loaders { get; }
+    public ObservableCollection<ModrinthVersion> ModVersions { get; }
     public IReadOnlyList<string> Categories { get; }
     public IReadOnlyList<string> SortOptions { get; }
 
     public AsyncRelayCommand SearchCommand { get; }
     public AsyncRelayCommand LoadMoreCommand { get; }
     public AsyncRelayCommand<ModrinthProject> InstallCommand { get; }
+    public AsyncRelayCommand<ModrinthProject> LoadVersionsCommand { get; }
+    public AsyncRelayCommand InstallSelectedVersionCommand { get; }
     public AsyncRelayCommand RefreshCommand { get; }
     public RelayCommand<InstalledMod> ToggleCommand { get; }
     public RelayCommand<InstalledMod> RemoveCommand { get; }
@@ -115,6 +126,7 @@ public sealed class ModsCenterViewModel : ObservableObject
             if (!SetProperty(ref _selectedGameVersion, value))
                 return;
             OnPropertyChanged(nameof(CompatibilitySummary));
+            ClearModVersions();
             _ = SearchAsync(reset: true);
         }
     }
@@ -127,6 +139,7 @@ public sealed class ModsCenterViewModel : ObservableObject
             if (!SetProperty(ref _selectedLoader, value))
                 return;
             OnPropertyChanged(nameof(CompatibilitySummary));
+            ClearModVersions();
             _ = SearchAsync(reset: true);
         }
     }
@@ -156,7 +169,53 @@ public sealed class ModsCenterViewModel : ObservableObject
     public ModrinthProject? SelectedProject
     {
         get => _selectedProject;
-        set => SetProperty(ref _selectedProject, value);
+        set
+        {
+            if (!SetProperty(ref _selectedProject, value))
+                return;
+            ClearModVersions();
+            if (value is not null)
+                _ = LoadVersionsAsync(value);
+            InstallSelectedVersionCommand.RaiseCanExecuteChanged();
+        }
+    }
+
+    public ModrinthVersion? SelectedModVersion
+    {
+        get => _selectedModVersion;
+        set
+        {
+            if (!SetProperty(ref _selectedModVersion, value))
+                return;
+            InstallSelectedVersionCommand.RaiseCanExecuteChanged();
+        }
+    }
+
+    public bool IsLoadingVersions
+    {
+        get => _isLoadingVersions;
+        private set
+        {
+            if (!SetProperty(ref _isLoadingVersions, value))
+                return;
+            LoadVersionsCommand.RaiseCanExecuteChanged();
+            InstallSelectedVersionCommand.RaiseCanExecuteChanged();
+        }
+    }
+
+    public string TargetFolder
+    {
+        get => _targetFolder;
+        private set => SetProperty(ref _targetFolder, value);
+    }
+
+    public bool HasModVersions => ModVersions.Count > 0;
+
+    private void ClearModVersions()
+    {
+        ModVersions.Clear();
+        SelectedModVersion = null;
+        OnPropertyChanged(nameof(HasModVersions));
     }
 
     public string StatusMessage
@@ -187,6 +246,8 @@ public sealed class ModsCenterViewModel : ObservableObject
             if (!SetProperty(ref _isInstalling, value))
                 return;
             InstallCommand.RaiseCanExecuteChanged();
+            InstallSelectedVersionCommand.RaiseCanExecuteChanged();
+            LoadVersionsCommand.RaiseCanExecuteChanged();
             InstallModpackCommand.RaiseCanExecuteChanged();
             UpdateCommand.RaiseCanExecuteChanged();
         }
@@ -346,24 +407,71 @@ public sealed class ModsCenterViewModel : ObservableObject
     }
 
     private async Task InstallAsync(ModrinthProject? project)
+        => await InstallCoreAsync(project, null);
+
+    private async Task InstallSelectedVersionAsync()
+    {
+        if (SelectedProject is null || SelectedModVersion is null)
+            return;
+        await InstallCoreAsync(SelectedProject, SelectedModVersion);
+    }
+
+    private async Task LoadVersionsAsync(ModrinthProject? project)
     {
         if (project is null)
             return;
 
-        var version = _java.SelectedVersion;
-        if (version is null)
+        IsLoadingVersions = true;
+        ClearModVersions();
+        StatusMessage = $"Consultando versiones de {project.Name}…";
+        try
         {
-            _dialogs.ShowError("Centro de mods", "Selecciona una versión de Minecraft Java antes de instalar mods.");
-            return;
+            var (_, _, gameVersion, loader, _) = GetTargetContext();
+            var versions = await _modrinth.GetVersionsAsync(project.Id, gameVersion, loader);
+            await RunOnUiAsync(() =>
+            {
+                foreach (var version in versions
+                             .Where(v => ModrinthService.IsCompatible(v, gameVersion, loader))
+                             .OrderByDescending(v => v.DatePublished, StringComparer.Ordinal))
+                    ModVersions.Add(version);
+                if (ModVersions.Count > 0)
+                    SelectedModVersion = ModVersions[0];
+                OnPropertyChanged(nameof(HasModVersions));
+                StatusMessage = $"{ModVersions.Count} versión(es) disponibles para {project.Name}.";
+            });
         }
+        finally
+        {
+            IsLoadingVersions = false;
+            InstallSelectedVersionCommand.RaiseCanExecuteChanged();
+        }
+    }
+
+    private (JavaWorkspace Workspace, JavaProfile Profile, string GameVersion, string Loader, string ModsDirectory) GetTargetContext()
+    {
+        var version = _java.SelectedVersion
+            ?? throw new InvalidOperationException("Selecciona una versión de Minecraft Java antes de instalar mods.");
+        var workspace = _java.ActiveWorkspace;
+        var profile = _java.ActiveProfile ?? _java.ActiveStore.GetOrCreate(version.Id);
+        var gameVersion = string.IsNullOrWhiteSpace(profile.VersionId) ? version.Id : profile.VersionId;
+        var loader = string.IsNullOrWhiteSpace(profile.ModLoader) || profile.ModLoader == JavaModLoaders.Vanilla
+            ? (string.IsNullOrWhiteSpace(SelectedLoader) ? JavaModLoaders.Fabric : SelectedLoader)
+            : profile.ModLoader;
+        workspace.EnsureProfileDirectories(profile);
+        return (workspace, profile, gameVersion, loader, workspace.GetModsDirectory(profile));
+    }
+
+    private async Task InstallCoreAsync(ModrinthProject? project, ModrinthVersion? selectedVersion)
+    {
+        if (project is null)
+            return;
 
         IsInstalling = true;
         StatusMessage = $"Instalando {project.Name}…";
         try
         {
-            var workspace = _java.ActiveWorkspace;
-            var profile = _java.ActiveProfile ?? _java.ActiveStore.GetOrCreate(version.Id);
-            workspace.EnsureProfileDirectories(profile);
+            var (workspace, profile, gameVersion, loader, modsDirectory) = GetTargetContext();
+            TargetFolder = modsDirectory;
 
             var progress = new Progress<ModInstallProgress>(p => RunOnUi(() =>
             {
@@ -374,12 +482,12 @@ public sealed class ModsCenterViewModel : ObservableObject
                 ProgressEta = p.Eta is not null ? $"~{p.Eta:hh\\:mm\\:ss}" : string.Empty;
             }));
 
-            var result = await _installer.InstallAsync(project, SelectedGameVersion, SelectedLoader, workspace, profile,
-                includeOptionalDependencies: false, progress, CancellationToken.None);
+            var result = await _installer.InstallAsync(project, gameVersion, loader, workspace, profile,
+                includeOptionalDependencies: false, progress, CancellationToken.None, selectedVersion);
 
             await RefreshLibraryAsync();
             StatusMessage = result.Installed.Count > 0
-                ? $"Instalado: {string.Join(", ", result.Installed.Select(m => m.Name))}."
+                ? $"Instalado: {string.Join(", ", result.Installed.Select(m => m.Name))} en {modsDirectory}."
                 : "El mod ya estaba instalado y verificado.";
             ToastHub.Success(StatusMessage);
         }
@@ -449,6 +557,9 @@ public sealed class ModsCenterViewModel : ObservableObject
             ActiveProfileLabel = profile is null
                 ? workspace.DisplayName
                 : $"{workspace.DisplayName} · {profile.VersionId} · {profile.ModLoader}";
+            TargetFolder = version is null
+                ? "Sin versión Java seleccionada"
+                : workspace.GetModsDirectory(profile ?? _java.ActiveStore.GetOrCreate(version.Id));
         });
     }
 
