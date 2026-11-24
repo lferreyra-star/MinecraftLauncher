@@ -1,4 +1,4 @@
-using System.Net.Http;
+﻿using System.Net.Http;
 using XdLauncher.Core;
 using XdLauncher.Services;
 
@@ -13,6 +13,8 @@ public sealed class LoginViewModel : ObservableObject
     private const int GoogleTimeoutMinutes = 4;
     private static readonly TimeSpan GoogleTimeout = TimeSpan.FromMinutes(GoogleTimeoutMinutes);
     private readonly XdAuthService _auth;
+    private readonly SettingsService? _settings;
+    private bool _attempted;
     private string _email = string.Empty;
     private string _password = string.Empty;
     private string _confirmPassword = string.Empty;
@@ -35,15 +37,17 @@ public sealed class LoginViewModel : ObservableObject
     private string _successDetail = "Preparando tu launcher…";
     private bool _completionStarted;
 
-    public LoginViewModel(XdAuthService auth)
+    public LoginViewModel(XdAuthService auth, SettingsService? settings = null)
     {
         _auth = auth;
+        _settings = settings;
 
         SignInCommand = new AsyncRelayCommand(SignInAsync, () => !IsBusy, OnError);
         RegisterCommand = new AsyncRelayCommand(RegisterAsync, () => !IsBusy, OnError);
         RecoverCommand = new AsyncRelayCommand(RecoverAsync, () => !IsBusy, OnError);
         TogglePasswordCommand = new RelayCommand(() => ShowPassword = !ShowPassword);
         SwitchModeCommand = new RelayCommand(() => IsRegisterMode = !IsRegisterMode);
+        SetModeCommand = new RelayCommand(parameter => IsRegisterMode = parameter as bool? ?? parameter as string == "register");
         OpenWebsiteCommand = new RelayCommand(() => FileOps.OpenUrl(AppInfo.XdWebsite));
         OpenFirebaseConsoleCommand = new RelayCommand(() => FileOps.OpenUrl(XdAuthService.FirebaseConsoleUrl));
         ContinueWithGoogleCommand = new AsyncRelayCommand(() => SignInWithGoogleAsync(), () => !IsBusy, OnError);
@@ -55,20 +59,60 @@ public sealed class LoginViewModel : ObservableObject
     public string Email
     {
         get => _email;
-        set => SetProperty(ref _email, value);
+        set
+        {
+            if (SetProperty(ref _email, value))
+                OnPropertyChanged(nameof(EmailError));
+        }
     }
 
     public string Password
     {
         get => _password;
-        set => SetProperty(ref _password, value);
+        set
+        {
+            if (SetProperty(ref _password, value))
+            {
+                OnPropertyChanged(nameof(PasswordError));
+                OnPropertyChanged(nameof(ConfirmError));
+            }
+        }
     }
 
     public string ConfirmPassword
     {
         get => _confirmPassword;
-        set => SetProperty(ref _confirmPassword, value);
+        set
+        {
+            if (SetProperty(ref _confirmPassword, value))
+                OnPropertyChanged(nameof(ConfirmError));
+        }
     }
+
+    public bool RememberMe
+    {
+        get => _settings?.Settings.RememberMe ?? true;
+        set
+        {
+            if (_settings is null || _settings.Settings.RememberMe == value)
+                return;
+            _settings.Settings.RememberMe = value;
+            _settings.Save();
+            OnPropertyChanged(nameof(RememberMe));
+        }
+    }
+
+    public string EmailError => !string.IsNullOrWhiteSpace(_email) && !_email.Contains('@')
+        ? "Correo no válido"
+        : string.Empty;
+
+    public string PasswordError => _attempted && string.IsNullOrWhiteSpace(_password)
+        ? "Escribe tu contraseña."
+        : string.Empty;
+
+    public string ConfirmError => _attempted && IsRegisterMode && !string.Equals(Password, ConfirmPassword, StringComparison.Ordinal)
+        ? "Las contraseñas no coinciden."
+        : string.Empty;
 
     public string DisplayName
     {
@@ -237,6 +281,7 @@ public sealed class LoginViewModel : ObservableObject
     public AsyncRelayCommand RecoverCommand { get; }
     public RelayCommand TogglePasswordCommand { get; }
     public RelayCommand SwitchModeCommand { get; }
+    public RelayCommand SetModeCommand { get; }
     public RelayCommand OpenWebsiteCommand { get; }
     public RelayCommand OpenFirebaseConsoleCommand { get; }
     public AsyncRelayCommand ContinueWithGoogleCommand { get; }
@@ -278,6 +323,9 @@ public sealed class LoginViewModel : ObservableObject
 
     private async Task RegisterAsync()
     {
+        _attempted = true;
+        OnPropertyChanged(nameof(PasswordError));
+        OnPropertyChanged(nameof(ConfirmError));
         ErrorMessage = string.Empty;
         InfoMessage = string.Empty;
         NeedsEmailProvider = false;
@@ -452,6 +500,9 @@ public sealed class LoginViewModel : ObservableObject
 
     private bool ValidateCredentials()
     {
+        _attempted = true;
+        OnPropertyChanged(nameof(PasswordError));
+        OnPropertyChanged(nameof(ConfirmError));
         if (string.IsNullOrWhiteSpace(Email) || !Email.Contains('@'))
         {
             ErrorMessage = "Escribe un correo válido.";
@@ -505,7 +556,10 @@ public sealed class LoginViewModel : ObservableObject
             return false;
 
         _completionStarted = true;
-        XdSessionStore.Save(account);
+        if (RememberMe)
+            XdSessionStore.Save(account);
+        else
+            XdSessionStore.Delete();
         Password = string.Empty;
         ConfirmPassword = string.Empty;
         ErrorMessage = string.Empty;

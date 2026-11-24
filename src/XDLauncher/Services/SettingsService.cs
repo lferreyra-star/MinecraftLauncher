@@ -56,6 +56,7 @@ public sealed class LauncherSettings
     public string OnboardingLanguage { get; set; } = "Español";
     public bool VerifyBeforeLaunch { get; set; } = true;
     public bool AutoCheckUpdates { get; set; } = true;
+    public bool RememberMe { get; set; } = true;
     public bool StartWithWindows { get; set; }
     public bool ShowNews { get; set; } = true;
     public string MotionLevel { get; set; } = "Cinematográfico";

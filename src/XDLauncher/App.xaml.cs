@@ -99,7 +99,7 @@ public partial class App : Application
             {
                 splash.Report("Iniciando sesión…", 0.85);
                 splash.Close();
-                account = await ShowLoginAsync(auth);
+                account = await ShowLoginAsync(auth, settingsService);
                 if (account is null)
                 {
                     Shutdown();
@@ -283,12 +283,12 @@ public partial class App : Application
     }
 
     /// <summary>Muestra la pantalla de acceso y devuelve la cuenta validada.</summary>
-    private async Task<XdAccount?> ShowLoginAsync(XdAuthService auth)
+    private async Task<XdAccount?> ShowLoginAsync(XdAuthService auth, SettingsService settingsService)
     {
         if (TakePendingHandoff() is { } ready)
             return ready;
 
-        var loginViewModel = new ViewModels.LoginViewModel(auth);
+        var loginViewModel = new ViewModels.LoginViewModel(auth, settingsService);
         var login = new Views.LoginWindow(loginViewModel);
         _loginWindow = login;
 
@@ -364,7 +364,7 @@ public partial class App : Application
     {
         try
         {
-            var account = await ShowLoginAsync(new XdAuthService());
+            var account = await ShowLoginAsync(new XdAuthService(), settingsService);
             if (account is null)
             {
                 Shutdown();
