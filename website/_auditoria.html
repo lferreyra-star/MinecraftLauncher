@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Auditoria visual XD</title>
+<link rel="icon" href="assets/logo.png">
+<style>body{font-family:Consolas,monospace;background:#000;color:#0f0;padding:12px;font-size:12px}
+pre{white-space:pre-wrap;margin:0}iframe{width:1280px;height:800px;border:0;position:fixed;left:-3000px}</style>
+</head>
+<body>
+<pre id="out">auditando…</pre>
+<iframe id="f" src="/"></iframe>
+<script>
+const out = document.getElementById('out');
+const log = [];
+const add = (k, v) => log.push((v ? 'OK  ' : 'FAIL') + '  ' + k);
+
+window.addEventListener('load', () => {
+  setTimeout(() => {
+   try {
+    const f = document.getElementById('f');
+    const d = f.contentDocument, w = f.contentWindow;
+    if (!d) { out.textContent = 'no se pudo leer el iframe'; return; }
+
+    const cs = (sel, prop) => {
+      const el = d.querySelector(sel);
+      return el ? w.getComputedStyle(el)[prop] : '';
+    };
+
+    // --- recursos cargados dentro del iframe ---
+    const imgs = [...d.querySelectorAll('img')].filter(i => i.getAttribute('src'));
+    const broken = imgs.filter(i => !i.complete || i.naturalWidth === 0);
+    add('imagenes con src cargadas (' + imgs.length + ')', imgs.length > 0 && broken.length === 0);
+    if (broken.length) add('  rotas: ' + broken.map(i=>i.getAttribute('src')).join(', '), false);
+    const sheets = [...d.styleSheets].filter(s => (s.href||'').includes('styles.css'));
+    add('hoja de estilos aplicada', sheets.length === 1);
+    try {
+      const rules = sheets[0].cssRules.length;
+      add('reglas CSS disponibles (' + rules + ')', rules > 100);
+    } catch (e) { add('reglas CSS legibles', false); }
+
+    // --- estetica: variables, glassmorphism, gradientes ---
+    const rootStyle = w.getComputedStyle(d.documentElement);
+    add('variables CSS definidas (--accent)', !!rootStyle.getPropertyValue('--accent').trim());
+    const card = d.querySelector('.card');
+    if (card) {
+      const s = w.getComputedStyle(card);
+      add('card con backdrop-filter', (s.webkitBackdropFilter || s.backdropFilter || '').includes('blur'));
+      add('card con fondo translucido', /rgba/.test(s.backgroundColor));
+      add('card con border-radius', parseFloat(s.borderRadius) >= 8);
+      add('card con transicion', s.transitionDuration !== '0s');
+    }
+    const nav = d.querySelector('.nav');
+    const hero = d.querySelector('.hero');
+    const grad = d.querySelector('.gradient-text');
+    add('nav con backdrop-filter', !!nav && (w.getComputedStyle(nav).backdropFilter || '').includes('blur'));
+    add('hero con padding cinematic', !!hero && parseFloat(w.getComputedStyle(hero).paddingTop) > 80);
+    add('gradient-text con clip-path', !!grad && (w.getComputedStyle(grad).webkitBackgroundClip || w.getComputedStyle(grad).backgroundClip || '').includes('text'));
+
+    // --- animaciones en curso ---
+    const anim = d.getAnimations ? d.getAnimations() : [];
+    add('animaciones activas (' + anim.length + ')', anim.length > 0);
+
+    // --- logica del sitio ---
+    add('canvas de fondo presente', !!d.getElementById('bg-canvas'));
+    add('modal de autenticacion presente', !!d.getElementById('auth-modal'));
+    add('boton de Google presente', !!d.getElementById('google-login-btn'));
+    add('formulario de login presente', !!d.getElementById('auth-form-login'));
+    add('formulario de registro presente', !!d.getElementById('auth-form-register'));
+    add('boton de recuperar contrasena', !!d.getElementById('reset-password-btn'));
+    add('seccion de perfil presente', !!d.getElementById('profile'));
+    add('boton traspaso a escritorio', !!d.getElementById('desktop-handoff-btn'));
+    add('build del HTML', d.documentElement.getAttribute('data-xd-build') === 'xd-1.0');
+    add('build del JS', d.documentElement.getAttribute('data-xd-auth') === 'xd-1.0');
+
+    // --- firebase cargado ---
+    add('SDK de Firebase disponible', typeof w.FIREBASE_CONFIG === 'object' && !!w.FIREBASE_CONFIG.apiKey);
+
+    // --- elementos revelados (animacion de entrada) ---
+    const revealed = d.querySelectorAll('.reveal.visible').length;
+    const totalReveal = d.querySelectorAll('.reveal').length;
+    add('elementos revelados (' + revealed + '/' + totalReveal + ')', revealed > 0);
+
+    // --- nuevas secciones ---
+    add('seccion ecosistema', !!d.getElementById('ecosistema'));
+    add('rejilla editorial', !!d.querySelector('.editorial'));
+    add('notas laterales con contenido', d.querySelectorAll('#news-side .news-row').length > 0);
+    add('boton volver arriba', !!d.getElementById('to-top'));
+    add('metricas', d.querySelectorAll('.metric').length >= 4);
+    add('design system cargado', (w.getComputedStyle(d.documentElement).getPropertyValue('--ease') || '').includes('cubic-bezier'));
+    add('clase glass disponible', (() => { const el = d.createElement('div'); el.className='glass'; d.body.appendChild(el); const s = w.getComputedStyle(el); const ok = (s.webkitBackdropFilter || s.backdropFilter || '').includes('blur'); el.remove(); return ok; })());
+
+    // --- errores de consola capturados ---
+    add('errores JS detectados (' + (w.__errors || []).length + ')', (w.__errors || []).length === 0);
+
+    out.textContent = log.join('\n');
+    document.title = 'DONE';
+   } catch (e) { out.textContent = 'error al auditar: ' + e.message; document.title = 'DONE'; }
+  }, 3500);
+});
+</script>
+</body>
+</html>

@@ -6,178 +6,39 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
   // Marcador de versión: permite verificar desde fuera qué build carga el navegador.
   document.documentElement.setAttribute('data-xd-auth', 'xd-1.0');
   const $ = (s, r = document) => r.querySelector(s);
-  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-  const reduce = false;
 
-  // nav
-  const nav = $('#nav');
-  const onScroll = () => nav && nav.classList.toggle('scrolled', window.scrollY > 20);
-  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
-  const toggle = $('#nav-toggle'), links = $('#nav-links');
-  if (toggle && links) {
-    toggle.addEventListener('click', () => links.classList.toggle('open'));
-    $$('a', links).forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
-  }
-
-  // reveal
-  const revealEls = $$('.reveal');
-  const showReveal = (el) => el.classList.add('visible');
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver((entries) => entries.forEach(e => {
-      if (e.isIntersecting) { showReveal(e.target); io.unobserve(e.target); }
-    }), { threshold: 0.12 });
-    revealEls.forEach(el => io.observe(el));
-  } else { revealEls.forEach(showReveal); }
-  const revealVisible = () => revealEls.forEach(el => { const r = el.getBoundingClientRect(); if (r.top < window.innerHeight) showReveal(el); });
-  window.addEventListener('load', revealVisible);
-  setTimeout(revealVisible, 150); setTimeout(() => revealEls.forEach(showReveal), 1800);
-
-  // counters
-  const countIO = ('IntersectionObserver' in window) ? new IntersectionObserver((entries) => entries.forEach(e => {
-    if (!e.isIntersecting) return;
-    const el = e.target, target = parseInt(el.dataset.count, 10) || 0, start = performance.now();
-    const step = (now) => { const p = Math.min((now - start) / 1200, 1), eased = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(target * eased); if (p < 1) requestAnimationFrame(step); };
-    requestAnimationFrame(step); countIO.unobserve(el);
-  }), { threshold: 0.6 }) : null;
-  $$('.stat-num[data-count]').forEach(c => countIO ? countIO.observe(c) : (c.textContent = c.dataset.count));
-
-  // cursor glow
-  const glow = $('#cursor-glow');
-  if (glow && !reduce) {
-    window.addEventListener('mousemove', (e) => { glow.style.opacity = '1'; glow.style.left = e.clientX + 'px'; glow.style.top = e.clientY + 'px'; }, { passive: true });
-    window.addEventListener('mouseleave', () => glow.style.opacity = '0');
-  }
-
-  // magnetico: desplazamiento sutil hacia el cursor (solo en punteros finos)
-  const magneticEls = $$('.magnetic');
-  if (!reduce && window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
-    magneticEls.forEach((el) => {
-      el.addEventListener('mousemove', (e) => {
-        const r = el.getBoundingClientRect();
-        const dx = (e.clientX - (r.left + r.width / 2)) * 0.16;
-        const dy = (e.clientY - (r.top + r.height / 2)) * 0.16;
-        el.style.setProperty('--mx', dx.toFixed(2) + 'px');
-        el.style.setProperty('--my', dy.toFixed(2) + 'px');
-      });
-      el.addEventListener('mouseleave', () => {
-        el.style.setProperty('--mx', '0px');
-        el.style.setProperty('--my', '0px');
-      });
-    });
-  }
-
-  // parallax + tilt
-  if (!reduce) {
-    const parEls = $$('[data-parallax]');
-    window.addEventListener('mousemove', (e) => {
-      const cx = window.innerWidth / 2, cy = window.innerHeight / 2, dx = (e.clientX - cx) / cx, dy = (e.clientY - cy) / cy;
-      parEls.forEach(el => { const amt = parseFloat(el.dataset.parallax || '10'); el.style.transform = `translate(${dx * amt}px, ${dy * amt}px)`; });
-    }, { passive: true });
-  }
-  $$('.tilt').forEach(card => {
-    if (reduce) return;
-    card.addEventListener('mousemove', (e) => { const r = card.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width - 0.5; const y = (e.clientY - r.top) / r.height - 0.5; card.style.transform = `perspective(900px) rotateX(${(-y * 6).toFixed(2)}deg) rotateY(${(x * 6).toFixed(2)}deg) translateY(-4px)`; });
-    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
-  });
-  $$('.magnetic').forEach(el => {
-    if (reduce) return;
-    el.addEventListener('mousemove', (e) => { const r = el.getBoundingClientRect(); el.style.transform = `translate(${(e.clientX - (r.left + r.width / 2)) * 0.18}px, ${(e.clientY - (r.top + r.height / 2)) * 0.18}px)`; });
-    el.addEventListener('mouseleave', () => { el.style.transform = ''; });
-  });
-
-  // particles
-  const canvas = $('#bg-canvas');
-  if (canvas) {
-    const ctx = canvas.getContext('2d');
-    let w, h, particles;
-    function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; const count = Math.min(w < 720 ? 40 : 90, Math.floor((w * h) / 22000)); particles = Array.from({ length: count }, () => ({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.8 + 0.4, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, a: Math.random() * 0.5 + 0.15 })); }
-    let running = true;
-    document.addEventListener('visibilitychange', () => { running = !document.hidden; });
-    function draw() {
-      if (!running) { requestAnimationFrame(draw); return; }
-      ctx.clearRect(0, 0, w, h);
-      const g = ctx.createRadialGradient(w * 0.7, h * 0.2, 0, w * 0.7, h * 0.2, Math.max(w, h) * 0.7);
-      g.addColorStop(0, 'rgba(92,224,122,0.07)'); g.addColorStop(0.5, 'rgba(53,208,255,0.03)'); g.addColorStop(1, 'rgba(11,15,20,0)');
-      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-        if (!reduce) { p.x += p.vx; p.y += p.vy; if (p.x < 0) p.x = w; if (p.x > w) p.x = 0; if (p.y < 0) p.y = h; if (p.y > h) p.y = 0; }
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = `rgba(156,242,172,${p.a})`; ctx.fill();
-        for (let j = i + 1; j < particles.length; j++) { const q = particles[j], dx = p.x - q.x, dy = p.y - q.y, d = dx * dx + dy * dy; if (d < 150 * 150) { ctx.strokeStyle = `rgba(92,224,122,${(1 - Math.sqrt(d) / 150) * 0.12})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); } }
-      }
-      if (!reduce) requestAnimationFrame(draw);
-    }
-    window.addEventListener('resize', resize); resize(); draw();
-  }
-
-
-  // ===== Boton volver arriba =====
-  const toTop = $('#to-top');
-  if (toTop) {
-    const toggleTop = () => toTop.classList.toggle('show', window.scrollY > 520);
-    window.addEventListener('scroll', toggleTop, { passive: true });
-    toggleTop();
-    toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-  }
-
-  // ===== Noticias oficiales de Minecraft (fuente real, sin datos inventados) =====
-  const newsSide = $('#news-side');
-  const FALLBACK_NEWS = [
-    { title: 'Consulta las novedades oficiales en Minecraft.net', url: 'https://www.minecraft.net/es-es/updates', category: 'Sitio oficial', date: '' },
-    { title: 'Historial de versiones del launcher', url: 'https://github.com/lferreyra-star/MinecraftLauncher/releases', category: 'GitHub Releases', date: '' }
-  ];
-
-  const renderNewsSide = (items) => {
-    if (!newsSide) return;
-    const list = (items && items.length) ? items.slice(0, 3) : FALLBACK_NEWS;
-    newsSide.innerHTML = list.map((item) => {
-      const date = item.date ? `<small>${item.date}</small>` : '';
-      const tag = (item.category || 'Actualidad').slice(0, 22);
-      return `<a class="news-row" href="${item.url}" target="_blank" rel="noopener">
-        <span class="halo-icon">📰</span>
-        <span><b>${item.title}</b><small>${tag}${date ? ' · ' + date : ''}</small></span>
-      </a>`;
-    }).join('');
-  };
-  renderNewsSide(null);
-
-  // La API publica de Minecraft expone las novedades en JSON.
-  // Se pide con timeout: si la red falla, la seccion conserva la lista de respaldo
-  // y nunca queda a la espera bloqueando el render.
-  const fetchWithTimeout = (url, ms) => {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), ms);
-    return fetch(url, { mode: 'cors', signal: ctrl.signal }).finally(() => clearTimeout(timer));
-  };
-
-  fetchWithTimeout('https://launchercontent.mojang.com/v2/java/client.json', 6000)
-    .then((r) => (r.ok ? r.json() : null))
-    .then((data) => {
-      if (!data || !data.downloads) return;
-      const latest = data.downloads && data.downloads.latest && data.downloads.latest.release;
-      if (!latest) return;
-      renderNewsSide([{
-        title: 'Minecraft Java Edition ' + latest.version + ' ya disponible',
-        url: 'https://www.minecraft.net/es-es/updates',
-        category: 'Release',
-        date: latest.time ? new Date(latest.time).toLocaleDateString('es-ES') : ''
-      }]);
-    })
-    .catch(() => { /* se mantiene la lista de respaldo */ });
-
-  // ===== Firebase Auth + Firestore (Google) =====
+  // ===== Firebase Auth + Firestore (Google y correo/contraseña) =====
   const modal = $('#auth-modal'), openLogin = $('#open-login'), closeLogin = $('#auth-close'), googleBtn = $('#google-login-btn');
   const msg = $('#auth-msg');
   const userMenu = $('#user-menu'), userChip = $('#user-chip');
   const setMsg = (t, type = '') => { if (!msg) return; msg.textContent = t || ''; msg.className = 'auth-msg ' + type; };
-  const openModal = () => { modal && modal.classList.add('open'); modal && modal.setAttribute('aria-hidden', 'false'); setMsg(''); };
-  const closeModal = () => { modal && modal.classList.remove('open'); modal && modal.setAttribute('aria-hidden', 'true'); };
+  const openModal = () => {
+    if (!modal) return;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+    setMsg('');
+  };
+  const closeModal = () => {
+    if (!modal) return;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+  };
   openLogin && openLogin.addEventListener('click', openModal);
   closeLogin && closeLogin.addEventListener('click', closeModal);
   modal && modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
-  userChip && userChip.addEventListener('click', () => userMenu.classList.toggle('open'));
-  document.addEventListener('click', (e) => { if (userMenu && !userMenu.contains(e.target)) userMenu.classList.remove('open'); });
+  userChip && userChip.addEventListener('click', () => {
+    const open = userMenu.classList.toggle('open');
+    userChip.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('click', (e) => {
+    if (userMenu && !userMenu.contains(e.target)) {
+      userMenu.classList.remove('open');
+      userChip && userChip.setAttribute('aria-expanded', 'false');
+    }
+  });
 
   function fmtTs(ts) {
     if (!ts) return '—';
@@ -353,23 +214,19 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
   });
 
   // Google: se intenta el popup (mantiene la página sin recargar). Solo se cae a la
-  // redirección completa cuando el navegador bloquea la ventana emergente. Errores
-  // de configuración (dominio no autorizado, proveedor desactivado, red) se muestran
-  // directamente: redirigir en esos casos provoca bucles de vuelta a la web.
+  // redirección completa cuando el navegador bloquea la ventana emergente.
   const canFallbackToRedirect = (code) =>
     code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment';
 
   const startGoogle = async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-
     try {
       const result = await signInWithPopup(auth, provider);
       if (result && result.user) return result.user;
     } catch (err) {
       const code = err && err.code ? err.code : '';
       if (canFallbackToRedirect(code)) {
-        // Ventana emergente bloqueada: se navega a Google y se vuelve a la web.
         await signInWithRedirect(auth, provider);
         return null;
       }
@@ -422,20 +279,15 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
   });
 
   if (isDesktopFlow) {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('desktop') === '1') {
-      // Mensaje inicial para que el usuario sepa qué está haciendo.
-      setMsg('Inicia sesión con Google para enviar la sesión al launcher.');
-    }
+    setMsg('Inicia sesión con Google para enviar la sesión al launcher.');
   }
 
   async function doLogout() { try { await signOut(auth); } catch {} }
   $('#logout-btn') && $('#logout-btn').addEventListener('click', doLogout);
   $('#profile-logout') && $('#profile-logout').addEventListener('click', doLogout);
 
-  // Tras volver de una redireccion de Google se recupera el resultado.
-  // Solo se consulta si la URL trae los parametros de la redireccion: pedirlo
-  // sin necesidad deja la promesa colgada y ralentiza la carga en produccion.
+  // Solo se consulta si la URL trae parámetros de redirección: pedirlo sin
+  // necesidad deja la promesa colgada y ralentiza la carga en producción.
   const hasRedirectParams = () => {
     const search = new URLSearchParams(window.location.search);
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
@@ -457,7 +309,6 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) { renderUser(null, null); return; }
-    // usuario autenticado (nuevo o existente). Mostrar datos y sincronizar perfil propio en Firestore.
     renderUser(user, null);
     setMsg('Sesión iniciada.', 'ok');
     try {
@@ -467,7 +318,6 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.
       // si Firestore falla (reglas/config), mantenemos la sesión visible con datos de Auth
       renderUser(user, null);
     }
-    // Traspaso de sesión al launcher de escritorio (si se pidió con ?desktop=1).
     if (isDesktopFlow) await handoffToDesktop(user);
   });
 })();

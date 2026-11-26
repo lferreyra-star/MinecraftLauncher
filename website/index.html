@@ -3,109 +3,234 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="XD Launcher - Launcher para Minecraft Bedrock, Java y Mobile Connect. Descarga gratis para Windows.">
-  <meta name="theme-color" content="#0b0f14">
-  <title>XD Launcher · Minecraft Bedrock, Java & Mobile Connect</title>
+  <meta name="description" content="XD Launcher - Launcher para Minecraft Bedrock, Java y Mobile Connect. Descarga gratis para Windows 10/11.">
+  <meta name="theme-color" content="#070b11">
+  <title>XD Launcher · Tu universo Minecraft en un solo launcher</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="icon" type="image/png" href="assets/logo.png">
 </head>
 <body>
+  <svg class="svg-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.1-1.5 6.1-6.6A5.2 5.2 0 0 0 19.2 4a4.9 4.9 0 0 0-.1-3.6S18 0 15 2a12.4 12.4 0 0 0-6 0C6 0 5.1.4 5.1.4A4.9 4.9 0 0 0 5 4a5.2 5.2 0 0 0-1.4 3.6c0 5 3 6.3 6.1 6.6A3.4 3.4 0 0 0 8.8 17V21"/></symbol>
+    <symbol id="i-windows" viewBox="0 0 24 24"><path d="M3 5.5 11 4v7H3V5.5ZM12 3.8 21 2.5v8.5h-9V3.8ZM3 12h8v7l-8-1.5V12Zm9 0h9v8.5l-9-1.3V12Z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/></symbol>
+    <symbol id="i-cube" viewBox="0 0 24 24"><path d="m12 2 9 5v10l-9 5-9-5V7l9-5Z"/><path d="m3 7 9 5 9-5M12 12v10"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M10.5 18.5h3"/></symbol>
+    <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M10 3a2 2 0 0 1 4 0v1h4a1 1 0 0 1 1 1v4h1a2 2 0 0 1 0 4h-1v4a1 1 0 0 1-1 1h-4v-1a2 2 0 0 0-4 0v1H6a1 1 0 0 1-1-1v-4H4a2 2 0 0 1 0-4h1V5a1 1 0 0 1 1-1h4V3Z"/></symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18h1.5a2.5 2.5 0 0 0 0-5H12a3 3 0 0 1 0-6h5a4 4 0 0 0 4-4A9 9 0 0 0 12 3Z"/><circle cx="7.5" cy="10" r=".8" fill="currentColor" stroke="none"/><circle cx="11" cy="7" r=".8" fill="currentColor" stroke="none"/><circle cx="15" cy="8" r=".8" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 2.1 6 5.9 2-5.9 2L12 18l-2.1-6L4 10l5.9-2L12 2Z"/><path d="m19 17 .7 2 2 .3-2 .7-.7 2-.7-2-2-.7 2-.3.7-2Z"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m0 0-5-5m5 5-5 5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7V5Z"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2 8.5a16 16 0 0 1 20 0M5 12a11 11 0 0 1 14 0M8.5 15.5a6 6 0 0 1 7 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-usb" viewBox="0 0 24 24"><path d="M12 2v14m-4 4 4 2 4-2-4-6-4 6Z"/><path d="M9 4h6M8 7h8"/></symbol>
+    <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 9h16l-1-5H5L4 9Z"/><path d="M5 9v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9M9 21v-6h6v6"/><path d="M4 9a2.5 2.5 0 0 0 4 1.7A2.5 2.5 0 0 0 12 9a2.5 2.5 0 0 0 4 1.7A2.5 2.5 0 0 0 20 9"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 6.6M20 5v6h-6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1-2.8 2.8-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21h-4v-.2a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1L4.2 17l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3v-4h.2a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8L4.3 7 7 4.2l.1.1a1.6 1.6 0 0 0 1.8.3A1.6 1.6 0 0 0 10 3.1V3h4v.2a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1L19.7 7l-.1.1a1.6 1.6 0 0 0-.3 1.8 1.6 1.6 0 0 0 1.5 1H21v4h-.2a1.6 1.6 0 0 0-1.4 1Z"/></symbol>
+    <symbol id="i-package" viewBox="0 0 24 24"><path d="m12 2 9 5v10l-9 5-9-5V7l9-5Z"/><path d="m3 7 9 5 9-5M8 4.8l9 5M16 4.8l-9 5"/><path d="M12 12v10"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-13-2 16"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4m6-4 4-4-4-4m4 4H10"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3 1.2-4.5A8 8 0 1 1 21 12Z"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="m6 9 3 3-3 3m6 0h6"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  </svg>
+
   <canvas id="bg-canvas" aria-hidden="true"></canvas>
-  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  <div class="ambient-grid" aria-hidden="true"></div>
   <div class="noise" aria-hidden="true"></div>
   <div id="cursor-glow" aria-hidden="true"></div>
+  <div class="page-progress" aria-hidden="true"><i id="page-progress-bar"></i></div>
 
   <header class="nav" id="nav">
     <div class="container nav-inner">
-      <a class="brand magnetic" href="#top">
-        <img src="assets/logo.png" alt="XD Launcher" class="brand-logo">
-        <span>XD Launcher</span>
+      <a class="brand magnetic" href="#top" aria-label="XD Launcher, ir al inicio">
+        <span class="brand-mark"><img src="assets/logo.png" alt=""></span>
+        <span class="brand-name">XD <b>Launcher</b></span>
+        <span class="brand-tag">REBIRTH</span>
       </a>
-      <nav class="nav-links" id="nav-links">
+
+      <nav class="nav-links" id="nav-links" aria-label="Navegación principal">
         <a href="#features">Funciones</a>
+        <a href="#ediciones">Ediciones</a>
         <a href="#mobile">Mobile Connect</a>
-        <a href="#java">Java Edition</a>
+        <a href="#mods">Mods</a>
         <a href="#download">Descargar</a>
-        <a class="btn btn-sm btn-ghost" href="https://github.com/lferreyra-star/MinecraftLauncher" target="_blank" rel="noopener">
-          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.5 7.5 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
-          GitHub
+        <a class="nav-github" href="https://github.com/lferreyra-star/MinecraftLauncher" target="_blank" rel="noopener">
+          <svg class="ico" aria-hidden="true"><use href="#i-github"/></svg><span>GitHub</span>
         </a>
         <div class="nav-auth">
-          <button class="btn btn-sm btn-secondary magnetic" id="open-login">Iniciar sesión</button>
+          <button class="btn btn-sm btn-secondary magnetic" id="open-login">
+            <svg class="ico" aria-hidden="true"><use href="#i-user"/></svg><span>Iniciar sesión</span>
+          </button>
           <div class="user-menu" id="user-menu" hidden>
-            <button class="user-chip" id="user-chip" aria-haspopup="true">
-              <img id="user-avatar" alt="" />
+            <button class="user-chip" id="user-chip" aria-haspopup="true" aria-expanded="false">
+              <img id="user-avatar" alt="">
               <span id="user-name"></span>
+              <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg>
             </button>
             <div class="user-dropdown" id="user-dropdown">
               <div class="user-dd-head">
-                <img id="user-avatar-lg" alt="" />
+                <img id="user-avatar-lg" alt="">
                 <div>
                   <div class="user-dd-name" id="user-name-lg"></div>
                   <div class="user-email" id="user-email"></div>
                 </div>
               </div>
               <div class="user-dd-provider">Sesión con Google</div>
-              <button class="btn btn-sm btn-ghost" id="logout-btn">Cerrar sesión</button>
+              <button class="btn btn-sm btn-ghost" id="logout-btn">
+                <svg class="ico" aria-hidden="true"><use href="#i-logout"/></svg> Cerrar sesión
+              </button>
             </div>
           </div>
         </div>
       </nav>
-      <button class="nav-toggle" id="nav-toggle" aria-label="Menú"><span></span><span></span><span></span></button>
+
+      <button class="nav-toggle" id="nav-toggle" aria-label="Abrir menú" aria-controls="nav-links" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </header>
 
   <main id="top">
+    <!-- ================= HERO ================= -->
     <section class="hero">
       <div class="hero-orbs" aria-hidden="true"><span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span></div>
       <div class="container hero-grid">
         <div class="hero-copy">
-          <div class="badge reveal"><span class="dot"></span> Windows 10/11 · Gratis · Open Source</div>
-          <h1 class="reveal">Tu universo <span class="gradient-text shimmer">Minecraft</span>, en un solo launcher.</h1>
+          <div class="badge-row reveal">
+            <span class="badge"><svg class="ico" aria-hidden="true"><use href="#i-windows"/></svg> Windows 10/11</span>
+            <span class="badge badge-green"><svg class="ico" aria-hidden="true"><use href="#i-spark"/></svg> Gratis</span>
+            <span class="badge badge-violet"><svg class="ico" aria-hidden="true"><use href="#i-code"/></svg> Open Source</span>
+          </div>
+          <h1 class="reveal">Tu universo <span class="gradient-text shimmer">Minecraft</span>,<br>en un solo launcher.</h1>
           <p class="lead reveal">Gestiona <strong>Bedrock</strong>, <strong>Java Edition</strong> y juega al Minecraft de tu móvil en PC con <strong>Mobile Connect</strong>. Rápido, moderno y sin complicaciones.</p>
           <div class="hero-actions reveal">
-            <a class="btn btn-primary btn-lg magnetic" href="https://github.com/lferreyra-star/MinecraftLauncher/releases/latest" target="_blank" rel="noopener">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-              Descargar instalador
+            <a class="btn btn-primary btn-lg magnetic btn-shine" href="https://github.com/lferreyra-star/MinecraftLauncher/releases/latest" target="_blank" rel="noopener">
+              <svg class="ico" aria-hidden="true"><use href="#i-download"/></svg> Descargar instalador
             </a>
-            <a class="btn btn-secondary btn-lg magnetic" href="https://github.com/lferreyra-star/MinecraftLauncher" target="_blank" rel="noopener">Ver en GitHub</a>
+            <a class="btn btn-secondary btn-lg magnetic" href="https://github.com/lferreyra-star/MinecraftLauncher" target="_blank" rel="noopener">
+              <svg class="ico" aria-hidden="true"><use href="#i-github"/></svg> Ver en GitHub
+              <svg class="ico ico-sm" aria-hidden="true"><use href="#i-arrow"/></svg>
+            </a>
           </div>
           <div class="hero-meta reveal">
-            <div class="meta-item"><strong>.NET 10</strong><span>WPF nativo</span></div>
-            <div class="meta-item"><strong>3 en 1</strong><span>Bedrock · Java · Móvil</span></div>
-            <div class="meta-item"><strong>Seguro</strong><span>Fuentes oficiales</span></div>
+            <div class="meta-item"><span class="meta-icon"><svg class="ico" aria-hidden="true"><use href="#i-bolt"/></svg></span><span><strong>.NET 10</strong><small>WPF nativo</small></span></div>
+            <div class="meta-item"><span class="meta-icon"><svg class="ico" aria-hidden="true"><use href="#i-layers"/></svg></span><span><strong>3 en 1</strong><small>Bedrock · Java · Móvil</small></span></div>
+            <div class="meta-item"><span class="meta-icon"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg></span><span><strong>Seguro</strong><small>Fuentes oficiales</small></span></div>
           </div>
         </div>
-        <div class="hero-visual reveal delay-1" data-parallax="18">
+
+        <div class="hero-visual reveal delay-1" data-parallax="14">
+          <div class="visual-aura" aria-hidden="true"></div>
           <div class="mockup tilt" data-tilt>
-            <div class="mockup-bar"><span></span><span></span><span></span><div class="bar-title">XD Launcher</div></div>
-            <div class="mockup-body">
-              <img src="assets/logo.png" alt="" class="mockup-logo floaty">
-              <div class="mockup-title">Centro de control</div>
-              <div class="mockup-cards">
-                <div class="mcard float-card"><span class="micon">⛏</span><div><b>Java Edition</b><small>Versiones, perfiles y mods</small></div></div>
-                <div class="mcard float-card d2"><span class="micon">🧱</span><div><b>Bedrock</b><small>Detecta y lanza desde Store</small></div></div>
-                <div class="mcard accent float-card d3"><span class="micon">📱</span><div><b>Mobile Connect</b><small>Juega tu móvil en PC</small></div></div>
-              </div>
-              <div class="mockup-play pulse">▶ JUGAR</div>
+            <div class="mockup-bar">
+              <span class="win-dot d1"></span><span class="win-dot d2"></span><span class="win-dot d3"></span>
+              <div class="bar-title"><span class="bar-logo">XD</span> XD Launcher <small>· demo interactiva</small></div>
+              <span class="bar-connection"><i></i> Conectado</span>
             </div>
-            <div class="glow glow-a"></div>
-            <div class="glow glow-b"></div>
+
+            <div class="mockup-shell">
+              <aside class="mockup-rail" aria-hidden="true">
+                <button class="rail-btn active" type="button" data-rail="home"><svg class="ico"><use href="#i-grid"/></svg><span>Inicio</span></button>
+                <button class="rail-btn" type="button" data-rail="java"><svg class="ico"><use href="#i-code"/></svg><span>Java</span></button>
+                <button class="rail-btn" type="button" data-rail="bedrock"><svg class="ico"><use href="#i-cube"/></svg><span>Bedrock</span></button>
+                <button class="rail-btn" type="button" data-rail="mobile"><svg class="ico"><use href="#i-phone"/></svg><span>Móvil</span></button>
+                <button class="rail-btn" type="button" data-rail="mods"><svg class="ico"><use href="#i-puzzle"/></svg><span>Mods</span></button>
+                <button class="rail-btn" type="button" data-rail="download"><svg class="ico"><use href="#i-download"/></svg><span>Descargas</span></button>
+              </aside>
+
+              <div class="mockup-main">
+                <div class="app-header">
+                  <div>
+                    <span class="app-kicker">CENTRO DE CONTROL</span>
+                    <h3>Tu mundo, listo para jugar</h3>
+                  </div>
+                  <span class="app-user"><i></i> Xperado</span>
+                </div>
+
+                <div class="app-stage">
+                  <div class="stage-art" aria-hidden="true"><span class="stage-sun"></span><span class="stage-hill h1"></span><span class="stage-hill h2"></span><span class="stage-hill h3"></span><span class="stage-stars"></span></div>
+                  <div class="stage-content">
+                    <span class="stage-tag" data-stage-tag>JAVA EDITION</span>
+                    <h4 data-stage-title>Versiones oficiales,<br>listas para jugar</h4>
+                    <p data-stage-desc>Descarga desde los manifiestos de Mojang y lanza tu perfil en segundos.</p>
+                    <button class="app-cta" id="mock-play" type="button"><svg class="ico" aria-hidden="true"><use href="#i-play"/></svg><span data-play-label>JUGAR</span></button>
+                    <div class="app-progress" aria-hidden="true"><i></i></div>
+                  </div>
+                  <span class="stage-scan" aria-hidden="true"></span>
+                </div>
+
+                <div class="edition-tabs" role="tablist" aria-label="Ediciones del launcher">
+                  <button class="edition-tab active" type="button" role="tab" aria-selected="true" data-edition="java">
+                    <svg class="ico" aria-hidden="true"><use href="#i-code"/></svg>
+                    <span><b>Java Edition</b><small>Versiones y perfiles</small></span>
+                  </button>
+                  <button class="edition-tab" type="button" role="tab" aria-selected="false" data-edition="bedrock">
+                    <svg class="ico" aria-hidden="true"><use href="#i-cube"/></svg>
+                    <span><b>Bedrock</b><small>Microsoft Store</small></span>
+                  </button>
+                  <button class="edition-tab" type="button" role="tab" aria-selected="false" data-edition="mobile">
+                    <svg class="ico" aria-hidden="true"><use href="#i-phone"/></svg>
+                    <span><b>Mobile Connect</b><small>USB y Wi-Fi</small></span>
+                  </button>
+                </div>
+
+                <div class="app-panels">
+                  <div class="app-panel active" data-panel="java">
+                    <span class="panel-line"><i class="dot-ok"></i> Perfil activo · Premium · Java automático</span>
+                    <span class="panel-line"><i class="dot-idle"></i> Biblioteca oficial · releases y snapshots</span>
+                  </div>
+                  <div class="app-panel" data-panel="bedrock">
+                    <span class="panel-line"><i class="dot-idle"></i> Paquete detectado · verificación de firma</span>
+                    <span class="panel-line"><i class="dot-ok"></i> Catálogo de Microsoft Store disponible</span>
+                  </div>
+                  <div class="app-panel" data-panel="mobile">
+                    <span class="panel-line"><i class="dot-ok"></i> ADB y scrcpy oficiales listos</span>
+                    <span class="panel-line"><i class="dot-idle"></i> Transmisión · calidad y FPS en vivo</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mockup-dock" aria-hidden="true">
+              <span class="dock-item active"><svg class="ico"><use href="#i-grid"/></svg></span>
+              <span class="dock-item"><svg class="ico"><use href="#i-code"/></svg></span>
+              <span class="dock-item"><svg class="ico"><use href="#i-play"/></svg></span>
+              <span class="dock-item"><svg class="ico"><use href="#i-clock"/></svg></span>
+              <span class="dock-item"><svg class="ico"><use href="#i-package"/></svg></span>
+              <span class="dock-item"><svg class="ico"><use href="#i-puzzle"/></svg></span>
+              <span class="dock-item"><svg class="ico"><use href="#i-download"/></svg></span>
+              <span class="dock-item"><svg class="ico"><use href="#i-gear"/></svg></span>
+              <span class="dock-item"><svg class="ico"><use href="#i-phone"/></svg></span>
+            </div>
+            <div class="glow glow-a"></div><div class="glow glow-b"></div>
           </div>
         </div>
       </div>
+
       <div class="marquee" aria-hidden="true">
         <div class="marquee-track">
-          <span>Bedrock</span><span>•</span><span>Java Edition</span><span>•</span><span>Mobile Connect</span><span>•</span><span>Mods & Fabric</span><span>•</span><span>Complementos</span><span>•</span><span>Microsoft Store</span><span>•</span><span>ADB & scrcpy</span><span>•</span>
-          <span>Bedrock</span><span>•</span><span>Java Edition</span><span>•</span><span>Mobile Connect</span><span>•</span><span>Mods & Fabric</span><span>•</span><span>Complementos</span><span>•</span><span>Microsoft Store</span><span>•</span><span>ADB & scrcpy</span><span>•</span>
+          <span>Bedrock</span><span>◆</span><span>Java Edition</span><span>◆</span><span>Mobile Connect</span><span>◆</span><span>Mods &amp; Fabric</span><span>◆</span><span>Complementos</span><span>◆</span><span>Microsoft Store</span><span>◆</span><span>ADB &amp; scrcpy</span><span>◆</span>
+          <span>Bedrock</span><span>◆</span><span>Java Edition</span><span>◆</span><span>Mobile Connect</span><span>◆</span><span>Mods &amp; Fabric</span><span>◆</span><span>Complementos</span><span>◆</span><span>Microsoft Store</span><span>◆</span><span>ADB &amp; scrcpy</span><span>◆</span>
         </div>
       </div>
       <div class="scroll-hint" aria-hidden="true"><span></span></div>
     </section>
 
+    <!-- ================= STATS ================= -->
     <section class="stats-strip">
       <div class="container stats-grid reveal">
         <div class="stat card-glow"><span class="stat-num" data-count="3">0</span><span class="stat-label">Ediciones integradas</span></div>
@@ -114,12 +239,12 @@
       </div>
     </section>
 
-    <!-- Profile panel (visible cuando hay sesión) -->
+    <!-- ================= PERFIL (se muestra con sesión) ================= -->
     <section id="profile" class="section section-profile" hidden>
       <div class="container">
         <div class="profile-card reveal">
           <div class="profile-head">
-            <img id="profile-avatar" alt="Avatar" class="profile-avatar" />
+            <img id="profile-avatar" alt="Avatar" class="profile-avatar">
             <div class="profile-info">
               <span class="eyebrow">Tu perfil</span>
               <h2 id="profile-name">—</h2>
@@ -135,49 +260,95 @@
               <div><small>Cuenta creada</small><strong id="profile-created">—</strong></div>
               <div><small>Último acceso</small><strong id="profile-last">—</strong></div>
             </div>
-            <button class="btn btn-primary" id="desktop-handoff-btn">Continuar en el launcher de escritorio</button>
-            <button class="btn btn-secondary" id="profile-logout">Cerrar sesión</button>
+            <button class="btn btn-primary" id="desktop-handoff-btn"><svg class="ico" aria-hidden="true"><use href="#i-monitor"/></svg> Continuar en el launcher de escritorio</button>
+            <button class="btn btn-secondary" id="profile-logout"><svg class="ico" aria-hidden="true"><use href="#i-logout"/></svg> Cerrar sesión</button>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- ================= FUNCIONES ================= -->
     <section id="features" class="section">
       <div class="container">
         <div class="section-head reveal">
-          <span class="eyebrow">Funciones</span>
+          <span class="eyebrow"><svg class="ico" aria-hidden="true"><use href="#i-grid"/></svg> Funciones</span>
           <h2>Todo lo que necesitas, <span class="gradient-text">pulido al detalle</span></h2>
           <p>Un centro de control moderno para tus ediciones de Minecraft en Windows.</p>
         </div>
         <div class="features-grid">
-          <article class="card feature reveal tilt" data-tilt><div class="icon-wrap">🧱</div><h3>Bedrock para Windows</h3><p>Detecta tu instalación oficial (Retail/Preview), verifica paquetes y firma, comprueba actualizaciones del catálogo de Microsoft Store y lanza el juego al instante.</p></article>
-          <article class="card feature reveal delay-1 tilt" data-tilt><div class="icon-wrap">⛏</div><h3>Java Edition completo</h3><p>Biblioteca oficial con releases, snapshots y antiguas. Perfiles, Java automático, RAM, Fabric, mundos y registros en workspaces Premium/No-Premium.</p></article>
-          <article class="card feature reveal delay-2 tilt" data-tilt><div class="icon-wrap">📱</div><h3>Mobile Connect</h3><p>Conecta tu Android por USB o Wi-Fi, transmite en tiempo real y juega al Minecraft de tu móvil con teclado y ratón del PC (ADB y scrcpy).</p></article>
-          <article class="card feature reveal tilt" data-tilt><div class="icon-wrap">🧩</div><h3>Complementos</h3><p>Importa y gestiona .mcpack, .mcaddon, .mcworld y .mctemplate con validación segura y biblioteca local.</p></article>
-          <article class="card feature reveal delay-1 tilt" data-tilt><div class="icon-wrap">🎨</div><h3>Personalización</h3><p>Tema claro/oscuro, acentos, fondos, tamaño y escala. Experiencia visual fluida y adaptable.</p></article>
-          <article class="card feature reveal delay-2 tilt" data-tilt><div class="icon-wrap">🔒</div><h3>Seguro y oficial</h3><p>Manifiestos de Mojang, Microsoft Store y herramientas oficiales. Cuenta Microsoft o perfil local, token cifrado con DPAPI.</p></article>
+          <article class="card feature reveal tilt" data-tilt><div class="icon-wrap tone-green"><svg class="ico" aria-hidden="true"><use href="#i-cube"/></svg></div><span class="feature-no">01</span><h3>Bedrock para Windows</h3><p>Detecta tu instalación oficial (Retail/Preview), verifica paquetes y firma, comprueba actualizaciones del catálogo de Microsoft Store y lanza el juego al instante.</p></article>
+          <article class="card feature reveal delay-1 tilt" data-tilt><div class="icon-wrap tone-blue"><svg class="ico" aria-hidden="true"><use href="#i-code"/></svg></div><span class="feature-no">02</span><h3>Java Edition completo</h3><p>Biblioteca oficial con releases, snapshots y antiguas. Perfiles, Java automático, RAM, Fabric, mundos y registros en workspaces Premium/No-Premium.</p></article>
+          <article class="card feature reveal delay-2 tilt" data-tilt><div class="icon-wrap tone-violet"><svg class="ico" aria-hidden="true"><use href="#i-phone"/></svg></div><span class="feature-no">03</span><h3>Mobile Connect</h3><p>Conecta tu Android por USB o Wi-Fi, transmite en tiempo real y juega al Minecraft de tu móvil con teclado y ratón del PC (ADB y scrcpy).</p></article>
+          <article class="card feature reveal tilt" data-tilt><div class="icon-wrap tone-amber"><svg class="ico" aria-hidden="true"><use href="#i-puzzle"/></svg></div><span class="feature-no">04</span><h3>Complementos</h3><p>Importa y gestiona .mcpack, .mcaddon, .mcworld y .mctemplate con validación segura y biblioteca local.</p></article>
+          <article class="card feature reveal delay-1 tilt" data-tilt><div class="icon-wrap tone-pink"><svg class="ico" aria-hidden="true"><use href="#i-palette"/></svg></div><span class="feature-no">05</span><h3>Personalización</h3><p>Tema claro/oscuro, acentos, fondos, tamaño y escala. Experiencia visual fluida y adaptable.</p></article>
+          <article class="card feature reveal delay-2 tilt" data-tilt><div class="icon-wrap tone-cyan"><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg></div><span class="feature-no">06</span><h3>Seguro y oficial</h3><p>Manifiestos de Mojang, Microsoft Store y herramientas oficiales. Cuenta Microsoft o perfil local, token cifrado con DPAPI.</p></article>
         </div>
       </div>
     </section>
 
+    <!-- ================= CARACTERÍSTICAS DESTACADAS ================= -->
+    <section id="destacado" class="section section-alt">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow"><svg class="ico" aria-hidden="true"><use href="#i-spark"/></svg> Destacado</span>
+          <h2>Pensado para jugar, <span class="gradient-text">no para configurar</span></h2>
+          <p>Cada detalle del launcher está orientado a que llegues al juego con el mínimo esfuerzo.</p>
+        </div>
+        <div class="bento">
+          <article class="bento-card bento-wide reveal edge-card">
+            <div class="bento-copy"><span class="chip"><svg class="ico" aria-hidden="true"><use href="#i-bolt"/></svg> Arranque rápido</span><h3>Un clic y estás dentro</h3><p>El selector de edición adapta el botón principal: Java, Bedrock Windows o Bedrock Android. Sin menús intermedios ni pasos innecesarios.</p><a class="text-link" href="#ediciones">Explorar ediciones <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+            <div class="bento-art art-launch" aria-hidden="true"><span class="launch-ring"></span><span class="launch-core"><svg class="ico"><use href="#i-play"/></svg></span><span class="launch-line l1"></span><span class="launch-line l2"></span></div>
+          </article>
+          <article class="bento-card reveal edge-card">
+            <div class="bento-copy"><span class="chip chip-green"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg> Confianza</span><h3>Solo fuentes oficiales</h3><p>Mojang, Microsoft Store, ADB de Google y scrcpy verificado con SHA-256.</p></div>
+          </article>
+          <article class="bento-card reveal delay-1 edge-card">
+            <div class="bento-copy"><span class="chip chip-violet"><svg class="ico" aria-hidden="true"><use href="#i-palette"/></svg> Tu estilo</span><h3>Se adapta a ti</h3><p>Temas, acentos, fondos y escala de interfaz. Tu launcher, a tu manera.</p></div>
+          </article>
+          <article class="bento-card bento-wide reveal edge-card">
+            <div class="bento-copy"><span class="chip"><svg class="ico" aria-hidden="true"><use href="#i-terminal"/></svg> Diagnóstico</span><h3>Siempre sabes qué ocurre</h3><p>Estado de servicios, registro de actividad y copia de diagnóstico cuando la necesitas.</p><a class="text-link" href="#faq">Ver preguntas frecuentes <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+            <div class="bento-art art-terminal" aria-hidden="true"><span><i></i> Firebase Auth <b>OK</b></span><span><i></i> Microsoft Store <b>OK</b></span><span><i></i> Mobile Connect <b>READY</b></span></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= EDICIONES ================= -->
+    <section id="ediciones" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow"><svg class="ico" aria-hidden="true"><use href="#i-layers"/></svg> Ediciones</span>
+          <h2>Tres formas de jugar, <span class="gradient-text">una sola app</span></h2>
+          <p>Elige tu edición desde el inicio. El launcher adapta el botón principal y el panel de estado a tu elección.</p>
+        </div>
+        <div class="edition-cards">
+          <a class="edition-card reveal tilt edge-card tone-java" href="#java"><span class="edition-icon"><svg class="ico" aria-hidden="true"><use href="#i-code"/></svg></span><span class="edition-label">JAVA EDITION</span><h3>Minecraft Java</h3><p>Versiones oficiales, perfiles y mods en workspaces independientes.</p><span class="edition-go">Ver detalles <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></span></a>
+          <a class="edition-card reveal delay-1 tilt edge-card tone-bedrock" href="#bedrock"><span class="edition-icon"><svg class="ico" aria-hidden="true"><use href="#i-cube"/></svg></span><span class="edition-label">BEDROCK WINDOWS</span><h3>Minecraft Bedrock</h3><p>Tu instalación oficial de Microsoft Store, verificada y lista para jugar.</p><span class="edition-go">Ver detalles <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></span></a>
+          <a class="edition-card reveal delay-2 tilt edge-card tone-mobile" href="#mobile"><span class="edition-icon"><svg class="ico" aria-hidden="true"><use href="#i-phone"/></svg></span><span class="edition-label">BEDROCK ANDROID</span><h3>Mobile Connect</h3><p>El Minecraft de tu móvil, transmitido y controlado desde el PC.</p><span class="edition-go">Ver detalles <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MOBILE CONNECT ================= -->
     <section id="mobile" class="section section-alt">
       <div class="container split">
         <div class="reveal">
-          <span class="eyebrow">Mobile Connect</span>
+          <span class="eyebrow"><svg class="ico" aria-hidden="true"><use href="#i-phone"/></svg> Mobile Connect</span>
           <h2>El Minecraft de tu móvil, <span class="gradient-text">en tu PC</span></h2>
           <p>Transmite en tiempo real y controla con teclado y ratón. Sin emuladores, sin copiar el juego, sin tocar tus mundos ni tu cuenta.</p>
           <ul class="checklist">
-            <li>Conexión por USB o Wi-Fi (emparejamiento oficial)</li>
-            <li>Calidad, FPS y resolución en vivo</li>
+            <li>Conexión por USB o Wi-Fi con emparejamiento oficial</li>
+            <li>Calidad, resolución y FPS reales en vivo</li>
             <li>Controles reasignables y modo táctil calibrable</li>
-            <li>Instala ADB y scrcpy oficiales desde el launcher</li>
+            <li>ADB y scrcpy oficiales instalados desde el launcher</li>
           </ul>
-          <a class="btn btn-secondary magnetic" href="#download">Probar Mobile Connect</a>
+          <a class="btn btn-secondary magnetic" href="#download">Probar Mobile Connect <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
         </div>
         <div class="card showcase reveal delay-1 tilt" data-tilt>
           <div class="showcase-head"><span class="pill-live"><i></i> En vivo</span><span>Android · scrcpy</span></div>
           <div class="phone-mock">
             <div class="screen">
+              <div class="screen-land" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
               <div class="scanline"></div>
               <div class="crosshair"></div>
               <div class="hud">W A S D · Ratón · Espacio</div>
@@ -189,39 +360,155 @@
       </div>
     </section>
 
+    <!-- ================= JAVA EDITION ================= -->
     <section id="java" class="section">
       <div class="container split reverse">
         <div class="reveal">
-          <span class="eyebrow">Java Edition</span>
+          <span class="eyebrow"><svg class="ico" aria-hidden="true"><use href="#i-code"/></svg> Java Edition</span>
           <h2>Versiones oficiales, <span class="gradient-text">listas para jugar</span></h2>
           <p>Descarga desde los manifiestos de Mojang, configura Java y juega en segundos.</p>
           <ul class="checklist">
             <li>Releases, snapshots y versiones antiguas</li>
             <li>Workspaces independientes Premium y No-Premium</li>
             <li>Java automático y memoria (RAM) configurable</li>
-            <li>Perfiles, mods/Fabric, mundos y registros</li>
+            <li>Perfiles, Fabric, mundos y registros</li>
           </ul>
+          <a class="btn btn-secondary magnetic" href="#mods">Descubrir mods <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
         </div>
         <div class="card showcase reveal delay-1 tilt" data-tilt>
-          <div class="version-list">
-            <div class="vrow active"><span class="vtag">Release</span><b>1.21.x</b><span class="vstate">Instalada</span></div>
-            <div class="vrow"><span class="vtag">Release</span><b>1.20.6</b><span class="vstate">Disponible</span></div>
-            <div class="vrow"><span class="vtag snap">Snapshot</span><b>24wXXa</b><span class="vstate">Disponible</span></div>
-            <div class="vrow"><span class="vtag old">Antigua</span><b>1.8.9</b><span class="vstate">Disponible</span></div>
+          <div class="showcase-head"><span><svg class="ico" aria-hidden="true"><use href="#i-folder"/></svg> Biblioteca de versiones</span><span class="pill-soft">Oficial</span></div>
+          <div class="version-list" id="version-list">
+            <button class="vrow active" type="button"><span class="vtag">Release</span><b>1.21.x</b><span class="vstate">Instalada</span></button>
+            <button class="vrow" type="button"><span class="vtag">Release</span><b>1.20.6</b><span class="vstate">Disponible</span></button>
+            <button class="vrow" type="button"><span class="vtag snap">Snapshot</span><b>24wXXa</b><span class="vstate">Disponible</span></button>
+            <button class="vrow" type="button"><span class="vtag old">Antigua</span><b>1.8.9</b><span class="vstate">Disponible</span></button>
           </div>
-          <div class="play-bar"><div><b>Perfil activo</b><small>Premium · Java 21 · 4 GB</small></div><button class="btn btn-primary btn-sm magnetic" type="button">▶ Jugar</button></div>
+          <div class="play-bar"><div><b>Perfil activo</b><small>Premium · Java 21 · 4 GB</small></div><button class="btn btn-primary btn-sm magnetic play-demo" type="button"><svg class="ico" aria-hidden="true"><use href="#i-play"/></svg> Jugar</button></div>
         </div>
       </div>
     </section>
 
-    <section id="ecosistema" class="section section-alt">
+    <!-- ================= BEDROCK ================= -->
+    <section id="bedrock" class="section section-alt">
+      <div class="container split">
+        <div class="reveal">
+          <span class="eyebrow tone-green-eyebrow"><svg class="ico" aria-hidden="true"><use href="#i-cube"/></svg> Bedrock</span>
+          <h2>Tu Bedrock de Windows, <span class="gradient-text">sin rodeos</span></h2>
+          <p>El launcher detecta la instalación oficial de Microsoft Store, verifica el paquete y sus componentes, y lanza el juego mediante la activación oficial.</p>
+          <ul class="checklist checklist-green">
+            <li>Detección Retail y Preview</li>
+            <li>Verificación de paquete, firma y componentes</li>
+            <li>Actualizaciones contra el catálogo oficial</li>
+            <li>Cuenta Microsoft con token cifrado con DPAPI</li>
+          </ul>
+          <a class="btn btn-secondary magnetic" href="#store">Ver Microsoft Store <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+        <div class="card showcase show-store reveal delay-1 tilt" data-tilt>
+          <div class="showcase-head"><span><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg> Flujo de verificación</span><span class="pill-live"><i></i> Vista previa</span></div>
+          <div class="store-verify">
+            <div class="verify-row"><span class="verify-icon"><svg class="ico" aria-hidden="true"><use href="#i-monitor"/></svg></span><span><b>Detección del paquete</b><small>Ediciones Retail y Preview</small></span><span class="verify-state muted">PASO 1</span></div>
+            <div class="verify-row"><span class="verify-icon"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg></span><span><b>Firma y componentes</b><small>Comprobación antes de jugar</small></span><span class="verify-state muted">PASO 2</span></div>
+            <div class="verify-row"><span class="verify-icon"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></span><span><b>Catálogo de actualizaciones</b><small>Consulta bajo demanda</small></span><span class="verify-state muted">PASO 3</span></div>
+          </div>
+          <div class="store-foot"><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg> Ilustración del flujo real · sin modificar archivos del juego</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MODS & FABRIC ================= -->
+    <section id="mods" class="section">
       <div class="container">
         <div class="section-head reveal">
-          <span class="eyebrow">Ecosistema</span>
+          <span class="eyebrow tone-violet-eyebrow"><svg class="ico" aria-hidden="true"><use href="#i-puzzle"/></svg> Mods &amp; Fabric</span>
+          <h2>Mods que <span class="gradient-text">sí funcionan</span></h2>
+          <p>Instala mods y modpacks compatibles desde catálogos reales, en un workspace Java independiente.</p>
+        </div>
+        <div class="mod-grid">
+          <article class="card mod-card reveal tilt" data-tilt><span class="mod-icon violet"><svg class="ico" aria-hidden="true"><use href="#i-spark"/></svg></span><h3>Fabric de verdad</h3><p>Instala el cargador oficial desde Fabric Meta y combina el perfil con la versión vanilla correspondiente.</p><span class="mod-tag">Fabric Meta</span></article>
+          <article class="card mod-card reveal delay-1 tilt" data-tilt><span class="mod-icon blue"><svg class="ico" aria-hidden="true"><use href="#i-package"/></svg></span><h3>Catálogo integrado</h3><p>Busca proyectos y versiones compatibles con tu versión y cargador desde Modrinth.</p><span class="mod-tag">Modrinth</span></article>
+          <article class="card mod-card reveal delay-2 tilt" data-tilt><span class="mod-icon green"><svg class="ico" aria-hidden="true"><use href="#i-folder"/></svg></span><h3>Modpacks .mrpack</h3><p>Descarga el paquete, aplica overrides y crea un perfil exclusivo para el modpack.</p><span class="mod-tag">Workspaces</span></article>
+          <article class="card mod-card reveal tilt" data-tilt><span class="mod-icon amber"><svg class="ico" aria-hidden="true"><use href="#i-gear"/></svg></span><h3>Sin mezclar mundos</h3><p>Cada workspace mantiene sus versiones, mods y partidas separadas del resto.</p><span class="mod-tag">Aislado</span></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= COMPLEMENTOS ================= -->
+    <section id="addons" class="section section-alt">
+      <div class="container split reverse">
+        <div class="card showcase show-addons reveal tilt" data-tilt>
+          <div class="showcase-head"><span><svg class="ico" aria-hidden="true"><use href="#i-puzzle"/></svg> Importador de complementos</span><span class="pill-soft">Local</span></div>
+          <div class="file-list">
+            <div class="file-chip"><span class="file-ext">.mcpack</span><span>Complemento</span><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg></div>
+            <div class="file-chip"><span class="file-ext">.mcaddon</span><span>Paquete completo</span><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg></div>
+            <div class="file-chip"><span class="file-ext">.mcworld</span><span>Mundo</span><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg></div>
+            <div class="file-chip"><span class="file-ext">.mctemplate</span><span>Plantilla</span><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg></div>
+          </div>
+          <div class="addon-path"><svg class="ico" aria-hidden="true"><use href="#i-folder"/></svg> Se importan en la carpeta oficial <code>com.mojang</code></div>
+        </div>
+        <div class="reveal">
+          <span class="eyebrow tone-amber-eyebrow"><svg class="ico" aria-hidden="true"><use href="#i-puzzle"/></svg> Complementos</span>
+          <h2>Importa contenido <span class="gradient-text">sin riesgo</span></h2>
+          <p>Gestiona tus complementos de Bedrock con validación segura. Los archivos originales no se modifican.</p>
+          <ul class="checklist checklist-amber">
+            <li>Formatos .mcpack, .mcaddon, .mcworld y .mctemplate</li>
+            <li>Validación antes de importar</li>
+            <li>Biblioteca local organizada</li>
+            <li>Sin tocar tus mundos ni addons existentes</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MICROSOFT STORE ================= -->
+    <section id="store" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow tone-blue-eyebrow"><svg class="ico" aria-hidden="true"><use href="#i-store"/></svg> Microsoft Store</span>
+          <h2>Integrado con <span class="gradient-text">tu Store</span></h2>
+          <p>El launcher trabaja con la instalación oficial de Minecraft Bedrock y consulta el catálogo de Microsoft Store.</p>
+        </div>
+        <div class="store-grid">
+          <article class="card store-feature reveal tilt" data-tilt><span class="store-step">01</span><span class="mod-icon blue"><svg class="ico" aria-hidden="true"><use href="#i-monitor"/></svg></span><h3>Detección</h3><p>Localiza las ediciones Retail y Preview instaladas en el equipo.</p></article>
+          <article class="card store-feature reveal delay-1 tilt" data-tilt><span class="store-step">02</span><span class="mod-icon violet"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg></span><h3>Verificación</h3><p>Comprueba paquete, firma y componentes obligatorios antes de jugar.</p></article>
+          <article class="card store-feature reveal delay-2 tilt" data-tilt><span class="store-step">03</span><span class="mod-icon green"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></span><h3>Actualización</h3><p>Consulta novedades del catálogo oficial y avisa cuando hay cambios.</p></article>
+        </div>
+        <div class="notice info reveal" style="margin-top:20px"><svg class="ico" aria-hidden="true"><use href="#i-store"/></svg><span><b>Juego con licencia legítima</b>Minecraft Bedrock se instala y actualiza desde Microsoft Store. XD Launcher no sustituye ni modifica el juego.</span></div>
+      </div>
+    </section>
+
+    <!-- ================= ADB & SCRCPY ================= -->
+    <section id="adb" class="section section-alt">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow tone-violet-eyebrow"><svg class="ico" aria-hidden="true"><use href="#i-terminal"/></svg> ADB &amp; scrcpy</span>
+          <h2>La tecnología oficial, <span class="gradient-text">ya integrada</span></h2>
+          <p>El launcher descarga ADB de Google y scrcpy desde su release oficial, y verifica el SHA-256 publicado.</p>
+        </div>
+        <div class="pipeline reveal">
+          <div class="pipe-node"><span class="pipe-icon"><svg class="ico" aria-hidden="true"><use href="#i-phone"/></svg></span><b>Teléfono</b><small>Minecraft Bedrock Android</small></div>
+          <span class="pipe-link"><i></i></span>
+          <div class="pipe-node"><span class="pipe-icon"><svg class="ico" aria-hidden="true"><use href="#i-usb"/></svg></span><b>ADB</b><small>USB o Wi-Fi · emparejamiento oficial</small></div>
+          <span class="pipe-link"><i></i></span>
+          <div class="pipe-node"><span class="pipe-icon"><svg class="ico" aria-hidden="true"><use href="#i-monitor"/></svg></span><b>scrcpy</b><small>Transmisión y control UHID</small></div>
+          <span class="pipe-link"><i></i></span>
+          <div class="pipe-node accent"><span class="pipe-icon"><svg class="ico" aria-hidden="true"><use href="#i-monitor"/></svg></span><b>Tu PC</b><small>Teclado y ratón</small></div>
+        </div>
+        <div class="adb-notes reveal">
+          <div class="card"><span class="mod-icon green"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg></span><h3>Sin permisos especiales</h3><p>El modo UHID de scrcpy envía teclado y ratón sin necesitar INJECT_EVENTS.</p></div>
+          <div class="card"><span class="mod-icon blue"><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg></span><h3>Sin tocar tus datos</h3><p>No se copia el juego ni se modifican mundos, skins, addons ni tu cuenta.</p></div>
+          <div class="card"><span class="mod-icon violet"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></span><h3>Verificado</h3><p>ADB de dl.google.com y scrcpy con SHA-256 comprobado desde GitHub.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ECOSISTEMA ================= -->
+    <section id="ecosistema" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow"><svg class="ico" aria-hidden="true"><use href="#i-spark"/></svg> Ecosistema</span>
           <h2>Un launcher, <span class="gradient-text">todo tu universo</span></h2>
           <p>Complementos, texturas y versiones, presentados con el mismo lenguaje y cuidado visual que el launcher.</p>
         </div>
-
         <div class="editorial reveal">
           <article class="editorial-main edge-card">
             <span class="chip tag">NOTICIAS</span>
@@ -234,7 +521,6 @@
           </article>
           <div class="editorial-side" id="news-side"></div>
         </div>
-
         <div class="metrics reveal" style="margin-top:26px">
           <div class="metric"><b>3</b><small>Ediciones integradas</small></div>
           <div class="metric"><b>1</b><small>Instalador con todo incluido</small></div>
@@ -244,54 +530,78 @@
       </div>
     </section>
 
+    <!-- ================= DESCARGA ================= -->
     <section id="download" class="section section-download">
       <div class="container">
         <div class="download-card reveal tilt" data-tilt>
           <div class="download-copy">
-            <span class="eyebrow">Descarga</span>
+            <span class="eyebrow"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg> Descarga</span>
             <h2>Empieza en <span class="gradient-text">un clic</span></h2>
             <p>Instalador para Windows 10/11 (x64), con todo incluido. No requiere tener .NET instalado.</p>
             <div class="hero-actions">
-              <a class="btn btn-primary btn-lg magnetic" href="https://github.com/lferreyra-star/MinecraftLauncher/releases/latest" target="_blank" rel="noopener">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-                Descargar desde Releases
+              <a class="btn btn-primary btn-lg magnetic btn-shine" href="https://github.com/lferreyra-star/MinecraftLauncher/releases/latest" target="_blank" rel="noopener">
+                <svg class="ico" aria-hidden="true"><use href="#i-download"/></svg> Descargar desde Releases
               </a>
-              <a class="btn btn-secondary btn-lg magnetic" href="https://github.com/lferreyra-star/MinecraftLauncher" target="_blank" rel="noopener">Repositorio en GitHub</a>
+              <a class="btn btn-secondary btn-lg magnetic" href="https://github.com/lferreyra-star/MinecraftLauncher" target="_blank" rel="noopener">
+                <svg class="ico" aria-hidden="true"><use href="#i-github"/></svg> Repositorio en GitHub
+              </a>
             </div>
             <p class="fine">Siempre la última versión en <a href="https://github.com/lferreyra-star/MinecraftLauncher/releases" target="_blank" rel="noopener">GitHub Releases</a>. Instalador: <code>MinecraftLauncher_Setup.exe</code>.</p>
           </div>
           <div class="download-aside">
             <div class="req-card">
-              <h4>Requisitos</h4>
+              <h4><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> Requisitos</h4>
               <ul>
                 <li>Windows 10/11 (64 bits)</li>
                 <li>Conexión a Internet</li>
                 <li>Cuenta/licencia según edición</li>
               </ul>
+              <div class="req-badges"><span><svg class="ico" aria-hidden="true"><use href="#i-windows"/></svg> x64</span><span><svg class="ico" aria-hidden="true"><use href="#i-bolt"/></svg> .NET incluido</span><span><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg> Verificado</span></div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FAQ ================= -->
+    <section id="faq" class="section section-alt">
+      <div class="container faq-grid">
+        <div class="faq-intro reveal">
+          <span class="eyebrow"><svg class="ico" aria-hidden="true"><use href="#i-chat"/></svg> Preguntas frecuentes</span>
+          <h2>Dudas rápidas, <span class="gradient-text">respuestas claras</span></h2>
+          <p>Todo lo importante antes de descargar. Si te queda algo, abre un issue en GitHub.</p>
+          <a class="btn btn-secondary magnetic" href="https://github.com/lferreyra-star/MinecraftLauncher/issues" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-chat"/></svg> Preguntar en GitHub</a>
+        </div>
+        <div class="faq-list reveal delay-1">
+          <details class="faq-item" open><summary>¿Es un launcher oficial de Minecraft?<svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>No. XD Launcher es un proyecto no oficial y no está afiliado a Mojang Studios ni a Microsoft. Usa siempre juegos y servicios oficiales.</p></details>
+          <details class="faq-item"><summary>¿Necesito instalar .NET por separado?<svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>No. El instalador incluye el runtime necesario: funciona en Windows 10/11 de 64 bits sin instalar .NET aparte.</p></details>
+          <details class="faq-item"><summary>¿Mobile Connect copia el juego o toca mis mundos?<svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>No. Transmite la pantalla del Minecraft Bedrock que ya tienes en el móvil mediante ADB y scrcpy. No modifica mundos, skins, addons ni tu cuenta.</p></details>
+          <details class="faq-item"><summary>¿Puedo usar mods y Fabric en Java Edition?<svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>Sí. Puedes instalar Fabric desde Fabric Meta y gestionar mods y modpacks compatibles desde el centro de mods, en workspaces separados.</p></details>
+          <details class="faq-item"><summary>¿Cómo inicio sesión?<svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>Puedes usar Google o correo y contraseña en la web, y continuar en el launcher de escritorio. También puedes jugar con perfil local o cuenta Microsoft en el launcher.</p></details>
+          <details class="faq-item"><summary>¿Dónde se descarga la última versión?<svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>Siempre en <a href="https://github.com/lferreyra-star/MinecraftLauncher/releases/latest" target="_blank" rel="noopener">GitHub Releases</a>. El instalador se llama <code>MinecraftLauncher_Setup.exe</code>.</p></details>
         </div>
       </div>
     </section>
   </main>
 
   <footer class="footer">
-    <div class="container footer-inner">
-      <div class="footer-brand"><img src="assets/logo.png" alt="" width="28" height="28"><span>XD Launcher</span></div>
-      <p>Launcher no oficial. No afiliado a Mojang Studios ni a Microsoft. Minecraft es una marca de Mojang Synergies AB.</p>
-      <div class="footer-links">
-        <a href="https://github.com/lferreyra-star/MinecraftLauncher" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/lferreyra-star/MinecraftLauncher/releases" target="_blank" rel="noopener">Releases</a>
-        <a href="https://github.com/lferreyra-star/MinecraftLauncher/issues" target="_blank" rel="noopener">Issues</a>
+    <div class="container footer-top">
+      <div class="footer-about">
+        <a class="footer-brand" href="#top"><span class="brand-mark"><img src="assets/logo.png" alt=""></span><span>XD <b>Launcher</b></span></a>
+        <p>Launcher no oficial. No afiliado a Mojang Studios ni a Microsoft. Minecraft es una marca de Mojang Synergies AB.</p>
       </div>
+      <div class="footer-col"><h4>Producto</h4><a href="#features">Funciones</a><a href="#ediciones">Ediciones</a><a href="#mods">Mods &amp; Fabric</a><a href="#download">Descargar</a></div>
+      <div class="footer-col"><h4>Recursos</h4><a href="https://github.com/lferreyra-star/MinecraftLauncher" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/lferreyra-star/MinecraftLauncher/releases" target="_blank" rel="noopener">Releases</a><a href="https://github.com/lferreyra-star/MinecraftLauncher/issues" target="_blank" rel="noopener">Issues</a><a href="#faq">Preguntas frecuentes</a></div>
+      <div class="footer-col"><h4>Comunidad</h4><a href="https://www.minecraft.net/es-es/updates" target="_blank" rel="noopener">Novedades oficiales</a><a href="https://www.minecraft.net" target="_blank" rel="noopener">Minecraft.net</a></div>
     </div>
+    <div class="container footer-bottom"><span>© <span id="footer-year">2026</span> XD Launcher · Hecho con cuidado para la comunidad.</span><span class="footer-status"><i></i> Proyecto open source</span></div>
   </footer>
 
   <button class="to-top" id="to-top" aria-label="Volver arriba" title="Volver arriba">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7M12 19V5"/></svg>
+    <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg>
   </button>
 
-  <!-- Auth modal -->
+  <!-- Auth modal: la lógica real sigue en js/main.js -->
   <div class="modal-backdrop" id="auth-modal" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
       <button class="modal-close" id="auth-close" aria-label="Cerrar">×</button>
@@ -300,19 +610,15 @@
         <h3 id="auth-title">Accede a XD Launcher</h3>
         <p>Usa tu cuenta de XD Launcher: Google o correo y contraseña.</p>
       </div>
-
       <button class="btn btn-google magnetic" id="google-login-btn" type="button">
         <svg class="g-icon" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.1-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6 29.3 4 24 4c-7.7 0-14.4 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35 26.7 36 24 36c-5.2 0-9.7-3.3-11.3-8l-6.5 5C9.4 39.6 16.1 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.1-.1-2.3-.4-3.5z"/></svg>
         Continuar con Google
       </button>
-
       <div class="auth-sep"><span>o con correo y contraseña</span></div>
-
       <div class="auth-tabs" role="tablist">
         <button class="auth-tab active" id="tab-login" type="button" role="tab" aria-selected="true">Iniciar sesión</button>
         <button class="auth-tab" id="tab-register" type="button" role="tab" aria-selected="false">Crear cuenta</button>
       </div>
-
       <form class="auth-form" id="auth-form-login">
         <label class="auth-label" for="login-email">Correo electrónico</label>
         <input class="auth-input" id="login-email" type="email" autocomplete="email" placeholder="tu@correo.com" required>
@@ -324,7 +630,6 @@
         <button class="btn btn-primary auth-submit" id="login-submit" type="submit">Iniciar sesión</button>
         <button class="auth-link" id="reset-password-btn" type="button">Olvidé mi contraseña</button>
       </form>
-
       <form class="auth-form hidden" id="auth-form-register">
         <label class="auth-label" for="reg-name">Nombre mostrado</label>
         <input class="auth-input" id="reg-name" type="text" autocomplete="name" placeholder="Tu nombre" required>
@@ -337,13 +642,13 @@
         </div>
         <button class="btn btn-primary auth-submit" id="register-submit" type="submit">Crear cuenta</button>
       </form>
-
       <div class="auth-msg" id="auth-msg" role="status"></div>
-      <p class="auth-note">Inicio de sesión seguro con <strong>Firebase Authentication</strong>. La misma cuenta sirve en la web y en el BEDROCK LAUNCHER de escritorio. Tu perfil se guarda en Firestore.</p>
+      <p class="auth-note">Inicio de sesión seguro con <strong>Firebase Authentication</strong>. La misma cuenta sirve en la web y en el launcher de escritorio. Tu perfil se guarda en Firestore.</p>
     </div>
   </div>
 
   <script src="js/config.js"></script>
+  <script type="module" src="js/ui.js"></script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
