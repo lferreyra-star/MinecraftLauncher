@@ -1,15 +1,46 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Animation;
 using XdLauncher.Core;
+using XdLauncher.ViewModels;
 
 namespace XdLauncher.Views;
 
 public partial class HomeView : UserControl
 {
+    private HomeViewModel? _home;
+
     public HomeView()
     {
         InitializeComponent();
+        DataContextChanged += (_, _) =>
+        {
+            if (_home is not null)
+                _home.PropertyChanged -= OnHomePropertyChanged;
+            _home = DataContext as HomeViewModel;
+            if (_home is not null)
+                _home.PropertyChanged += OnHomePropertyChanged;
+        };
         Loaded += (_, _) => AnimateDashboard();
+    }
+
+    private void OnHomePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(HomeViewModel.CurrentBannerPath) ||
+            !AnimationHelper.CardAnimationsEnabled ||
+            AnimationHelper.ReduceMotion)
+            return;
+
+        BannerRoot?.BeginAnimation(OpacityProperty, new DoubleAnimation
+        {
+            From = 0.55,
+            To = 1,
+            Duration = TimeSpan.FromMilliseconds(480),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        });
+        if (BannerContent is not null)
+            AnimationHelper.AnimateEntrance(BannerContent, 18, TimeSpan.FromMilliseconds(420));
     }
 
     /// <summary>

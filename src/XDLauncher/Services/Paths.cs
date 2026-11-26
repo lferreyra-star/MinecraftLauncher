@@ -157,6 +157,14 @@ public static class Paths
             "aurora" => "bg-aurora.png",
             "amanecer" => "bg-amanecer.png",
             "cueva" => "bg-cueva.png",
+            "nether" => "bg-nether.png",
+            "end" => "bg-end.png",
+            "cerezo" => "bg-cerezo.png",
+            "nevado" => "bg-nevado.png",
+            "ciudad" => "bg-ciudad.png",
+            "nocturno" => "bg-nocturno.png",
+            "magico" => "bg-magico.png",
+            "fantastico" => "bg-fantastico.png",
             _ => null
         };
         if (name is null)

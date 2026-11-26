@@ -110,6 +110,10 @@ public sealed class SettingsState : ObservableObject
     public long LauncherMemoryBytes { get; private set; }
     public string LauncherMemoryText => $"{LauncherMemoryBytes / 1024d / 1024d:0.#} MB";
 
+    public double LauncherMemoryPercent => SystemInfo.TotalRamBytes == 0
+        ? 0
+        : Math.Clamp(LauncherMemoryBytes * 100d / SystemInfo.TotalRamBytes, 0, 100);
+
     public event Action? AppearanceChanged;
     public event Action? WindowPlacementChanged;
     public event Action? ScaleChanged;
@@ -245,12 +249,14 @@ public sealed class SettingsState : ObservableObject
         AnimationHelper.AmbientEffectsEnabled = Settings.AmbientEffectsEnabled && !Settings.PerformanceMode;
         AnimationHelper.AmbientIntensity = Settings.AmbientIntensity;
         AnimationHelper.TransparencyLevel = Settings.TransparencyLevel;
+        AnimationHelper.RespectSystemMotion = Settings.RespectSystemMotion;
         AnimationHelper.NavTransitionsEnabled = Settings.NavTransitionsEnabled && !Settings.PerformanceMode;
         AnimationHelper.ParticleEffectsEnabled = Settings.ParticleEffectsEnabled && !Settings.PerformanceMode;
         AnimationHelper.HoverEffectsEnabled = Settings.HoverEffectsEnabled;
         AnimationHelper.ParallaxEnabled = Settings.ParallaxEnabled && !Settings.PerformanceMode;
         AnimationHelper.CardAnimationsEnabled = Settings.CardAnimationsEnabled && !Settings.PerformanceMode;
         AnimationHelper.LoadingAnimationsEnabled = Settings.LoadingAnimationsEnabled && !Settings.PerformanceMode;
+        AnimationHelper.MotionLevel = Settings.MotionLevel;
         AnimationHelper.PerformanceMode = Settings.PerformanceMode;
         ThemeManager.ApplyTransparency(Settings.TransparencyLevel);
     }
@@ -380,6 +386,49 @@ public sealed class SettingsState : ObservableObject
         set { Settings.ShowNews = value; SaveAndNotify(nameof(ShowNews)); }
     }
 
+    public IReadOnlyList<string> MotionLevels => AnimationHelper.MotionLevels;
+
+    public double BackgroundBlur
+    {
+        get => Settings.BackgroundBlur;
+        set
+        {
+            var clamped = Math.Clamp(value, 0, 8);
+            if (Math.Abs(Settings.BackgroundBlur - clamped) < 0.01)
+                return;
+            Settings.BackgroundBlur = clamped;
+            SaveAndNotify(nameof(BackgroundBlur));
+        }
+    }
+
+    public double BackgroundOverlayIntensity
+    {
+        get => Settings.BackgroundOverlayIntensity;
+        set
+        {
+            var clamped = Math.Clamp(value, 0, 1);
+            if (Math.Abs(Settings.BackgroundOverlayIntensity - clamped) < 0.01)
+                return;
+            Settings.BackgroundOverlayIntensity = clamped;
+            SaveAndNotify(nameof(BackgroundOverlayIntensity));
+        }
+    }
+
+    public string MotionLevel
+    {
+        get => Settings.MotionLevel;
+        set
+        {
+            if (string.Equals(Settings.MotionLevel, value, StringComparison.OrdinalIgnoreCase))
+                return;
+            Settings.MotionLevel = value;
+            AnimationHelper.MotionLevel = value;
+            SaveAndNotify(nameof(MotionLevel), nameof(MotionLevelLabel));
+        }
+    }
+
+    public string MotionLevelLabel => Settings.MotionLevel;
+
     public bool AnimationsEnabled
     {
         get => Settings.AnimationsEnabled;
@@ -434,6 +483,12 @@ public sealed class SettingsState : ObservableObject
             ApplyVisualSettings();
             SaveAndNotify(nameof(TransparencyLevel));
         }
+    }
+
+    public bool RespectSystemMotion
+    {
+        get => Settings.RespectSystemMotion;
+        set { Settings.RespectSystemMotion = value; ApplyVisualSettings(); SaveAndNotify(nameof(RespectSystemMotion)); }
     }
 
     public bool NavTransitionsEnabled
@@ -499,7 +554,7 @@ public sealed class SettingsState : ObservableObject
         var id = section switch
         {
             "java" => "cueva",
-            "game" => "ciudad",
+            "bedrock" => "ciudad",
             "versions" => "amanecer",
             "addons" => "cerezo",
             "mods" => "magico",
@@ -609,6 +664,7 @@ public sealed class SettingsState : ObservableObject
         OnPropertyChanged(nameof(SystemInfo));
         OnPropertyChanged(nameof(LauncherMemoryBytes));
         OnPropertyChanged(nameof(LauncherMemoryText));
+        OnPropertyChanged(nameof(LauncherMemoryPercent));
     }
 
     private void BrowseBackground()

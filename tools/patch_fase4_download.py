@@ -1,0 +1,116 @@
+import io
+
+def read(p):
+    return io.open(p, 'r', encoding='utf-8-sig').read()
+
+def write(p, s):
+    io.open(p, 'w', encoding='utf-8-sig', newline='\r\n').write(s)
+
+p = 'src/XDLauncher/Services/DownloadService.cs'
+s = read(p)
+s = s.replace('using System.Net.Http;\n', 'using System.Net;\nusing System.Net.Http;\n', 1)
+start = s.index('    public static async Task DownloadAsync(')
+end = s.index('\n    public static async Task<string?> TryDownloadTextAsync', start)
+new_method = '''    private const int MaxAttempts = 3;
+
+    public static async Task DownloadAsync(
+        string url,
+        string destination,
+        IProgress<DownloadProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        var partPath = destination + ".part";
+
+        for (var attempt = 1; attempt <= MaxAttempts; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                var start = File.Exists(partPath) ? new FileInfo(partPath).Length : 0;
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                if (start > 0)
+                    request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(start, null);
+
+                using var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                if (response.StatusCode == HttpStatusCode.RequestedRangeNotSatisfiable)
+                {
+                    File.Delete(partPath);
+                    start = 0;
+                    using var retry = new HttpRequestMessage(HttpMethod.Get, url);
+                    using var retryResponse = await Client.SendAsync(retry, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                    retryResponse.EnsureSuccessStatusCode();
+                    await CopyResponseAsync(retryResponse, partPath, 0, progress, cancellationToken);
+                }
+                else
+                {
+                    response.EnsureSuccessStatusCode();
+                    var append = response.StatusCode == HttpStatusCode.PartialContent && start > 0;
+                    if (!append)
+                        start = 0;
+                    await CopyResponseAsync(response, partPath, start, progress, cancellationToken);
+                }
+
+                File.Move(partPath, destination, true);
+                return;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex) when (ex is HttpRequestException or IOException or UnauthorizedAccessException)
+            {
+                if (attempt == MaxAttempts)
+                    throw Classify(ex);
+                await Task.Delay(TimeSpan.FromMilliseconds(400 * (1 << (attempt - 1))), cancellationToken);
+            }
+        }
+    }
+
+    private static async Task CopyResponseAsync(HttpResponseMessage response, string partPath, long start,
+        IProgress<DownloadProgress>? progress, CancellationToken cancellationToken)
+    {
+        var length = response.Content.Headers.ContentLength;
+        var total = start + (length ?? 0);
+        await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
+        await using var target = new FileStream(partPath, start > 0 ? FileMode.Open : FileMode.Create,
+            FileAccess.Write, FileShare.None, 1024 * 128, useAsync: true);
+        if (start > 0)
+            target.Seek(0, SeekOrigin.End);
+
+        var buffer = new byte[1024 * 128];
+        var received = start;
+        var lastReport = DateTime.UtcNow;
+        while (true)
+        {
+            var read = await source.ReadAsync(buffer, cancellationToken);
+            if (read <= 0)
+                break;
+            await target.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+            received += read;
+
+            if (progress is not null && (DateTime.UtcNow - lastReport).TotalMilliseconds >= 120)
+            {
+                progress.Report(new DownloadProgress(received, length is null ? null : total));
+                lastReport = DateTime.UtcNow;
+            }
+        }
+
+        if (length is > 0 && received < total)
+            throw new IOException($"Descarga incompleta: {received} de {total} bytes.");
+        progress?.Report(new DownloadProgress(received, length is null ? null : total));
+    }
+
+    private static Exception Classify(Exception ex) => ex switch
+    {
+        UnauthorizedAccessException => new InvalidOperationException(
+            "No hay permisos para escribir el archivo. Revisa la carpeta de destino o el antivirus.", ex),
+        IOException => new InvalidOperationException(
+            "No se pudo guardar la descarga. Revisa el espacio disponible o el antivirus.", ex),
+        HttpRequestException => new InvalidOperationException(
+            "No se pudo completar la descarga por un problema de red.", ex),
+        _ => ex
+    };
+'''
+s = s[:start] + new_method + s[end:]
+write(p, s)

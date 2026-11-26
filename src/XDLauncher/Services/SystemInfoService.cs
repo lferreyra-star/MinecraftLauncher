@@ -19,7 +19,11 @@ public sealed class SystemSummary
     public string AvailableRamText => $"{AvailableRamBytes / 1024d / 1024d / 1024d:0.#} GB";
     public string RamUsageText => TotalRamBytes == 0
         ? "—"
-        : $"{Math.Round((TotalRamBytes - AvailableRamBytes) * 100d / TotalRamBytes)}% en uso";
+        : $"{Math.Round(RamUsagePercent)}% en uso";
+
+    public double RamUsagePercent => TotalRamBytes == 0
+        ? 0
+        : Math.Clamp((TotalRamBytes - AvailableRamBytes) * 100d / TotalRamBytes, 0, 100);
 }
 
 public sealed class SystemInfoService

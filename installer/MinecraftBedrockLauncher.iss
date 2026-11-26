@@ -5,7 +5,7 @@
 
 #define AppName "XD Launcher"
 #define AppShortName "MinecraftLauncher"
-#define AppVersion "1.3.8"
+#define AppVersion "1.3.9"
 #define AppPublisher "XD Studio"
 #define AppExeName "MinecraftLauncher.exe"
 #define AppId "{{B4E0B7A9-3F1D-4C7E-9E2B-6F5D1A8C2D40}"
@@ -45,7 +45,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
 MinVersion=10.0
-VersionInfoVersion=1.3.8
+VersionInfoVersion=1.3.9
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription=Instalador de XD Launcher (Minecraft Java + Bedrock)
 VersionInfoProductName={#AppName}
